@@ -1,6 +1,6 @@
 # Rift Ruckus
 
-Rift Ruckus is a local platform fighter for Windows PCs. Combat takes place on a 2D plane in a low-poly 3D arena. The seventeen fighters, their models, the arena, and the synthesized sound effects are original to the project.
+Rift Ruckus is a local platform fighter for Windows PCs. Combat takes place on a 2D plane in a low-poly 3D arena. The eighteen fighters, their models, the arena, and the synthesized sound effects are original to the project.
 
 ## Play on Windows
 
@@ -31,12 +31,12 @@ Each fighter starts with three stocks. Damage makes subsequent hits launch a fig
 
 Jump and double jump use Space or X. Hold Down with the jump button to drop through a raised platform.
 
-| Dragon Boy | Eid | Incantus | Beina | Gangar | Vi | Bomm | Gioppino | Huuuuu!! | 67 | Inga inga | Bid | Olivar | Keyboard | Controller (Xbox labels) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Claw & Kick | Kick & Punch | Belly Bump | Kick & Punch | Punch & Kick | Horn Jab | Headbutts | Punch & Kicks | Slap | Kick & Headbutt | Headbutt | Claw Swipe | Kick & Punch | J | A |
-| Flame Breath | Pulse Shot | Ear Stench | Peel Flip | Lunge Bite | Hoof Kick | Quick Bomb | Zombie Bite | Choking Puff | Briefcase Swing | Lance Throw | Flying Kicks | Sprout Blade | Tap L | Tap B |
-| Spine Shot | Blink Scythe | Stagger Hex | Banana Toss | Eye Lasers | Rainbow Arc | Power Steal | Brain Toss | Bandage Bind | 67 Venom Snakes | Draw & Slash | Goblin Pair | Sprout Assault | Hold L | Hold B |
-| Scale Burst | Robot Spin | Hypnotic Chomp | Banana Barrage | Gulp & Spit | Clone Herd | Bomm Burst | Zombie Horde | Sarcophagus | Snake Dance | Blade Storm | Goblin Horde | Laser Burst | J + L | A + B |
+| Dragon Boy | Eid | Incantus | Beina | Gangar | Vi | Bomm | Gioppino | Huuuuu!! | 67 | Inga inga | Bid | Olivar | Packman | Keyboard | Controller (Xbox labels) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Claw & Kick | Kick & Punch | Belly Bump | Kick & Punch | Punch & Kick | Horn Jab | Headbutts | Punch & Kicks | Slap | Kick & Headbutt | Headbutt | Claw Swipe | Kick & Punch | Chomp | J | A |
+| Flame Breath | Pulse Shot | Ear Stench | Peel Flip | Lunge Bite | Hoof Kick | Quick Bomb | Zombie Bite | Choking Puff | Briefcase Swing | Draw & Slash | Flying Kicks | Sprout Blade | Gas Cloud | Tap L | Tap B |
+| Spine Shot | Blink Scythe | Stagger Hex | Banana Toss | Eye Lasers | Rainbow Arc | Power Steal | Brain Toss | Bandage Bind | 67 Venom Snakes | Lance Throw | Goblin Pair | Sprout Assault | Blue Eye Lasers | Hold L | Hold B |
+| Scale Burst | Robot Spin | Hypnotic Chomp | Banana Barrage | Gulp & Spit | Clone Herd | Bomm Burst | Zombie Horde | Sarcophagus | Snake Dance | Blade Storm | Goblin Horde | Laser Burst | Trace 67 | J + L | A + B |
 
 Touch the golden Superstar at center stage to stock one super attack. The star above the fighter and on the HUD shows when the move is ready. The Superstar returns after the move is used or its holder is knocked out. Upward recovery still uses Up + L or Up + B.
 
@@ -58,9 +58,10 @@ Touch the golden Superstar at center stage to stock one super attack. The star a
 | Gioppino | Zombie brawler | **Zombie Bite** turns a rival into a slower zombie for five seconds. **Brain Toss** throws a spread of cartoon brains. **Zombie Horde** fills the horde to six half-size CPU copies that use Gioppino’s attacks and disappear on their first hit. |
 | Huuuuu!! | Mummy | **Slap** hits at close range. **Choking Puff** releases a cloud on both sides. **Bandage Bind** unwinds bandages from the mummy's body, wraps the first rival hit, and blocks their movement, jumps, shields, and attacks for five seconds. **Sarcophagus** seals a nearby rival in a coffin before dealing damage. |
 | 67 | Radio shark | **Kick & Headbutt** chains two close-range hits. **Briefcase Swing** sends a tethered case out to midrange and reels it back. **67 Venom Snakes** releases green diamond-shaped serpents that damage and poison rivals for four seconds. **Snake Dance** plays a synth tune and locks all fighters in place for a seven-second dance while six snakes chase and bite 67's rivals. |
-| Inga inga | Armored guard | **Headbutt** hits at close range. **Lance Throw** sends a lance straight ahead. **Draw & Slash** unsheathes a sword and sweeps it in front of the guard. **Blade Storm** sends two staggered volleys of spinning swords and daggers out in a full circle. |
+| Inga inga | Armored guard | **Headbutt** hits at close range. **Draw & Slash** unsheathes a sword and sweeps it in front of the guard. **Lance Throw** sends a lance straight ahead. **Blade Storm** sends two staggered volleys of spinning swords and daggers out in a full circle. |
 | Bid | Goblin summoner | **Claw Swipe** scratches a nearby rival. **Flying Kicks** leaps into two kicks. **Goblin Pair** fills the group to two goblins and **Goblin Horde** fills it to five. These half-size CPU goblins use Bid's attacks in combat and disappear on the first hit, when they fall out of the arena, or when Bid is eliminated. |
 | Olivar | Space explorer | Three small space sprouts orbit Olivar. **Sprout Blade** lines them up into a blade for two slashes. **Sprout Assault** enlarges them and sends them after the nearest opponent for five seconds, then they return and can form the blade again. **Laser Burst** fires a full circle of laser pulses. |
+| Packman | Armored chomper | **Chomp** lunges into a bite. **Gas Cloud** hits nearby rivals. **Blue Eye Lasers** fires two beams straight ahead. **Trace 67** turns Packman blue and invulnerable while he snaps his jaw and flies along two strokes to draw a glowing 67 in the center of the arena. Rivals in the path of either stroke take damage. |
 
 ## Code layout
 

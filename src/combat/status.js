@@ -1,5 +1,9 @@
 import { clamp } from '../math.js';
 
+export function isInvulnerable(player) {
+  return Boolean(player.invulnerable || player.attack?.untouchable);
+}
+
 export function isZombie(player, match) {
   return player.zombieUntil != null && match.time - player.zombieUntil > 1e-9;
 }
@@ -12,7 +16,7 @@ export function advancePoison(player, match) {
   const { poison } = player;
   if (!poison || !player.stocks || player.respawn) return;
   while (poison.next >= poison.until - 1e-9 && poison.next >= match.time - 1e-9) {
-    player.damage += 2;
+    if (!player.attack?.untouchable) player.damage += 2;
     poison.next -= 1;
   }
   if (match.time <= poison.until + 1e-9) player.poison = null;

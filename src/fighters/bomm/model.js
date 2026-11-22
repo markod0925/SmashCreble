@@ -8,6 +8,7 @@ import { zombieSnap } from '../gioppino/model.js';
 import { drawChokingPuff } from '../huuuuu/model.js';
 import { stenchEffect } from '../incantus/model.js';
 import { drawBorrowedBlade } from '../olivar/model.js';
+import { drawGasCloud } from '../packman/model.js';
 
 const bombParts = [
   part('bombShell', zero, one, '#333a47'),
@@ -111,6 +112,7 @@ export function draw(renderer, fighter, position, time, options) {
   else if (attack.type === 'gioppinoBite') zombieSnap(renderer, position, facing, attack);
   else if (attack.type === 'mummyPuff') drawChokingPuff(renderer, position, attack);
   else if (attack.type === 'bidKicks') drawFlyingKickTrail(renderer, position, facing, attack, size);
+  else if (attack.type === 'packmanGas') drawGasCloud(renderer, position, facing, attack, size);
   else if (attack.type === 'viHoof') {
     renderer.object('leaf', [x + facing * 1.45, y + .97, z + .58], [.24, .94, .15], '#aaf0ff', [0, 0, -facing * 1.2], .91, .77);
   } else if (attack.type === 'thorn') {

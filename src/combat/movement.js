@@ -11,7 +11,7 @@ export function move(player, input, dt, match) {
   player.dodge = Math.max(0, player.dodge - dt);
   player.landing = Math.max(0, player.landing - dt);
   player.stagger = Math.max(0, player.stagger - dt);
-  if (capturingAttack(player, match)) return;
+  if (player.attack?.trace67 || capturingAttack(player, match)) return;
   const bound = boundTime(player, match) > 0;
   const free = !player.hitstun && !player.dodge && !bound;
   const mobility = player.attack ? 0.54 : player.charging ? 0.36 : 1;
@@ -38,6 +38,7 @@ export function move(player, input, dt, match) {
         player.grounded = null;
       }
       if (!player.stagger) handleAttackInput(player, input, match, dt);
+      if (player.attack?.trace67) return;
     }
     if (!player.dodge && player.attack?.type !== 'dash') {
       const condition = player.stagger ? 0.58 : isZombie(player, match) ? 0.74 : 1;

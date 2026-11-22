@@ -9,6 +9,7 @@ import { interruptAttack } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower, powerStealTravelTime, stolenPowerTime } from '../fighters/bomm/profile.js';
 import { assaultRemaining, deployCompanions } from '../fighters/olivar/companions.js';
+import { advanceTrace, startTrace } from '../fighters/packman/trace.js';
 import { rainbowHeight } from '../fighters/vi/profile.js';
 import { clamp, direction } from '../math.js';
 
@@ -62,6 +63,7 @@ function startAttack(player, type, input, match, borrowed = null) {
   const scale = scaleOf(player);
   scaleAttack(attack, scale);
   player.attack = { ...attack, scale, facing, age: 0, victims: new Set(), fired: false, borrowed };
+  if (attack.trace67) startTrace(player, match);
   if (attack.volleyEvery) player.attack.nextVolley = attack.from;
   if (attack.takeoff && (player.grounded || attack.aerialTakeoff)) {
     player.grounded = null;
@@ -105,6 +107,10 @@ export function advanceAttack(player, dt, match) {
   attack.age += dt;
   if (attack.age >= attack.duration) {
     player.attack = null;
+    return;
+  }
+  if (attack.trace67) {
+    advanceTrace(player, attack, match, dt);
     return;
   }
   if (attack.followUp && attack.age >= attack.followUp.from) {

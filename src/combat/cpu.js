@@ -41,11 +41,12 @@ export function cpuInput(player, match, dt) {
     const shark = player.fighter.id === 'shark-67';
     const inga = player.fighter.id === 'inga-inga';
     const olivar = player.fighter.id === 'olivar';
+    const packman = player.fighter.id === 'packman';
     const deployed = assaultRemaining(player, match) > 1e-9;
     const summonLimit = signatureAttacks[player.fighter.moves.hold].summonsClones;
     const roomToSummon = summonLimit && canSummonClones(player, match, summonLimit);
     const superInRange = shark || (inga && Math.hypot(dx, dy) < signatureAttacks.ingaBladeStorm.range * .83) ||
-      (summonLimit && Math.abs(dx) < 5.9) || (olivar && Math.hypot(dx, dy) < 5.5);
+      (summonLimit && Math.abs(dx) < 5.9) || (olivar && Math.hypot(dx, dy) < 5.5) || (packman && Math.abs(target.x) < 6.25);
     if ((active || (superInRange && !player.attack && !player.hitstun)) && canUseSuper(player, match)) return { x, y: 0, superPressed: true };
     if (olivar && !deployed && !close && Math.abs(dx) < 5.9 && Math.abs(dy) < 2.3 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
@@ -57,7 +58,7 @@ export function cpuInput(player, match, dt) {
       player.aiDelay = 1.05;
       return { x: 0, y: 0, specialPressed: true, special: true };
     }
-    const rangedCharge = ['vi', 'gioppino', 'huuuuu', 'shark-67'].includes(player.fighter.id);
+    const rangedCharge = ['vi', 'gioppino', 'huuuuu', 'shark-67', 'packman'].includes(player.fighter.id);
     if (rangedCharge && !close && Math.abs(dx) < signatureAttacks[player.fighter.moves.hold].range * scaleOf(player) && Math.abs(dy) < 0.9 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
       player.aiDelay = 0.96;
@@ -66,7 +67,7 @@ export function cpuInput(player, match, dt) {
     if (inga && !close && Math.abs(dx) < signatureAttacks.ingaLance.range * .86 && Math.abs(dy) < .76 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
       player.aiDelay = .93;
-      return { x, y: 0, specialPressed: true, special: Math.abs(dx) < signatureAttacks.ingaSword.range * .94 };
+      return { x, y: 0, specialPressed: true, special: Math.abs(dx) >= signatureAttacks.ingaSword.range * .94 };
     }
     if (player.fighter.id === 'bomm' && !close && Math.abs(dx) < 5.5 && Math.abs(dy) < 1.3 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
@@ -82,7 +83,8 @@ export function cpuInput(player, match, dt) {
     const lightPressed = active && (deployed || Math.random() < 0.56);
     const specialPressed = active && !lightPressed;
     const canCharge = !summonLimit || roomToSummon;
-    return { x, y: 0, jumpPressed, lightPressed, specialPressed, special: !eid && canCharge && specialPressed && Math.random() < 0.35, guard };
+    const chargeChance = inga ? 0.65 : 0.35;
+    return { x, y: 0, jumpPressed, lightPressed, specialPressed, special: !eid && canCharge && specialPressed && Math.random() < chargeChance, guard };
   }
   return { x, y: dy < -2.3 ? -1 : 0, jumpPressed, lightPressed: active && Math.random() < 0.64, specialPressed: active, guard };
 }

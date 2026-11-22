@@ -15,8 +15,9 @@ import * as shark67 from '../fighters/shark-67/model.js';
 import * as ingaInga from '../fighters/inga-inga/model.js';
 import * as bid from '../fighters/bid/model.js';
 import * as olivar from '../fighters/olivar/model.js';
+import * as packman from '../fighters/packman/model.js';
 
-const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar };
+const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar, packman };
 const projectileModels = Object.assign({}, ...Object.values(models).map(({ projectiles }) => projectiles));
 
 export function drawCharacter(renderer, fighter, position, time, options = {}) {

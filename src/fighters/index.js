@@ -15,8 +15,9 @@ import * as shark67 from './shark-67/profile.js';
 import * as ingaInga from './inga-inga/profile.js';
 import * as bid from './bid/profile.js';
 import * as olivar from './olivar/profile.js';
+import * as packman from './packman/profile.js';
 
-const roster = [rivet, bramble, vesper, kiln, dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, shark67, ingaInga, bid, olivar];
+const roster = [rivet, bramble, vesper, kiln, dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, shark67, ingaInga, bid, olivar, packman];
 
 export const fighters = roster.map(({ fighter }) => fighter);
 export const signatureAttacks = Object.assign({}, ...roster.map(({ attacks }) => attacks));

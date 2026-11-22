@@ -1,9 +1,9 @@
 import { vanishClone } from './clones.js';
-import { boundTime, captureProgress, capturingAttack, interruptAttack } from './status.js';
+import { boundTime, captureProgress, capturingAttack, interruptAttack, isInvulnerable } from './status.js';
 import { clamp } from '../math.js';
 
 export function strike(attacker, victim, hit, match) {
-  if (attacker.slot === victim.slot || victim.invulnerable || victim.dodge || victim.respawn || !victim.stocks) return false;
+  if (attacker.slot === victim.slot || isInvulnerable(victim) || victim.dodge || victim.respawn || !victim.stocks) return false;
   if (victim.owner) {
     vanishClone(victim, match);
     return true;

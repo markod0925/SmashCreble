@@ -1,9 +1,9 @@
 export const fighter = {
   id: 'inga-inga', name: 'Inga inga', role: 'Armored guard', color: '#92c4ef',
   description: 'A grinning guard in steel armor and blue trousers, armed with a lance and a sheathed sword.',
-  special: 'Lance Throw', specialDescription: 'Tap B or L to throw a lance. Hold it to draw the sword and slash.',
+  special: 'Draw & Slash', specialDescription: 'Tap B or L to draw the sword and slash. Hold it to throw a lance.',
   speed: 7.2, jump: 12.6, weight: 1.18, power: 1.1, size: 1.05,
-  moves: { light: 'ingaHeadbutt', tap: 'ingaLance', hold: 'ingaSword', super: 'ingaBladeStorm' },
+  moves: { light: 'ingaHeadbutt', tap: 'ingaSword', hold: 'ingaLance', super: 'ingaBladeStorm' },
 };
 
 export const attacks = {

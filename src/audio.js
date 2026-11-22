@@ -34,6 +34,7 @@ const soundEffects = {
   lanceThrow: [280, 108, .17, 'triangle', .1],
   swordSlash: [630, 249, .21, 'triangle', .13],
   bladeVolley: [875, 333, .23, 'triangle', .14],
+  packmanTrace: [310, 1090, .31, 'triangle', .17],
   block: [700, 450, .12, 'triangle', .09],
   break: [650, 89, .25, 'sawtooth', .09],
   finish: [450, 910, .39, 'triangle', .13],

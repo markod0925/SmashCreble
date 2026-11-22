@@ -1,6 +1,7 @@
 import { arena } from './arena.js';
 import { strike } from './hits.js';
 import { bodyCenter, combatants, scaleOf } from './state.js';
+import { isInvulnerable } from './status.js';
 import { projectileLaunchers } from '../fighters/index.js';
 import { advanceBriefcase } from '../fighters/shark-67/profile.js';
 import { direction } from '../math.js';
@@ -49,7 +50,7 @@ export function advanceProjectiles(match, dt) {
     const lands = projectile.gravity && projectile.vy < 0 && arena.platforms.some(({ left, right, y }) =>
       projectile.x >= left && projectile.x <= right && previousY >= y && projectile.y <= y);
     if (projectile.kind === 'bomb') {
-      if (lands || projectile.remaining <= 0 || targets.some((target) => target.stocks && !target.respawn && !target.invulnerable && !target.dodge && projectileTouches(projectile, target))) {
+      if (lands || projectile.remaining <= 0 || targets.some((target) => target.stocks && !target.respawn && !isInvulnerable(target) && !target.dodge && projectileTouches(projectile, target))) {
         detonateBomb(projectile, targets, match);
       }
       continue;

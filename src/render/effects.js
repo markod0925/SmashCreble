@@ -1,6 +1,8 @@
 import { TAU, zero } from './math.js';
 import { powerStealCloud } from '../fighters/bomm/model.js';
 import { powerStealTravelTime } from '../fighters/bomm/profile.js';
+import { drawTrace67 } from '../fighters/packman/model.js';
+import { traceAfterglow, traceDuration } from '../fighters/packman/path.js';
 
 export class BattleEffects {
   constructor() {
@@ -18,6 +20,10 @@ export class BattleEffects {
       if (event.type === 'swing') continue;
       if (event.type === 'powerSteal') {
         this.effects.push({ ...event, lifetime: powerStealTravelTime, age: 0 });
+        continue;
+      }
+      if (event.type === 'packmanTrace') {
+        this.effects.push({ ...event, lifetime: traceDuration + traceAfterglow, age: 0 });
         continue;
       }
       if (event.type === 'explosion') {
@@ -38,10 +44,14 @@ export class BattleEffects {
 
   draw(renderer, match, time, dt) {
     for (const effect of this.effects) {
-      effect.age = effect.type === 'powerSteal' ? effect.startedAt - match.time : effect.age + dt;
+      effect.age = effect.startedAt === undefined ? effect.age + dt : effect.startedAt - match.time;
       if (effect.age >= effect.lifetime) continue;
       if (effect.type === 'powerSteal') {
         if (effect.target.stocks && !effect.target.respawn) powerStealCloud(renderer, effect, match, time);
+        continue;
+      }
+      if (effect.type === 'packmanTrace') {
+        drawTrace67(renderer, effect.age);
         continue;
       }
       const life = 1 - effect.age / effect.lifetime;
