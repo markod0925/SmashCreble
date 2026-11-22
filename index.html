@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101419">
+    <title>Rift Ruckus</title>
+    <link rel="stylesheet" href="/style.css">
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <div id="shell">
+      <header class="site-header">
+        <button class="brand" type="button" id="home-button" aria-label="Rift Ruckus home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>RIFT<span class="brand-accent">RUCKUS</span></span>
+        </button>
+        <div class="header-actions">
+          <div class="controller-status" id="pad-status" aria-live="polite"><span class="status-dot"></span><span id="pad-count">0 / 4 CONTROLLERS</span></div>
+          <button type="button" class="text-button" id="controls-button"><span class="key-icon" aria-hidden="true"></span> Controls</button>
+          <button type="button" class="sound-button" id="sound-button" aria-label="Sound" aria-pressed="true"><span class="speaker-icon" aria-hidden="true"></span></button>
+        </div>
+      </header>
+
+      <main id="home">
+        <section class="hero" aria-labelledby="game-title">
+          <div class="hero-world" id="hero-world">
+            <div class="sky hero-sky" aria-hidden="true"><span class="sun"></span></div>
+            <span class="sky-bracket sky-bracket-top" aria-hidden="true"></span>
+          </div>
+          <div class="hero-copy">
+            <div class="eyebrow"><span class="slash-mark" aria-hidden="true"></span> LOCAL PLATFORM FIGHTER</div>
+            <h1 id="game-title"><span>RIFT</span><span>RUCKUS</span></h1>
+            <p>Seventeen fighters. One floating foundry.<br>Send your rivals over the edge.</p>
+            <button type="button" class="primary-button" id="play-button"><span class="play-icon" aria-hidden="true"></span> Play match <kbd>Enter</kbd></button>
+          </div>
+          <div class="hero-detail" id="hero-detail"><span id="hero-special-label">RIVET'S SPECIAL</span><strong id="hero-special">Arc Bolt</strong><p id="hero-special-description">Fires an electric bolt straight ahead.</p></div>
+          <div class="hero-legend"><span class="mini-diamond" aria-hidden="true"></span> CLOUDBREAK FOUNDRY</div>
+        </section>
+
+        <section class="roster-section" aria-labelledby="roster-title">
+          <div class="section-heading">
+            <h2 id="roster-title">CHOOSE YOUR FIGHTER</h2>
+            <span><kbd>←</kbd> <kbd>→</kbd> Browse roster</span>
+          </div>
+          <div class="roster" id="roster"></div>
+        </section>
+      </main>
+
+      <main id="battle" class="battle" hidden aria-label="Match arena">
+        <div class="sky battle-sky" aria-hidden="true"><span class="sun"></span></div>
+        <div class="battle-top">
+          <div class="round-label"><span class="mini-diamond" aria-hidden="true"></span> CLOUDBREAK FOUNDRY <small>STOCK MATCH</small></div>
+          <div class="timer" id="timer" aria-label="Time remaining">3:00</div>
+          <button class="text-button pause-button" id="pause-button" type="button"><span aria-hidden="true">Ⅱ</span> Pause <kbd>Esc</kbd></button>
+        </div>
+        <div id="battle-tags" aria-hidden="true"></div>
+        <div class="countdown" id="countdown" aria-live="polite">3</div>
+        <div class="hud" id="hud"></div>
+      </main>
+
+      <footer class="site-footer" id="site-footer">
+        <span><span class="footer-mark" aria-hidden="true"></span> LOCAL VS <span class="footer-divider"></span> 1–4 PLAYERS</span>
+        <span>Pair controllers in Windows, then press <kbd>A</kbd> or <kbd>Start</kbd></span>
+      </footer>
+    </div>
+
+    <dialog id="dialog" aria-labelledby="dialog-title">
+      <div class="dialog-top">
+        <div class="eyebrow"><span class="slash-mark" aria-hidden="true"></span> <span id="dialog-kicker"></span></div>
+        <button type="button" id="close-dialog" class="close-button" aria-label="Close">×</button>
+      </div>
+      <h2 id="dialog-title"></h2>
+      <div id="dialog-content"></div>
+    </dialog>
+
+    <template id="controls-template">
+      <table class="controls-table">
+        <caption>Standard controls</caption>
+        <thead><tr><th scope="col">Action</th><th scope="col">Keyboard</th><th scope="col">Controller</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Move / aim</th><td>WASD or arrows</td><td>Left stick / D-pad</td></tr>
+          <tr><th scope="row">Jump / double jump</th><td>Space</td><td>A</td></tr>
+          <tr><th scope="row">Light attack</th><td>J</td><td>X</td></tr>
+          <tr><th scope="row">Charge heavy attack</th><td>Hold K</td><td>Hold Y</td></tr>
+          <tr><th scope="row">Fighter special</th><td>L</td><td>B</td></tr>
+          <tr><th scope="row">Upward recovery</th><td>Up + L</td><td>Up + B</td></tr>
+          <tr><th scope="row">Shield / dodge</th><td>Shift / Shift + I</td><td>LT or RT / hold trigger + LB or RB</td></tr>
+          <tr><th scope="row">Drop through platform</th><td>Down + Space</td><td>Down + A</td></tr>
+          <tr><th scope="row">Pause</th><td>Esc</td><td>Start</td></tr>
+        </tbody>
+      </table>
+      <table class="controls-table">
+        <caption>Superstar fighters</caption>
+        <thead><tr><th scope="col">Dragon Boy</th><th scope="col">Eid</th><th scope="col">Incantus</th><th scope="col">Beina</th><th scope="col">Gangar</th><th scope="col">Vi</th><th scope="col">Bomm</th><th scope="col">Gioppino</th><th scope="col">Huuuuu!!</th><th scope="col">67</th><th scope="col">Inga inga</th><th scope="col">Bid</th><th scope="col">Olivar</th><th scope="col">Keyboard</th><th scope="col">Controller</th></tr></thead>
+        <tbody>
+          <tr><th scope="row" colspan="13">Jump / double jump</th><td>Space</td><td>X</td></tr>
+          <tr><th scope="row" colspan="13">Drop through platform</th><td>Down + Space</td><td>Down + X</td></tr>
+          <tr><td>Claw &amp; Kick</td><td>Kick &amp; Punch</td><td>Belly Bump</td><td>Kick &amp; Punch</td><td>Punch &amp; Kick</td><td>Horn Jab</td><td>Headbutts</td><td>Punch &amp; Kicks</td><td>Slap</td><td>Kick &amp; Headbutt</td><td>Headbutt</td><td>Claw Swipe</td><td>Kick &amp; Punch</td><td>J</td><td>A</td></tr>
+          <tr><td>Flame Breath</td><td>Pulse Shot</td><td>Ear Stench</td><td>Peel Flip</td><td>Lunge Bite</td><td>Hoof Kick</td><td>Quick Bomb</td><td>Zombie Bite</td><td>Choking Puff</td><td>Briefcase Swing</td><td>Lance Throw</td><td>Flying Kicks</td><td>Sprout Blade</td><td>Tap L</td><td>Tap B</td></tr>
+          <tr><td>Spine Shot</td><td>Blink Scythe</td><td>Stagger Hex</td><td>Banana Toss</td><td>Eye Lasers</td><td>Rainbow Arc</td><td>Power Steal</td><td>Brain Toss</td><td>Bandage Bind</td><td>67 Venom Snakes</td><td>Draw &amp; Slash</td><td>Goblin Pair</td><td>Sprout Assault</td><td>Hold L</td><td>Hold B</td></tr>
+          <tr><td>Scale Burst</td><td>Robot Spin</td><td>Hypnotic Chomp</td><td>Banana Barrage</td><td>Gulp &amp; Spit</td><td>Clone Herd</td><td>Bomm Burst</td><td>Zombie Horde</td><td>Sarcophagus</td><td>Snake Dance</td><td>Blade Storm</td><td>Goblin Horde</td><td>Laser Burst</td><td>J + L</td><td>A + B</td></tr>
+        </tbody>
+      </table>
+      <p class="dialog-note">Collect the golden Superstar at center stage to use a super attack. Stagger Hex temporarily blocks attacks. Power Steal copies the secondary attack of the closest rival in front of Bomm for ten seconds. After Bomm Burst, Bomm swells up, then shrinks and moves more slowly for five seconds. Zombie Bite turns the opponent into a slower zombie for five seconds. Bandage Bind wraps a rival and blocks movement, jumps, shields, and attacks for five seconds. Snake Dance makes every fighter dance in place for seven seconds while six snakes attack 67's rivals. Bid's Goblin Pair and Goblin Horde refill the group to two or five half-size fighters. Olivar's sprouts attack independently for five seconds, then become available for Sprout Blade again.</p>
+    </template>
+    <div id="fatal" class="fatal" role="alert" hidden></div>
+  </body>
+</html>
