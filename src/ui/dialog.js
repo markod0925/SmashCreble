@@ -22,6 +22,13 @@ export function handleDismiss(dismiss) {
 
 export function renderControls() {
   content.append($('controls-template').content.cloneNode(true));
+  const scroller = content.querySelector('.controls-scroll');
+  scroller.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    event.stopPropagation();
+    scroller.scrollLeft += (event.key === 'ArrowLeft' ? -1 : 1) * scroller.clientWidth * .15;
+  });
   $('close-dialog').focus();
 }
 

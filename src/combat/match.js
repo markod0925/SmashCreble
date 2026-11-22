@@ -54,7 +54,7 @@ export function tickMatch(match, controls, dt = rules.step) {
     if (!player.stocks || player.owner?.stocks === 0) continue;
     if (player.respawn > 0) {
       player.respawn -= dt;
-      if (player.respawn <= 0) Object.assign(player, spawn(player.slot, false));
+      if (player.respawn <= 0) Object.assign(player, spawn(player.slot, false, player.fighter));
       continue;
     }
     move(player, player.cpu ? cpuInput(player, match, dt) : controls.get(player.slot) ?? idleInput, dt, match);

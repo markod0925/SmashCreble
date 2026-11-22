@@ -1,11 +1,14 @@
 import { multiply, one, smoothStep, TAU, transform, zero } from '../../render/math.js';
 import { part } from '../../render/parts.js';
 import { drawFlyingKickTrail } from '../bid/model.js';
+import { drawClubImpact } from '../ciclope/model.js';
 import { bommBurstAge, bommBurstRecovery } from './profile.js';
 import { flameEffect } from '../dragon-boy/model.js';
+import { drawNavelBeam } from '../dragonball/model.js';
 import { biteEffect } from '../gangar/model.js';
 import { zombieSnap } from '../gioppino/model.js';
 import { drawChokingPuff } from '../huuuuu/model.js';
+import { drawBorrowedThrust } from '../ii/model.js';
 import { stenchEffect } from '../incantus/model.js';
 import { drawBorrowedBlade } from '../olivar/model.js';
 import { drawGasCloud } from '../packman/model.js';
@@ -105,6 +108,10 @@ export function draw(renderer, fighter, position, time, options) {
     renderer.parts(bombParts, bomb, false);
   }
   if (attack.borrowed && attack.type === 'olivarBlade') drawBorrowedBlade(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'iiThrust') drawBorrowedThrust(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'dragonBallNavelLaser') {
+    drawNavelBeam(renderer, [x + attack.facing * .52 * size, y + 1.17 * size, z + .71 * size], x, attack, size);
+  }
   if (!attack.borrowed || attack.age < attack.from || attack.age > (attack.until ?? attack.from + .12)) return;
   if (attack.type === 'dragonFlame') flameEffect(renderer, position, facing, attack);
   else if (attack.type === 'incantusStench') stenchEffect(renderer, position, attack, 1.92);
@@ -113,6 +120,7 @@ export function draw(renderer, fighter, position, time, options) {
   else if (attack.type === 'mummyPuff') drawChokingPuff(renderer, position, attack);
   else if (attack.type === 'bidKicks') drawFlyingKickTrail(renderer, position, facing, attack, size);
   else if (attack.type === 'packmanGas') drawGasCloud(renderer, position, facing, attack, size);
+  else if (attack.type === 'ciclopeClub') drawClubImpact(renderer, position, facing, attack, size);
   else if (attack.type === 'viHoof') {
     renderer.object('leaf', [x + facing * 1.45, y + .97, z + .58], [.24, .94, .15], '#aaf0ff', [0, 0, -facing * 1.2], .91, .77);
   } else if (attack.type === 'thorn') {

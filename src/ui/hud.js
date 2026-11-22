@@ -1,7 +1,7 @@
 import { $, node } from './dom.js';
 import { playerColors } from '../player-colors.js';
 import { rules } from '../combat/arena.js';
-import { boundTime, isZombie } from '../combat/status.js';
+import { boundTime, frozenTime, isZombie } from '../combat/status.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { danceSeconds } from '../fighters/shark-67/profile.js';
@@ -57,9 +57,10 @@ export class BattleHud {
       star.hidden = match.superstar?.holder !== fighter;
       const zombie = isZombie(fighter, match);
       const bound = Math.ceil(boundTime(fighter, match));
+      const frozen = Math.ceil(frozenTime(fighter, match));
       const dancing = match.dance ? Math.ceil(danceSeconds - match.dance.elapsed - 1e-9) : 0;
       const sprouts = Math.ceil(assaultRemaining(fighter, match) - 1e-9);
-      const status = dancing ? ` · DANCE ${dancing}s` : bound ? ` · BOUND ${bound}s` : fighter.poison ? ' · POISONED'
+      const status = frozen ? ` · FROZEN ${frozen}s` : dancing ? ` · DANCE ${dancing}s` : bound ? ` · BOUND ${bound}s` : fighter.poison ? ' · POISONED'
         : zombie ? ' · ZOMBIE' : sprouts > 0 ? ` · SPROUTS ${sprouts}s` : '';
       const tagLabel = `P${fighter.slot + 1}${fighter.cpu ? ' CPU' : ''}${status}`;
       if (tag.textContent !== tagLabel) tag.textContent = tagLabel;
@@ -67,6 +68,7 @@ export class BattleHud {
       tag.classList.toggle('bound', bound > 0);
       tag.classList.toggle('poisoned', Boolean(fighter.poison));
       tag.classList.toggle('dancing', dancing > 0);
+      tag.classList.toggle('frozen', frozen > 0);
       if (power) {
         const borrowed = borrowedPower(fighter, match);
         power.hidden = !borrowed || !fighter.stocks;

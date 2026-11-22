@@ -1,8 +1,11 @@
 import { TAU, zero } from './math.js';
 import { powerStealCloud } from '../fighters/bomm/model.js';
 import { powerStealTravelTime } from '../fighters/bomm/profile.js';
+import { drawTomatoSplat } from '../fighters/funny-kings/model.js';
+import { drawThunderbolt } from '../fighters/nuvol/model.js';
 import { drawTrace67 } from '../fighters/packman/model.js';
 import { traceAfterglow, traceDuration } from '../fighters/packman/path.js';
+import { drawShockSkeleton } from './skeleton.js';
 
 export class BattleEffects {
   constructor() {
@@ -26,11 +29,19 @@ export class BattleEffects {
         this.effects.push({ ...event, lifetime: traceDuration + traceAfterglow, age: 0 });
         continue;
       }
+      if (event.type === 'tomatoSplat') {
+        this.effects.push({ ...event, lifetime: .55, age: 0 });
+        continue;
+      }
+      if (event.type === 'nuvolBolt' || event.type === 'shockEcho') {
+        this.effects.push({ ...event, lifetime: .29, age: 0 });
+        continue;
+      }
       if (event.type === 'explosion') {
         this.effects.push({ ...event, type: 'blastFlash', lifetime: .32, age: 0 });
         this.shake = Math.max(this.shake, Math.min(.26, event.strength * .066));
       }
-      const count = { ko: 33, hit: 13, block: 8, break: 16, jump: 5, special: 15, superstar: 20, blink: 14, chomp: 17, laser: 8, cloneIn: 8, clonePop: 11, explosion: 22, zombieBite: 12, bandageBind: 10, coffinBurst: 18, poison: 9, lanceThrow: 5, swordSlash: 12, bladeVolley: 15 }[event.type];
+      const count = { ko: 33, hit: 13, block: 8, break: 16, jump: 5, special: 15, superstar: 20, blink: 14, chomp: 17, laser: 8, cloneIn: 8, clonePop: 11, explosion: 22, zombieBite: 12, bandageBind: 10, coffinBurst: 18, poison: 9, lanceThrow: 5, swordSlash: 12, bladeVolley: 15, frost: 14, frostBite: 19, serpentBind: 10 }[event.type];
       const lifetime = event.type === 'ko' ? .75 : .35;
       const force = event.type === 'ko' ? 8 : event.type === 'hit' ? 5 : event.type === 'explosion' ? 3 + event.strength : 2.7;
       for (let i = 0; i < count; i++) {
@@ -52,6 +63,18 @@ export class BattleEffects {
       }
       if (effect.type === 'packmanTrace') {
         drawTrace67(renderer, effect.age);
+        continue;
+      }
+      if (effect.type === 'tomatoSplat') {
+        drawTomatoSplat(renderer, effect);
+        continue;
+      }
+      if (effect.type === 'nuvolBolt') {
+        drawThunderbolt(renderer, effect);
+        continue;
+      }
+      if (effect.type === 'shockEcho') {
+        drawShockSkeleton(renderer, effect.fighter, [effect.x, effect.y, effect.depth], effect.facing, effect.lifetime - effect.age);
         continue;
       }
       const life = 1 - effect.age / effect.lifetime;

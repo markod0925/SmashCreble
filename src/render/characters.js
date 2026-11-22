@@ -16,8 +16,14 @@ import * as ingaInga from '../fighters/inga-inga/model.js';
 import * as bid from '../fighters/bid/model.js';
 import * as olivar from '../fighters/olivar/model.js';
 import * as packman from '../fighters/packman/model.js';
+import * as ciclope from '../fighters/ciclope/model.js';
+import * as vidarr from '../fighters/vidarr/model.js';
+import * as funnyKings from '../fighters/funny-kings/model.js';
+import * as nuvol from '../fighters/nuvol/model.js';
+import * as ii from '../fighters/ii/model.js';
+import * as dragonball from '../fighters/dragonball/model.js';
 
-const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar, packman };
+const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar, packman, ciclope, vidarr, 'funny-kings': funnyKings, nuvol, ii, dragonball };
 const projectileModels = Object.assign({}, ...Object.values(models).map(({ projectiles }) => projectiles));
 
 export function drawCharacter(renderer, fighter, position, time, options = {}) {

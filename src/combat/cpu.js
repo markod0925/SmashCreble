@@ -1,13 +1,13 @@
 import { canSummonClones, canUseSuper } from './clones.js';
 import { combatants, idleInput, scaleOf } from './state.js';
-import { boundTime } from './status.js';
+import { boundTime, frozenTime } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { direction } from '../math.js';
 
 export function cpuInput(player, match, dt) {
-  if (boundTime(player, match)) return idleInput;
+  if (boundTime(player, match) || frozenTime(player, match)) return idleInput;
   let target;
   for (const other of combatants(match)) {
     if (other.slot === player.slot || !other.stocks || other.respawn) continue;
@@ -42,11 +42,21 @@ export function cpuInput(player, match, dt) {
     const inga = player.fighter.id === 'inga-inga';
     const olivar = player.fighter.id === 'olivar';
     const packman = player.fighter.id === 'packman';
+    const ciclope = player.fighter.id === 'ciclope';
+    const vidarr = player.fighter.id === 'vidarr';
+    const kings = player.fighter.id === 'funny-kings';
+    const nuvol = player.fighter.id === 'nuvol';
+    const duelist = player.fighter.id === 'ii';
+    const dragonball = player.fighter.id === 'dragonball';
     const deployed = assaultRemaining(player, match) > 1e-9;
     const summonLimit = signatureAttacks[player.fighter.moves.hold].summonsClones;
     const roomToSummon = summonLimit && canSummonClones(player, match, summonLimit);
-    const superInRange = shark || (inga && Math.hypot(dx, dy) < signatureAttacks.ingaBladeStorm.range * .83) ||
-      (summonLimit && Math.abs(dx) < 5.9) || (olivar && Math.hypot(dx, dy) < 5.5) || (packman && Math.abs(target.x) < 6.25);
+    const superInRange = shark || vidarr || nuvol || (inga && Math.hypot(dx, dy) < signatureAttacks.ingaBladeStorm.range * .83) ||
+      (summonLimit && !dragonball && Math.abs(dx) < 5.9) || (olivar && Math.hypot(dx, dy) < 5.5) || (packman && Math.abs(target.x) < 6.25) ||
+      (ciclope && Math.abs(dx) < signatureAttacks.ciclopeLaser.range * .84 && Math.abs(dy) < 1.6) ||
+      (kings && Math.hypot(dx, dy) < signatureAttacks.kingsFinale.range * .86) ||
+      (duelist && Math.abs(dx) < 3.65 && dy < 1.08 && dy > -2.1) ||
+      (dragonball && Math.abs(dx) < signatureAttacks.dragonBallBacteria.range * .83 && Math.abs(dy) < 1.65);
     if ((active || (superInRange && !player.attack && !player.hitstun)) && canUseSuper(player, match)) return { x, y: 0, superPressed: true };
     if (olivar && !deployed && !close && Math.abs(dx) < 5.9 && Math.abs(dy) < 2.3 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
@@ -58,11 +68,16 @@ export function cpuInput(player, match, dt) {
       player.aiDelay = 1.05;
       return { x: 0, y: 0, specialPressed: true, special: true };
     }
-    const rangedCharge = ['vi', 'gioppino', 'huuuuu', 'shark-67', 'packman'].includes(player.fighter.id);
+    if (ciclope && !close && Math.abs(dx) < signatureAttacks.ciclopeLasso.range * .87 && Math.abs(dy) < .75 &&
+        player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
+      player.aiDelay = .85;
+      return { x, y: 0, lightPressed: true };
+    }
+    const rangedCharge = ['vi', 'gioppino', 'huuuuu', 'shark-67', 'packman', 'vidarr', 'funny-kings', 'nuvol'].includes(player.fighter.id);
     if (rangedCharge && !close && Math.abs(dx) < signatureAttacks[player.fighter.moves.hold].range * scaleOf(player) && Math.abs(dy) < 0.9 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
       player.aiDelay = 0.96;
-      return { x, y: 0, specialPressed: true, special: !shark || Math.abs(dx) > 4 };
+      return { x, y: 0, specialPressed: true, special: (!shark && !vidarr) || Math.abs(dx) > 4 };
     }
     if (inga && !close && Math.abs(dx) < signatureAttacks.ingaLance.range * .86 && Math.abs(dy) < .76 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
@@ -73,6 +88,11 @@ export function cpuInput(player, match, dt) {
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
       player.aiDelay = 1.03;
       return { x, y: 0, specialPressed: true, special: !borrowedPower(player, match) && Math.random() < .56 };
+    }
+    if (dragonball && !close && Math.abs(dx) < signatureAttacks.dragonBallNavelLaser.range * scaleOf(player) * .9 && Math.abs(dy) < .68 &&
+        player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
+      player.aiDelay = .91;
+      return { x, y: 0, specialPressed: true };
     }
     const eid = player.fighter.id === 'eid';
     if ((eid || player.fighter.id === 'gangar') && !close && Math.abs(dx) < 5 && Math.abs(dy) < 0.9 &&

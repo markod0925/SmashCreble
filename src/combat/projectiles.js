@@ -3,7 +3,6 @@ import { strike } from './hits.js';
 import { bodyCenter, combatants, scaleOf } from './state.js';
 import { isInvulnerable } from './status.js';
 import { projectileLaunchers } from '../fighters/index.js';
-import { advanceBriefcase } from '../fighters/shark-67/profile.js';
 import { direction } from '../math.js';
 
 export function fireProjectiles(player, attack, match) {
@@ -27,7 +26,7 @@ function detonateBomb(projectile, targets, match) {
     if (strike(owner, target, { ...hit, x: direction(dx, direction(vx)) }, match)) victims.add(target);
   }
   projectile.remaining = 0;
-  match.events.push({ type: 'explosion', x, y, color: '#ffad69', strength: blast });
+  match.events.push({ type: 'explosion', x, y, color: projectile.blastColor ?? '#ffad69', strength: blast });
 }
 
 export function advanceProjectiles(match, dt) {
@@ -35,13 +34,13 @@ export function advanceProjectiles(match, dt) {
   for (const projectile of match.projectiles) {
     projectile.remaining -= dt;
     const previousY = projectile.y;
-    const returning = projectile.kind === 'tetheredBriefcase';
-    if (returning) {
+    const tethered = Boolean(projectile.advance);
+    if (tethered) {
       if (projectile.remaining <= 0 || !projectile.owner.stocks || projectile.owner.respawn) {
         projectile.remaining = 0;
         continue;
       }
-      advanceBriefcase(projectile);
+      projectile.advance(projectile, dt);
     } else {
       projectile.x += projectile.vx * dt;
       projectile.vy -= (projectile.gravity ?? 0) * dt;
@@ -49,23 +48,32 @@ export function advanceProjectiles(match, dt) {
     }
     const lands = projectile.gravity && projectile.vy < 0 && arena.platforms.some(({ left, right, y }) =>
       projectile.x >= left && projectile.x <= right && previousY >= y && projectile.y <= y);
-    if (projectile.kind === 'bomb') {
+    if (projectile.blast) {
       if (lands || projectile.remaining <= 0 || targets.some((target) => target.stocks && !target.respawn && !isInvulnerable(target) && !target.dodge && projectileTouches(projectile, target))) {
         detonateBomb(projectile, targets, match);
       }
       continue;
     }
+    if (projectile.recalling) continue;
     for (const target of targets) {
       if (!projectileTouches(projectile, target)) continue;
       if (strike(projectile.owner, target, projectile.hit, match)) {
         projectile.victims?.add(target);
-        if (!returning) {
+        projectile.onImpact?.(projectile, match, target);
+        if (!tethered) {
           projectile.remaining = 0;
+          break;
+        }
+        if (projectile.recallOnHit) {
+          projectile.recalling = true;
           break;
         }
       }
     }
-    if (lands) projectile.remaining = 0;
+    if (lands) {
+      if (projectile.remaining > 0) projectile.onImpact?.(projectile, match);
+      projectile.remaining = 0;
+    }
   }
   match.projectiles = match.projectiles.filter(({ remaining }) => remaining > 0);
 }

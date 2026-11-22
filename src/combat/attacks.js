@@ -9,8 +9,10 @@ import { interruptAttack } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower, powerStealTravelTime, stolenPowerTime } from '../fighters/bomm/profile.js';
 import { assaultRemaining, deployCompanions } from '../fighters/olivar/companions.js';
+import { advanceThunder } from '../fighters/nuvol/thunder.js';
 import { advanceTrace, startTrace } from '../fighters/packman/trace.js';
 import { rainbowHeight } from '../fighters/vi/profile.js';
+import { advanceFrost } from '../fighters/vidarr/frost.js';
 import { clamp, direction } from '../math.js';
 
 const chargeTime = 0.72;
@@ -113,6 +115,14 @@ export function advanceAttack(player, dt, match) {
     advanceTrace(player, attack, match, dt);
     return;
   }
+  if (attack.freezesRivals) {
+    advanceFrost(player, attack, match);
+    return;
+  }
+  if (attack.summonsThunder) {
+    advanceThunder(player, attack, match);
+    return;
+  }
   if (attack.followUp && attack.age >= attack.followUp.from) {
     Object.assign(attack, scaleAttack({ followUp: null, ...attack.followUp, fired: false }, attack.scale));
     attack.victims.clear();
@@ -131,6 +141,10 @@ export function advanceAttack(player, dt, match) {
     if (attack.stealsPower) stealPower(player, attack, match);
     if (attack.type === 'bommBurst') player.bommBurstAt = match.time;
     if (attack.lunge) player.vx = attack.capture ? 0 : attack.lunge * attack.facing;
+    if (attack.diveSpeed) {
+      player.grounded = null;
+      player.vy = Math.min(player.vy, -attack.diveSpeed);
+    }
     if (attack.travel) {
       match.events.push({ type: 'blink', x: player.x, y: player.y + 1.2, color: player.fighter.color });
       player.x += attack.travel * attack.facing;

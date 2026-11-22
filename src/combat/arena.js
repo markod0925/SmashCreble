@@ -14,6 +14,6 @@ export const rules = { stocks: 3, duration: 180, gravity: 31, step: 1 / 120 };
 export function leavePlatform(player) {
   if (player.grounded && (player.x < player.grounded.left || player.x > player.grounded.right)) {
     player.grounded = null;
-    player.jumps = Math.min(player.jumps, 1);
+    player.jumps = Math.min(player.jumps, player.fighter.airJumps ?? 1);
   }
 }

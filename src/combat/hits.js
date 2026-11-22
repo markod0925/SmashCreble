@@ -1,10 +1,13 @@
 import { vanishClone } from './clones.js';
-import { boundTime, captureProgress, capturingAttack, interruptAttack, isInvulnerable } from './status.js';
+import { boundTime, captureProgress, capturingAttack, freezeFighter, frozenTime, interruptAttack, isInvulnerable } from './status.js';
 import { clamp } from '../math.js';
 
 export function strike(attacker, victim, hit, match) {
   if (attacker.slot === victim.slot || isInvulnerable(victim) || victim.dodge || victim.respawn || !victim.stocks) return false;
   if (victim.owner) {
+    if (hit.shockDuration) {
+      match.events.push({ type: 'shockEcho', x: victim.x, y: victim.y, depth: victim.depth, facing: victim.facing, fighter: victim.fighter });
+    }
     vanishClone(victim, match);
     return true;
   }
@@ -34,14 +37,21 @@ export function strike(attacker, victim, hit, match) {
     victim.poison.until = match.time - hit.poisonDuration;
     match.events.push({ type: 'poison', x: victim.x, y: victim.y + 1.15, color: '#91ed6e' });
   }
+  if (hit.shockDuration) {
+    victim.shockedUntil = match.time - hit.shockDuration;
+  }
   const launch = (force + victim.damage * 0.145) * attacker.fighter.power / victim.fighter.weight;
   if (hit.bindDuration) {
     if (!boundTime(victim, match)) {
       victim.boundUntil = match.time - hit.bindDuration;
-      match.events.push({ type: 'bandageBind', x: victim.x, y: victim.y + 1.4, color: '#dcf8ff' });
+      victim.boundStyle = hit.bindStyle ?? null;
+      const serpents = hit.bindStyle === 'serpents';
+      match.events.push({ type: serpents ? 'serpentBind' : 'bandageBind', x: victim.x, y: victim.y + 1.4, color: serpents ? '#a9f2a1' : '#dcf8ff' });
     }
     victim.vx = 0;
     victim.vy = Math.min(0, victim.vy);
+  } else if (hit.freezeDuration) {
+    if (!frozenTime(victim, match)) freezeFighter(victim, match, hit.freezeDuration);
   } else if (hit.stagger) {
     victim.stagger = Math.max(victim.stagger, hit.stagger);
   } else if (!hit.stationary) {

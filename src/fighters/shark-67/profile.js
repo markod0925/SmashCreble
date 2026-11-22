@@ -30,12 +30,12 @@ function launchBriefcase(owner, attack, match) {
   if (match.projectiles.some((projectile) => projectile.owner === owner && projectile.kind === kind)) return;
   const [x, y] = briefcaseGrip(owner, facing);
   match.projectiles.push({
-    kind, owner, facing, range, victims, x, y, remaining: briefcaseFlight,
+    kind, owner, facing, range, victims, x, y, remaining: briefcaseFlight, advance: advanceBriefcase,
     hit: { damage: 11, force: 8.2, x: facing, y: .46, lift: 2.5 },
   });
 }
 
-export function advanceBriefcase(briefcase) {
+function advanceBriefcase(briefcase) {
   const { owner, facing, range, remaining } = briefcase;
   const [gripX, gripY] = briefcaseGrip(owner, facing);
   const reach = Math.sin(Math.PI * Math.max(0, remaining) / briefcaseFlight);

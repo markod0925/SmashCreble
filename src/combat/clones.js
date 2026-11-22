@@ -44,7 +44,7 @@ export function summonClones(player, match, limit) {
   for (let i = 0; i < missing; i++) {
     const x = center + offsets[i] * fit;
     const clone = {
-      ...spawn(player.slot, true), slot: player.slot, fighter, owner: player, stocks: 1, cpu: true,
+      ...spawn(player.slot, true, fighter), slot: player.slot, fighter, owner: player, stocks: 1, cpu: true,
       x, y, facing: player.facing, grounded: platform, vy: platform ? 0 : Math.max(0, player.vy * .55), aiDelay: .08 + i * .12,
       depth: offsets[i] === 0 ? .95 : i % 2 ? .46 : -.18,
     };

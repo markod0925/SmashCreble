@@ -16,8 +16,14 @@ import * as ingaInga from './inga-inga/profile.js';
 import * as bid from './bid/profile.js';
 import * as olivar from './olivar/profile.js';
 import * as packman from './packman/profile.js';
+import * as ciclope from './ciclope/profile.js';
+import * as vidarr from './vidarr/profile.js';
+import * as funnyKings from './funny-kings/profile.js';
+import * as nuvol from './nuvol/profile.js';
+import * as ii from './ii/profile.js';
+import * as dragonball from './dragonball/profile.js';
 
-const roster = [rivet, bramble, vesper, kiln, dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, shark67, ingaInga, bid, olivar, packman];
+const roster = [rivet, bramble, vesper, kiln, dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, shark67, ingaInga, bid, olivar, packman, ciclope, vidarr, funnyKings, nuvol, ii, dragonball];
 
 export const fighters = roster.map(({ fighter }) => fighter);
 export const signatureAttacks = Object.assign({}, ...roster.map(({ attacks }) => attacks));

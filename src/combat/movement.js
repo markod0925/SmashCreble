@@ -1,6 +1,6 @@
 import { arena, leavePlatform, rules } from './arena.js';
 import { handleAttackInput } from './attacks.js';
-import { boundTime, capturingAttack, isZombie } from './status.js';
+import { boundTime, capturingAttack, frozenTime, isZombie } from './status.js';
 import { bommBurstAge, bommBurstRecovery } from '../fighters/bomm/profile.js';
 import { approach, clamp, direction } from '../math.js';
 
@@ -11,6 +11,11 @@ export function move(player, input, dt, match) {
   player.dodge = Math.max(0, player.dodge - dt);
   player.landing = Math.max(0, player.landing - dt);
   player.stagger = Math.max(0, player.stagger - dt);
+  if (frozenTime(player, match)) {
+    player.vx = 0;
+    player.vy = 0;
+    return;
+  }
   if (player.attack?.trace67 || capturingAttack(player, match)) return;
   const bound = boundTime(player, match) > 0;
   const free = !player.hitstun && !player.dodge && !bound;
@@ -31,7 +36,7 @@ export function move(player, input, dt, match) {
           player.y -= 0.08;
           player.vy = -2;
         } else {
-          player.jumps -= 1;
+          if (!player.grounded || player.fighter.airJumps === undefined) player.jumps -= 1;
           player.vy = player.fighter.jump * (player.grounded ? 1 : 0.88);
           match.events.push({ type: 'jump', x: player.x, y: player.y + 0.06, color: player.fighter.color });
         }
@@ -70,7 +75,7 @@ export function move(player, input, dt, match) {
     player.y = surface.y;
     player.vy = 0;
     player.grounded = surface;
-    player.jumps = 2;
+    player.jumps = player.fighter.airJumps ?? 2;
     player.recovered = false;
   }
 }

@@ -1,4 +1,5 @@
 import { clamp } from '../math.js';
+import { bodyCenter } from './state.js';
 
 export function isInvulnerable(player) {
   return Boolean(player.invulnerable || player.attack?.untouchable);
@@ -9,7 +10,29 @@ export function isZombie(player, match) {
 }
 
 export function boundTime(player, match) {
-  return player.boundUntil == null ? 0 : Math.max(0, match.time - player.boundUntil - 1e-9);
+  return statusTime(player.boundUntil, match);
+}
+
+export function frozenTime(player, match) {
+  return statusTime(player.frozenUntil, match);
+}
+
+export function shockedTime(player, match) {
+  return statusTime(player.shockedUntil, match);
+}
+
+function statusTime(until, match) {
+  return until == null ? 0 : Math.max(0, match.time - until - 1e-9);
+}
+
+export function freezeFighter(player, match, duration) {
+  player.frozenUntil = Math.min(player.frozenUntil ?? match.time, match.time - duration);
+  interruptAttack(player);
+  player.guarding = false;
+  player.dodge = 0;
+  player.vx = 0;
+  player.vy = 0;
+  match.events.push({ type: 'frost', x: player.x, y: player.y + bodyCenter(player), color: '#a8efff' });
 }
 
 export function advancePoison(player, match) {

@@ -1,16 +1,18 @@
 import { arena, rules } from '../combat/arena.js';
 import { combatants } from '../combat/state.js';
-import { boundTime, captureProgress, capturingAttack, isZombie } from '../combat/status.js';
+import { boundTime, captureProgress, capturingAttack, frozenTime, isZombie, shockedTime } from '../combat/status.js';
 import { bommBurstScale } from '../fighters/bomm/model.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { drawBoundWrap, drawSarcophagus } from '../fighters/huuuuu/model.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { drawDanceSnake } from '../fighters/shark-67/model.js';
+import { drawIce, drawSerpentBind } from '../fighters/vidarr/model.js';
 import { playerColors } from '../player-colors.js';
 import { drawHero, drawPlatform, drawScenery } from './arena.js';
 import { drawCharacter, drawProjectiles, portraitCamera } from './characters.js';
 import { BattleEffects } from './effects.js';
 import { TAU, zero } from './math.js';
+import { drawShockSkeleton } from './skeleton.js';
 import { WebGLRenderer } from './webgl.js';
 
 export class Graphics {
@@ -80,26 +82,35 @@ export class Graphics {
       const zombie = isZombie(fighter, match);
       const power = borrowedPower(fighter, match);
       const fuseColor = power && (match.time - power.arrivesAt > 1e-9 ? power.previousColor : power.color);
+      const frozen = frozenTime(fighter, match);
       const danceBeat = dance ? dance.elapsed * TAU * 2 + fighter.slot * .7 : 0;
-      const sway = dance ? Math.sin(danceBeat) : 0;
-      const bounce = dance ? Math.abs(Math.cos(danceBeat)) * .18 : 0;
-      drawCharacter(renderer, model, [fighter.x + sway * .15, fighter.y + bounce, depth], dance ? danceBeat / 14 : time, {
+      const dancing = dance && !frozen;
+      const sway = dancing ? Math.sin(danceBeat) : 0;
+      const bounce = dancing ? Math.abs(Math.cos(danceBeat)) * .18 : 0;
+      const poseTime = frozen ? time + frozen : dancing ? danceBeat / 14 : time;
+      const shock = shockedTime(fighter, match);
+      if (shock > 0) drawShockSkeleton(renderer, model, [fighter.x, fighter.y, depth], fighter.facing, shock);
+      else drawCharacter(renderer, model, [fighter.x + sway * .15, fighter.y + bounce, depth], poseTime, {
         heading: fighter.facing * (dance ? .51 : .93) + sway * .31, facing: fighter.facing,
-        running: dance ? .65 : fighter.grounded ? Math.min(1, Math.abs(fighter.vx) / 7) : 0,
+        running: dancing ? .65 : fighter.grounded ? Math.min(1, Math.abs(fighter.vx) / 7) : 0,
         airborne: !dance && !fighter.grounded, verticalSpeed: fighter.vy, landing: fighter.landing, attack: fighter.attack, charging: fighter.charging,
         guarding: fighter.guarding, flash: fighter.invulnerable && Math.sin(time * 55) > .15,
-        wobble: dance ? sway * .24 : fighter.stagger ? Math.sin(time * 18) * .18 : capture ? Math.sin(time * 12) * .14 : zombie ? Math.sin(time * 12) * .16 : 0,
+        wobble: frozen ? 0 : dance ? sway * .24 : fighter.stagger ? Math.sin(time * 18) * .18 : capture ? Math.sin(time * 12) * .14 : zombie ? Math.sin(time * 12) * .16 : 0,
         zombie,
         fuseColor,
         caseAway: caseOwners.has(fighter),
         danceTime: dance?.elapsed ?? null,
         leadsDance: dance?.owner === fighter,
-        companionClock: rules.duration - match.time - match.countdown,
+        companionClock: rules.duration - match.time - match.countdown + frozen,
         companionAssault: fighter.companionAssault,
         companionRemaining: assaultRemaining(fighter, match),
       });
       const bound = boundTime(fighter, match);
-      if (bound > 0) drawBoundWrap(renderer, [fighter.x, fighter.y, depth], fighter.fighter, size, bound);
+      if (bound > 0) {
+        if (fighter.boundStyle === 'serpents') drawSerpentBind(renderer, [fighter.x, fighter.y, depth], size, poseTime);
+        else drawBoundWrap(renderer, [fighter.x, fighter.y, depth], fighter.fighter, size, bound);
+      }
+      if (frozen) drawIce(renderer, [fighter.x, fighter.y, depth], size, frozen);
       if (fighter.poison) {
         for (let i = 0; i < 3; i++) {
           const phase = ((dance?.elapsed ?? time) * 1.35 + i / 3) % 1;
