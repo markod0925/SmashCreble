@@ -3,6 +3,7 @@ export const fighter = {
   description: 'A blue unicorn with a pink mane, dark hooves, and a talent for making copies of herself.',
   special: 'Hoof Kick', specialDescription: 'Tap B or L to strike with a hoof. Hold it to cast a rainbow.',
   speed: 8.2, jump: 13.4, weight: 1, power: 1, size: 1,
+  bodyHalfWidth: .9,
   moves: { light: 'viHorn', tap: 'viHoof', hold: 'viRainbow', super: 'viClones' },
 };
 

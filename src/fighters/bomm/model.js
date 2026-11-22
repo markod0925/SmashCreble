@@ -2,7 +2,7 @@ import { multiply, one, smoothStep, TAU, transform, zero } from '../../render/ma
 import { part } from '../../render/parts.js';
 import { drawFlyingKickTrail } from '../bid/model.js';
 import { drawClubImpact } from '../ciclope/model.js';
-import { bommBurstAge, bommBurstRecovery } from './profile.js';
+import { bommBurstScale } from './profile.js';
 import { flameEffect } from '../dragon-boy/model.js';
 import { drawNavelBeam } from '../dragonball/model.js';
 import { biteEffect } from '../gangar/model.js';
@@ -137,18 +137,6 @@ export function draw(renderer, fighter, position, time, options) {
         [.6, .21, .23], color, [0, 0, angle], .91, .65);
     }
   }
-}
-
-export function bommBurstScale(player, match) {
-  const age = bommBurstAge(player, match);
-  if (age <= 0) return 1;
-  const { peakAt, smallAt, duration, returnTime } = bommBurstRecovery;
-  const large = 1.48;
-  const small = .65;
-  if (age < peakAt) return 1 + (large - 1) * smoothStep(age / peakAt);
-  if (age < smallAt) return large + (small - large) * smoothStep((age - peakAt) / (smallAt - peakAt));
-  const recovery = Math.max(0, Math.min(1, (age - smallAt - duration) / returnTime));
-  return small + (1 - small) * smoothStep(recovery);
 }
 
 export function powerStealCloud(renderer, effect, match, time) {

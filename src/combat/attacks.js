@@ -4,7 +4,7 @@ import { canSummonClones, canUseSuper, summonClones } from './clones.js';
 import { startDance } from './dance.js';
 import { strike } from './hits.js';
 import { fireProjectiles } from './projectiles.js';
-import { bodyCenter, combatants, scaleOf } from './state.js';
+import { bodyCenter, bodyContactDistance, combatants, scaleOf } from './state.js';
 import { interruptAttack } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower, powerStealTravelTime, stolenPowerTime } from '../fighters/bomm/profile.js';
@@ -169,7 +169,9 @@ export function advanceAttack(player, dt, match) {
   for (const target of combatants(match)) {
     if (target.slot === player.slot || attack.victims.has(target)) continue;
     const dx = target.x - player.x;
-    if (Math.abs(dx) > attack.range || (!attack.all && dx * attack.facing < -0.23 * attack.scale)) continue;
+    // Short strikes can still connect at body contact, including against wider fighters.
+    if (Math.abs(dx) > attack.range && Math.abs(dx) > bodyContactDistance(player, target, match) + 1e-9) continue;
+    if (!attack.all && dx * attack.facing < -0.23 * attack.scale) continue;
     const height = target.y + bodyCenter(target) - player.y;
     if (attack.arcStart) {
       const progress = clamp((dx * attack.facing - attack.arcStart) / (attack.range - attack.arcStart), 0, 1);

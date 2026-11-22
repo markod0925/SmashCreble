@@ -1,5 +1,5 @@
 import { canSummonClones, canUseSuper } from './clones.js';
-import { combatants, idleInput, scaleOf } from './state.js';
+import { bodyContactDistance, combatants, idleInput, scaleOf } from './state.js';
 import { boundTime, frozenTime } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
@@ -25,7 +25,8 @@ export function cpuInput(player, match, dt) {
   if (!target) return idleInput;
   const dx = target.x - player.x;
   const dy = target.y - player.y;
-  const close = Math.abs(dx) < (player.owner ? 1.06 : 1.65) && Math.abs(dy) < 1.25;
+  const close = Math.abs(dy) < 1.25 && (Math.abs(dx) < (player.owner ? 1.06 : 1.65) ||
+    Math.abs(dx) <= bodyContactDistance(player, target, match) + 1e-9);
   const x = Math.abs(dx) > 0.75 * scaleOf(player) ? direction(dx) : direction(dx) * 0.35;
   const jumpPressed = dy > 1.5 && player.aiJump <= 0 && (player.grounded || (player.jumps && player.vy < 3));
   if (jumpPressed) player.aiJump = 0.64;

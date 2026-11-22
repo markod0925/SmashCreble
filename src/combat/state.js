@@ -1,9 +1,16 @@
 import { arena, rules } from './arena.js';
+import { bommBurstScale } from '../fighters/bomm/profile.js';
 
 const spawns = [-6, 6, -1.8, 1.8];
 export const cloneScale = 0.5;
 export const scaleOf = (player) => player.owner ? cloneScale : 1;
 export const bodyCenter = (player) => 1.05 * scaleOf(player);
+export const bodySize = (player, match) => player.fighter.size * bommBurstScale(player, match);
+export const bodyHalfWidth = (player, size) => (player.fighter.bodyHalfWidth ?? .55) * size;
+
+export function bodyContactDistance(a, b, match) {
+  return bodyHalfWidth(a, bodySize(a, match)) + bodyHalfWidth(b, bodySize(b, match));
+}
 
 export function spawn(slot, initial, fighter) {
   return {

@@ -1,5 +1,6 @@
+export { smoothStep } from '../math.js';
+
 export const TAU = Math.PI * 2;
-export const smoothStep = (t) => t * t * (3 - 2 * t);
 export const sub = (a, b) => a.map((value, i) => value - b[i]);
 const dot = (a, b) => a.reduce((sum, value, i) => sum + value * b[i], 0);
 export const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];

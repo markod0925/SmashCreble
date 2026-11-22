@@ -5,6 +5,7 @@ export const fighter = {
   description: 'A hovering amber crusher with a faceted shell and a broad jaw full of blue fangs.',
   special: 'Gas Cloud', specialDescription: 'Tap B or L for a gas cloud. Hold it to fire blue lasers from both eyes.',
   speed: 7.5, jump: 13, weight: 1.07, power: 1.07, size: 1.06,
+  bodyHalfWidth: .9,
   moves: { light: 'packmanBite', tap: 'packmanGas', hold: 'packmanLaser', super: 'packmanTrace' },
 };
 

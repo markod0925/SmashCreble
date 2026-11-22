@@ -1,7 +1,7 @@
 import { arena, rules } from '../combat/arena.js';
 import { combatants } from '../combat/state.js';
 import { boundTime, captureProgress, capturingAttack, frozenTime, isZombie, shockedTime } from '../combat/status.js';
-import { bommBurstScale } from '../fighters/bomm/model.js';
+import { bommBurstScale } from '../fighters/bomm/profile.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { drawBoundWrap, drawSarcophagus } from '../fighters/huuuuu/model.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';

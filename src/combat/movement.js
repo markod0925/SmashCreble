@@ -65,7 +65,12 @@ export function move(player, input, dt, match) {
   if (player.grounded) return;
   player.vy = Math.max(-25, player.vy - dt * rules.gravity);
   player.y += player.vy * dt;
-  if (player.vy > 0 || player.drop) return;
+  landOnPlatform(player, oldY);
+  return oldY;
+}
+
+export function landOnPlatform(player, oldY) {
+  if (player.grounded || player.vy > 0 || player.drop) return;
   let surface = null;
   for (const platform of arena.platforms) {
     if (player.x >= platform.left && player.x <= platform.right && oldY >= platform.y && player.y <= platform.y && (!surface || platform.y > surface.y)) surface = platform;

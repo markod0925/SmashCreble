@@ -1,8 +1,11 @@
+import { clamp, smoothStep } from '../../math.js';
+
 export const fighter = {
   id: 'bomm', name: 'Bomm', role: 'Walking bomb', color: '#ffc174',
   description: 'A round, cheerful bomb with a sparking fuse and two quick feet.',
   special: 'Quick Bomb', specialDescription: 'Tap B or L to lob a bomb. Hold it to borrow a rival’s secondary attack for ten seconds.',
   speed: 7.1, jump: 12.9, weight: 1.14, power: 1.08, size: 1.08,
+  bodyHalfWidth: .92,
   moves: { light: 'bommHeadbutts', tap: 'bommQuickBomb', hold: 'bommSteal', super: 'bommBurst' },
 };
 
@@ -38,4 +41,16 @@ export function borrowedPower(player, match) {
 
 export function bommBurstAge(player, match) {
   return player.bommBurstAt == null ? -Infinity : player.bommBurstAt - match.time;
+}
+
+export function bommBurstScale(player, match) {
+  const age = bommBurstAge(player, match);
+  if (age <= 0) return 1;
+  const { peakAt, smallAt, duration, returnTime } = bommBurstRecovery;
+  const large = 1.48;
+  const small = .65;
+  if (age < peakAt) return 1 + (large - 1) * smoothStep(age / peakAt);
+  if (age < smallAt) return large + (small - large) * smoothStep((age - peakAt) / (smallAt - peakAt));
+  const recovery = clamp((age - smallAt - duration) / returnTime, 0, 1);
+  return small + (1 - small) * smoothStep(recovery);
 }

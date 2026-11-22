@@ -1,5 +1,6 @@
 import { arena, rules } from './arena.js';
 import { advanceAttack } from './attacks.js';
+import { separateBodies } from './bodies.js';
 import { vanishClone } from './clones.js';
 import { cpuInput } from './cpu.js';
 import { advanceDance } from './dance.js';
@@ -50,6 +51,7 @@ export function tickMatch(match, controls, dt = rules.step) {
   }
 
   const actors = combatants(match);
+  const movement = new Map();
   for (const player of actors) {
     if (!player.stocks || player.owner?.stocks === 0) continue;
     if (player.respawn > 0) {
@@ -57,7 +59,12 @@ export function tickMatch(match, controls, dt = rules.step) {
       if (player.respawn <= 0) Object.assign(player, spawn(player.slot, false, player.fighter));
       continue;
     }
-    move(player, player.cpu ? cpuInput(player, match, dt) : controls.get(player.slot) ?? idleInput, dt, match);
+    const x = player.x;
+    const landingFrom = move(player, player.cpu ? cpuInput(player, match, dt) : controls.get(player.slot) ?? idleInput, dt, match);
+    movement.set(player, { x, landingFrom });
+  }
+  separateBodies(actors, match, movement);
+  for (const player of movement.keys()) {
     const { side, top, bottom } = arena.bounds;
     if (Math.abs(player.x) > side || player.y > top || player.y < bottom) {
       if (player.owner) {
@@ -78,8 +85,10 @@ export function tickMatch(match, controls, dt = rules.step) {
   }
   for (const player of actors) {
     if (player.stocks && !player.respawn) advanceAttack(player, dt, match);
-    if (match.dance) return;
+    if (match.dance) break;
   }
+  separateBodies(combatants(match), match);
+  if (match.dance) return;
   for (const player of match.fighters) advanceCompanions(player, match, dt);
   advanceProjectiles(match, dt);
   match.clones = match.clones.filter(({ stocks }) => stocks > 0);
