@@ -86,7 +86,8 @@ void initVideo() {
         DCFlushRange(const_cast<unsigned char*>(visual.portrait.commands), visual.portrait.bytes);
     }
 
-    guVector eye{0, 9, 36}, up{0, 1, 0}, target{0, 2.4f, 0};
+    guVector eye{web::cameraEye[0], web::cameraEye[1], web::cameraEye[2]}, up{0, 1, 0};
+    guVector target{web::cameraTarget[0], web::cameraTarget[1], web::cameraTarget[2]};
     guLookAt(camera, &eye, &up, &target);
     const float aspect = CONF_GetAspectRatio() == CONF_ASPECT_16_9 ? 16.0f / 9 : 4.0f / 3;
     guPerspective(perspective, 40, aspect, 1, 100);

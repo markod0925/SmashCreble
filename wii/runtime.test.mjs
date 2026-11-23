@@ -3,8 +3,40 @@ import { test } from 'node:test';
 import { rules } from '../src/combat/arena.js';
 import { fighters, signatureAttacks } from '../src/fighters/index.js';
 import { Graphics } from '../src/render/scene.js';
+import { drawCharacter } from '../src/render/characters.js';
 import { shapes } from '../src/render/geometry.js';
+import { multiply, transform } from '../src/render/math.js';
+import { modelShape } from './model-detail.mjs';
 import './runtime.mjs';
+
+test('Wii battle models use at most a tenth of the source triangles in movement poses', () => {
+  const poses = [
+    [0, {}],
+    [.1, { running: 1 }],
+    [.2, { airborne: true, verticalSpeed: -3 }],
+  ];
+  for (const fighter of fighters) {
+    for (const facing of [-1, 1]) {
+      for (const [time, pose] of poses) {
+        let full = 0, reduced = 0;
+        const count = (shape, matrix) => {
+          full += shapes[shape].length / 18;
+          reduced += modelShape(shape, matrix).length / 18;
+        };
+        const renderer = {
+          mesh: count,
+          object: (shape, position, scale, _color, rotation = [0, 0, 0]) =>
+            count(shape, transform(position, scale, rotation)),
+          parts: (parts, root) => {
+            for (const part of parts) count(part.shape, multiply(root, part.matrix));
+          },
+        };
+        drawCharacter(renderer, fighter, [0, 0, 0], time, { heading: facing * .93, facing, ...pose });
+        assert.ok(reduced > 0 && reduced * 10 <= full, `${fighter.name}: ${full} to ${reduced} triangles`);
+      }
+    }
+  }
+});
 
 test('Wii controls activate and render the Web roster moves', () => {
   const draw = Graphics.prototype.battle;

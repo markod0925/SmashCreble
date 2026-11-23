@@ -13,6 +13,7 @@ const shapeIndices = new Map(Object.keys(shapes).map((shape, index) => [shape, i
 const renderer = {
   clones: new Set(),
   zombie: 0,
+  lowDetail: false,
   measure: () => [640, 480],
   begin() {},
   project: (x, y, z) => [x, y, z],
@@ -25,9 +26,9 @@ const renderer = {
     globalThis.wiiDrawClone(pose, ...position);
     return true;
   },
-  mesh(shape, matrix, color, glow = 0, alpha = 1) {
+  mesh(shape, matrix, color, glow = 0, alpha = 1, lowDetail = this.lowDetail) {
     modelMatrix.set(matrix);
-    globalThis.wiiMesh(shapeIndices.get(shape) ?? -1, parseInt(color.slice(1), 16), glow, alpha, this.zombie);
+    globalThis.wiiMesh(shapeIndices.get(shape) ?? -1, parseInt(color.slice(1), 16), glow, alpha, this.zombie, Number(lowDetail));
   },
   object(shape, position, scale, color, angles = [0, 0, 0], glow = 0, alpha = 1) {
     this.mesh(shape, transform(position, scale, angles), color, glow, alpha);

@@ -10,6 +10,7 @@ import { drawCharacter } from '../src/render/characters.js';
 import { shapes } from '../src/render/geometry.js';
 import { multiply, transform } from '../src/render/math.js';
 import { clonePoses, cloneRoster } from './clone-poses.mjs';
+import { cameraEye, cameraTarget, modelDetail, modelShape } from './model-detail.mjs';
 
 function number(value) {
   if (!Number.isFinite(value)) throw new Error(`Invalid Wii export number: ${value}`);
@@ -22,13 +23,13 @@ const color = (hex) => {
   return `0x${hex.slice(1)}ffu`;
 };
 
-function capture(drawScene, project, include = () => true) {
+function capture(drawScene, project, include = () => true, lowDetail = false) {
   const vertices = [];
   const renderer = {
     mesh(shape, matrix, hex, glow = 0, alpha = 1) {
       if (!include(alpha)) return;
       const rgb = [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
-      const mesh = shapes[shape];
+      const mesh = lowDetail ? modelShape(shape, matrix) : shapes[shape];
       if (!mesh || mesh.length % 18) throw new Error(`Invalid Wii mesh: ${shape}`);
       for (let vertex = 0; vertex < mesh.length; vertex += 6) {
         const [x, y, z, nx, ny, nz] = mesh.slice(vertex, vertex + 6);
@@ -118,7 +119,9 @@ async function collectModules(name, modules = new Map()) {
 }
 
 function indexGeometry() {
-  const geometry = Object.entries(shapes).map(([name, values]) => {
+  const variants = Object.entries(modelDetail).flatMap(([name, views]) =>
+    views.map((view, i) => [`lod_${name}_${i}`, view]));
+  const geometry = [...Object.entries(shapes), ...variants].map(([name, values]) => {
     const positions = new Map();
     const normals = new Map();
     const triangles = [];
@@ -191,6 +194,9 @@ export async function exportWeb(output) {
   const tables = `// Generated from the Web game. Do not edit.
 namespace web {
 constexpr float step = ${number(rules.step)};
+constexpr float cameraEye[] = {${values(cameraEye)}};
+constexpr float cameraTarget[] = {${values(cameraTarget)}};
+constexpr size_t shapeCount = ${Object.keys(shapes).length};
 constexpr FighterSpec roster[] = {
 ${fighters.map((entry) => {
     const name = entry.name.normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase().replace(/[^A-Z0-9 .!&'-]/g, ' ');
@@ -221,7 +227,8 @@ constexpr uint32_t playerColors[] = {${playerColors.map(color).join(', ')}};
       for (const { name: pose, time, options } of clonePoses) {
         const name = `clone_${fighter.id.replaceAll('-', '_')}_${direction}_${pose}`;
         meshes.push([name, capture((renderer) =>
-          drawCharacter(renderer, model, [0, 0, 0], time, { facing, heading: facing * .93, ...options }))]);
+          drawCharacter(renderer, model, [0, 0, 0], time, { facing, heading: facing * .93, ...options }),
+        null, undefined, true)]);
         poseAssets.push(name);
       }
     }

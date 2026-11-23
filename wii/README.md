@@ -2,7 +2,9 @@
 
 This native Homebrew Channel build supports one to four local players in Cloudbreak Foundry. The Wii release uses the Web roster, fighter models, combat rules, moves, and battle effects. The browser game remains the authoring project.
 
-The Wii renderer draws Cloudbreak Foundry from prebuilt display lists and keeps its background clouds still. Clones use prebuilt idle, running, and airborne poses during ordinary movement. Their attacks and status effects use the shared battle renderer. The Wii build uses the Web geometry and clone behavior.
+The Wii renderer draws Cloudbreak Foundry from prebuilt display lists and keeps its background clouds still. Clones use prebuilt idle, running, and airborne poses during ordinary movement. Their attacks and status effects use the shared battle renderer. The Wii build uses the Web combat rules and clone behavior.
+
+During a match the Wii renderer uses low-polygon surfaces derived from the Web fighter meshes. The exporter creates six views of each primitive. The renderer selects a view for each animated part using the fixed arena camera. Roster portraits, the arena, and effects drawn outside fighter models use the original geometry.
 
 ## Build a release
 

@@ -184,15 +184,34 @@ struct Fight::Engine {
 
     static JSValue mesh(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
         auto& engine = *static_cast<Engine*>(JS_GetContextOpaque(ctx));
-        if (argc != 5) return JS_ThrowTypeError(ctx, "Expected Wii mesh parameters");
+        if (argc != 6) return JS_ThrowTypeError(ctx, "Expected Wii mesh parameters");
         uint32_t shapeIndex, rgb;
         double glow, alpha, zombie;
         if (JS_ToUint32(ctx, &shapeIndex, argv[0]) || JS_ToUint32(ctx, &rgb, argv[1]) ||
             JS_ToFloat64(ctx, &glow, argv[2]) || JS_ToFloat64(ctx, &alpha, argv[3]) ||
             JS_ToFloat64(ctx, &zombie, argv[4])) return JS_EXCEPTION;
-        if (shapeIndex >= engine.geometryCount) return JS_ThrowReferenceError(ctx, "Unknown Wii mesh");
-        const auto* shape = engine.geometry + shapeIndex;
         const auto& matrix = engine.matrix;
+        if (shapeIndex >= web::shapeCount) return JS_ThrowReferenceError(ctx, "Unknown Wii mesh");
+        if (JS_ToBool(ctx, argv[5])) {
+            float best = -1;
+            unsigned view = 0;
+            for (unsigned axis = 0; axis < 3; ++axis) {
+                const float* column = matrix.data() + axis * 4;
+                float dot = 0, magnitude = 0;
+                for (unsigned i = 0; i < 3; ++i) {
+                    dot += column[i] * (web::cameraEye[i] - web::cameraTarget[i]);
+                    magnitude += column[i] * column[i];
+                }
+                const float score = magnitude > 0 ? dot * dot / magnitude : -1;
+                if (score > best) {
+                    best = score;
+                    view = axis * 2 + unsigned(dot >= 0);
+                }
+            }
+            shapeIndex = web::shapeCount + shapeIndex * 6 + view;
+        }
+        if (shapeIndex >= engine.geometryCount) return JS_ThrowReferenceError(ctx, "Missing Wii mesh view");
+        const auto* shape = engine.geometry + shapeIndex;
         const unsigned opacity = unsigned(std::clamp(alpha, 0.0, 1.0) * 255 + .5);
         if (!opacity) return JS_UNDEFINED;
         const bool opaque = alpha >= 1;
@@ -278,7 +297,7 @@ struct Fight::Engine {
         JS_SetContextOpaque(context, this);
         JS_SetModuleLoaderFunc(runtime, nullptr, load, this);
         JSValue global = JS_GetGlobalObject(context);
-        JS_SetPropertyStr(context, global, "wiiMesh", JS_NewCFunction(context, mesh, "wiiMesh", 5));
+        JS_SetPropertyStr(context, global, "wiiMesh", JS_NewCFunction(context, mesh, "wiiMesh", 6));
         JS_SetPropertyStr(context, global, "wiiDrawClone", JS_NewCFunction(context, drawClone, "wiiDrawClone", 4));
         JS_SetPropertyStr(context, global, "wiiMultiply", JS_NewCFunction(context, multiply, "wiiMultiply", 2));
         JS_SetPropertyStr(context, global, "wiiTransform", JS_NewCFunction(context, transform, "wiiTransform", 9));
