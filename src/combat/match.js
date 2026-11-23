@@ -1,4 +1,4 @@
-import { arena, rules } from './arena.js';
+import { advanceArena, carryRider, rules } from './arena.js';
 import { advanceAttack } from './attacks.js';
 import { separateBodies } from './bodies.js';
 import { vanishClone } from './clones.js';
@@ -50,13 +50,19 @@ export function tickMatch(match, controls, dt = rules.step) {
     return;
   }
 
+  const { arena } = match;
+  const { side, top, bottom } = arena.definition.bounds;
   const actors = combatants(match);
+  advanceArena(arena, dt);
+  for (const player of actors) {
+    if (player.stocks && !player.respawn && player.owner?.stocks !== 0) carryRider(player);
+  }
   const movement = new Map();
   for (const player of actors) {
     if (!player.stocks || player.owner?.stocks === 0) continue;
     if (player.respawn > 0) {
       player.respawn -= dt;
-      if (player.respawn <= 0) Object.assign(player, spawn(player.slot, false, player.fighter));
+      if (player.respawn <= 0) Object.assign(player, spawn(player.slot, false, player.fighter, arena));
       continue;
     }
     const x = player.x;
@@ -65,7 +71,6 @@ export function tickMatch(match, controls, dt = rules.step) {
   }
   separateBodies(actors, match, movement);
   for (const player of movement.keys()) {
-    const { side, top, bottom } = arena.bounds;
     if (Math.abs(player.x) > side || player.y > top || player.y < bottom) {
       if (player.owner) {
         vanishClone(player, match);

@@ -1,4 +1,3 @@
-import { arena } from './arena.js';
 import { cloneScale, spawn } from './state.js';
 import { interruptAttack } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
@@ -35,16 +34,19 @@ export function summonClones(player, match, limit) {
   const offsets = cloneFormations[missing - 1];
   const fighter = { ...player.fighter, size: player.fighter.size * cloneScale };
   const platform = player.grounded;
-  const left = (platform?.left ?? -arena.bounds.side) + .32;
-  const right = (platform?.right ?? arena.bounds.side) - .32;
+  const { arena } = match;
+  const { side, top } = arena.definition.bounds;
+  const padding = platform ? Math.min(.32, (platform.right - platform.left) / 2) : .32;
+  const left = (platform?.left ?? -side) + padding;
+  const right = (platform?.right ?? side) - padding;
   const spread = offsets.at(-1);
   const fit = spread ? Math.min(1, (right - left) / (2 * spread)) : 1;
   const center = clamp(player.x, left + spread * fit, right - spread * fit);
-  const y = Math.min(player.y, arena.bounds.top - .3);
+  const y = platform?.y ?? Math.min(player.y, top - .3);
   for (let i = 0; i < missing; i++) {
     const x = center + offsets[i] * fit;
     const clone = {
-      ...spawn(player.slot, true, fighter), slot: player.slot, fighter, owner: player, stocks: 1, cpu: true,
+      ...spawn(player.slot, true, fighter, arena), slot: player.slot, fighter, owner: player, stocks: 1, cpu: true,
       x, y, facing: player.facing, grounded: platform, vy: platform ? 0 : Math.max(0, player.vy * .55), aiDelay: .08 + i * .12,
       depth: offsets[i] === 0 ? .95 : i % 2 ? .46 : -.18,
     };

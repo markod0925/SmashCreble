@@ -1,5 +1,6 @@
-import { arena, leavePlatform, rules } from './arena.js';
+import { crossedPlatform, leavePlatform, rules } from './arena.js';
 import { handleAttackInput } from './attacks.js';
+import { bodyCenter } from './state.js';
 import { boundTime, capturingAttack, frozenTime, isZombie } from './status.js';
 import { bommBurstAge, bommBurstRecovery } from '../fighters/bomm/profile.js';
 import { approach, clamp, direction } from '../math.js';
@@ -59,22 +60,22 @@ export function move(player, input, dt, match) {
     player.vx *= Math.pow(player.dodge ? 0.12 : 0.51, dt);
   }
 
-  const oldY = player.y;
+  const from = { x: player.x, y: player.y };
   player.x += player.vx * dt;
   leavePlatform(player);
   if (player.grounded) return;
+  const { arena } = match;
+  const drift = arena.definition.airDrift?.({ x: player.x, y: player.y + bodyCenter(player) }, arena.environment) ?? 0;
+  player.x += drift * dt;
   player.vy = Math.max(-25, player.vy - dt * rules.gravity);
   player.y += player.vy * dt;
-  landOnPlatform(player, oldY);
-  return oldY;
+  landOnPlatform(player, from, arena);
+  return from;
 }
 
-export function landOnPlatform(player, oldY) {
-  if (player.grounded || player.vy > 0 || player.drop) return;
-  let surface = null;
-  for (const platform of arena.platforms) {
-    if (player.x >= platform.left && player.x <= platform.right && oldY >= platform.y && player.y <= platform.y && (!surface || platform.y > surface.y)) surface = platform;
-  }
+export function landOnPlatform(player, from, arena) {
+  if (player.grounded || player.drop) return;
+  const surface = crossedPlatform(arena, from, player);
   if (surface) {
     player.landing = 0.15;
     player.y = surface.y;

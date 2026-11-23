@@ -1,4 +1,5 @@
 import { $, button, node } from './dom.js';
+import { arenas } from '../arenas/index.js';
 import { fighters } from '../fighters/index.js';
 import { playerColors } from '../player-colors.js';
 import { audioReady, playSound } from '../audio.js';
@@ -10,6 +11,7 @@ export class Lobby {
     this.onPrimarySelection = onPrimarySelection;
     this.startMatch = startMatch;
     this.selection = 0;
+    this.arenaIndex = 0;
     this.snapshot = { pads: new Map(), unsupported: 0 };
     this.seats = [
       { source: 'keyboard', selection: 0, automatic: true },
@@ -35,6 +37,17 @@ export class Lobby {
 
   lineup() {
     return this.seats.flatMap((seat, slot) => seat ? [{ slot, fighter: fighters[seat.selection], cpu: seat.source === 'cpu' }] : []);
+  }
+
+  get arena() {
+    return arenas[this.arenaIndex];
+  }
+
+  chooseArena(step) {
+    this.arenaIndex = (this.arenaIndex + step + arenas.length) % arenas.length;
+    this.arenaLabel.textContent = this.arena.name;
+    audioReady();
+    playSound('select');
   }
 
   padFor(seat) {
@@ -103,7 +116,14 @@ export class Lobby {
     const focusKey = document.activeElement?.dataset.focus;
     const rows = node('div', 'lobby-slots');
     this.seats.forEach((seat, i) => rows.append(this.seatRow(seat, i)));
-    const note = node('p', 'dialog-note', 'Pair controllers in Windows and press A or Start to join. Move left or right to pick a fighter, then press Start to fight.');
+    const arena = button('', () => this.chooseArena(1), 'text-button lobby-arena');
+    arena.dataset.focus = 'arena';
+    this.arenaLabel = node('strong', '', this.arena.name);
+    this.arenaLabel.setAttribute('aria-live', 'polite');
+    const arrow = node('span', '', '↻');
+    arrow.setAttribute('aria-hidden', 'true');
+    arena.append(node('span', '', 'Arena'), this.arenaLabel, arrow);
+    const note = node('p', 'dialog-note', 'Press A or Start to join. On a controller, left and right pick a fighter. Up and down change the arena. Press Start to fight.');
     const actions = node('div', 'dialog-actions');
     const fight = button('Start fight', this.startMatch, 'primary-button');
     fight.dataset.focus = 'start';
@@ -117,7 +137,7 @@ export class Lobby {
     actions.append(fight, addCPU, addKey);
     if (!this.canBegin()) note.textContent = this.missingControllers().length ? 'Reconnect or remove disconnected controllers to start.' : 'Choose at least two fighters, including a keyboard or controller player.';
     else if (this.snapshot.unsupported) note.textContent += ' A controller without a standard browser mapping was detected.';
-    this.content.replaceChildren(rows, note, actions);
+    this.content.replaceChildren(rows, arena, note, actions);
     const prior = [...this.content.querySelectorAll('button')].find((el) => el.dataset.focus === focusKey && !el.disabled);
     if (prior) prior.focus();
     else if (focusStart && !fight.disabled) fight.focus();

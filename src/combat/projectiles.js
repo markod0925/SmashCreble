@@ -1,4 +1,4 @@
-import { arena } from './arena.js';
+import { crossedPlatform } from './arena.js';
 import { strike } from './hits.js';
 import { bodyCenter, combatants, scaleOf } from './state.js';
 import { isInvulnerable } from './status.js';
@@ -33,7 +33,7 @@ export function advanceProjectiles(match, dt) {
   const targets = combatants(match);
   for (const projectile of match.projectiles) {
     projectile.remaining -= dt;
-    const previousY = projectile.y;
+    const from = { x: projectile.x, y: projectile.y };
     const tethered = Boolean(projectile.advance);
     if (tethered) {
       if (projectile.remaining <= 0 || !projectile.owner.stocks || projectile.owner.respawn) {
@@ -46,8 +46,7 @@ export function advanceProjectiles(match, dt) {
       projectile.vy -= (projectile.gravity ?? 0) * dt;
       projectile.y += projectile.vy * dt;
     }
-    const lands = projectile.gravity && projectile.vy < 0 && arena.platforms.some(({ left, right, y }) =>
-      projectile.x >= left && projectile.x <= right && previousY >= y && projectile.y <= y);
+    const lands = projectile.gravity && crossedPlatform(match.arena, from, projectile);
     if (projectile.blast) {
       if (lands || projectile.remaining <= 0 || targets.some((target) => target.stocks && !target.respawn && !isInvulnerable(target) && !target.dodge && projectileTouches(projectile, target))) {
         detonateBomb(projectile, targets, match);

@@ -43,7 +43,7 @@ export function separateBodies(actors, match, movement) {
     player.x = position;
     leavePlatform(player);
     const landingFrom = movement?.get(player)?.landingFrom;
-    if (landingFrom !== undefined) landOnPlatform(player, landingFrom);
+    if (landingFrom) landOnPlatform(player, landingFrom, match.arena);
   }
   for (const { a, b, gap } of contacts) {
     if (b.player.x - a.player.x > gap + 1e-9 || a.player.vx <= b.player.vx) continue;

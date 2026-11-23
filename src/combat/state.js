@@ -1,7 +1,7 @@
-import { arena, rules } from './arena.js';
+import { defaultArena } from '../arenas/index.js';
+import { createArena, platformCenter, rules } from './arena.js';
 import { bommBurstScale } from '../fighters/bomm/profile.js';
 
-const spawns = [-6, 6, -1.8, 1.8];
 export const cloneScale = 0.5;
 export const scaleOf = (player) => player.owner ? cloneScale : 1;
 export const bodyCenter = (player) => 1.05 * scaleOf(player);
@@ -12,10 +12,13 @@ export function bodyContactDistance(a, b, match) {
   return bodyHalfWidth(a, bodySize(a, match)) + bodyHalfWidth(b, bodySize(b, match));
 }
 
-export function spawn(slot, initial, fighter) {
+export function spawn(slot, initial, fighter, arena) {
+  const entry = arena.definition.spawns[slot];
+  const platform = arena.platforms.find(({ id }) => id === entry.platform);
+  const x = platformCenter(platform) + entry.x;
   return {
-    x: spawns[slot], y: initial ? 0 : 7.8, vx: 0, vy: 0, facing: spawns[slot] < 0 ? 1 : -1,
-    grounded: initial ? arena.platforms[0] : null, jumps: fighter.airJumps ?? 2, recovered: false,
+    x, y: platform.y + (initial ? 0 : arena.definition.respawnHeight), vx: 0, vy: 0, facing: entry.facing ?? (x < 0 ? 1 : -1),
+    grounded: initial ? platform : null, jumps: fighter.airJumps ?? 2, recovered: false,
     damage: 0, hitstun: 0, invulnerable: initial ? 0 : 1.5, respawn: 0,
     attack: null, shield: 1, guarding: false, dodge: 0, drop: 0, charge: 0, charging: false,
     aiDelay: 0, aiJump: 0, landing: 0, stagger: 0, zombieUntil: null, boundUntil: null, boundStyle: null,
@@ -23,12 +26,14 @@ export function spawn(slot, initial, fighter) {
   };
 }
 
-export function createMatch(lineup) {
+export function createMatch(lineup, definition = defaultArena) {
+  const arena = createArena(definition);
   return {
-    time: rules.duration, countdown: 3, fighters: lineup.map(({ slot, fighter, cpu }) => ({
-      slot, fighter, cpu, stocks: rules.stocks, ...spawn(slot, true, fighter),
+    arena, time: rules.duration, countdown: 3, fighters: lineup.map(({ slot, fighter, cpu }) => ({
+      slot, fighter, cpu, stocks: rules.stocks, ...spawn(slot, true, fighter, arena),
     })), clones: [], projectiles: [], dance: null, result: null, events: [],
-    superstar: lineup.some(({ fighter }) => fighter.moves) ? { x: 0, y: 1.35, holder: null, cooldown: 0 } : null,
+    superstar: definition.superstar && lineup.some(({ fighter }) => fighter.moves)
+      ? { ...definition.superstar, holder: null, cooldown: 0 } : null,
   };
 }
 

@@ -1,5 +1,5 @@
 import { audioReady, playSound, toggleSound, updateDanceMusic } from './audio.js';
-import { arena, rules } from './combat/arena.js';
+import { rules } from './combat/arena.js';
 import { createMatch, tickMatch } from './combat/match.js';
 import { fighters } from './fighters/index.js';
 import { combatEdges, fighterInput, Inputs } from './input.js';
@@ -85,12 +85,14 @@ function startMatch() {
   if (!lobby.canBegin()) return;
   audioReady();
   closeDialog();
-  match = createMatch(lobby.lineup());
+  match = createMatch(lobby.lineup(), lobby.arena);
   graphics.resetBattle();
   view = 'battle';
   $('home').hidden = true;
   $('site-footer').hidden = true;
   $('battle').hidden = false;
+  $('battle').dataset.arenaTheme = match.arena.definition.theme;
+  $('arena-name').textContent = match.arena.definition.name.toUpperCase();
   $('battle').prepend(canvas);
   hud.reset(match);
   hud.update(match);
@@ -111,7 +113,7 @@ function goHome() {
 
 function openPause() {
   const disconnected = lobby.missingControllers().length;
-  openDialog('pause', arena.name.toUpperCase(), disconnected ? 'Controller disconnected' : 'Match paused');
+  openDialog('pause', match.arena.definition.name.toUpperCase(), disconnected ? 'Controller disconnected' : 'Match paused');
   renderPause(disconnected, dismissDialog, goHome);
 }
 
@@ -142,6 +144,8 @@ function handleMenu(snapshot, controllersChanged) {
       const slot = lobby.controllerSlot(pad);
       if (pad.navX && slot >= 0) lobby.chooseSeat(slot, pad.navX);
     }
+    const arenaStep = key.navY || connected.find((pad) => pad.navY)?.navY;
+    if (arenaStep) lobby.chooseArena(arenaStep);
     if (connected.some((pad) => pad.startPressed) || key.acceptPressed) startMatch();
     return;
   }

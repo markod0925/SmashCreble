@@ -1,14 +1,16 @@
 # Rift Ruckus
 
-Rift Ruckus is a local platform fighter for Windows PCs. Combat takes place on a 2D plane in a low-poly 3D arena. The twenty-four fighters, their models, the arena, and the synthesized sound effects are original to the project.
+Rift Ruckus is a local platform fighter for Windows PCs. Combat takes place on a 2D plane in low-poly 3D arenas. The twenty-four fighters, their models, the arenas, and the synthesized sound effects are original to the project.
 
 ## Play on Windows
 
 1. Install Node.js if it is missing. Double-click `Play.cmd` to start the local server and open the game in your default browser. You can also run `npm start` or `node server.mjs` in the project directory.
 2. If the browser does not open automatically, visit `http://127.0.0.1:4173` in a desktop browser with WebGL enabled. Keep the launcher window open while you play. The game uses no external assets or packages.
-3. Pick a fighter, select **Play match**, and select **Start fight**. The default setup is a keyboard player against a CPU. Lobby buttons let you add CPUs, change fighters, and remove seats.
+3. Pick a fighter, select **Play match**, and select **Start fight**. The default setup is a keyboard player against a CPU. In the lobby, use the **Arena** button or press Up or Down on a joined controller to change the stage.
 
 Pair Bluetooth controllers in Windows first, focus the game tab, then press the bottom face button or Start to join. Up to four controllers can play simultaneously. The first two controllers take over the default keyboard and CPU seats as they join. To play with both keyboard and controllers, use **Add keyboard** in the lobby. The game uses the browser’s [standard Gamepad mapping](https://www.w3.org/TR/gamepad/#remapping). A gamepad that the browser exposes without that mapping may need its Windows-compatible controller mode. Start begins the fight from the lobby and pauses during a match. The match pauses if a joined controller disconnects.
+
+**Cloudbreak Foundry** has fixed platforms. **Stormcoil Array** has two lifts that carry fighters standing on them. The current visible between the pylons changes direction and pushes airborne fighters within it.
 
 ## Controls
 
@@ -74,7 +76,12 @@ Touch the golden Superstar at center stage to stock one super attack. The star a
 - `src/main.js` connects the main menu, lobby, and match loop.
 - `src/fighters/<fighter-id>/profile.js` contains a fighter's stats, move definitions, and projectile launch behavior. The adjacent `model.js` contains their 3D rig, animations, and move visuals. Rivet, Bramble, Vesper, and Kiln share a rig builder and animation code in `src/fighters/standard-model.js`.
 - `src/combat/` handles the match clock, stocks, movement, attacks, hit resolution, projectiles, and CPU controls.
+- `src/arenas/index.js` defines platform layouts and motion, blast boundaries, spawn points, and environmental effects. `src/combat/arena.js` keeps the platform positions and environment for each match.
 - `src/render/` contains the WebGL renderer, geometry, arena, cameras, and effects. The roster portraits and match use the same fighter models.
 - `src/ui/` contains the roster, lobby, dialogs, and HUD. Keyboard and controller input live in `src/input.js`, and synthesized effects live in `src/audio.js`.
 
 To add a fighter, create a folder with a profile and a model. Register the profile in `src/fighters/index.js` and the model in `src/render/characters.js`. The roster, portraits, and lobby read from those registries. Update the roster copy and control guide in `index.html` when adding a fighter.
+
+To add an arena, register a definition in `src/arenas/index.js`. Mark solid floors with `main`. Other platforms allow fighters to drop through them. Each spawn uses a platform ID and a horizontal offset from that platform's center. The respawn height is relative to the same platform. A definition can set its own Superstar position and camera.
+
+An optional `environment(elapsed)` returns state for the current simulation step. A platform's `motion(environment, elapsed)` returns horizontal and vertical offsets from its layout. An optional `airDrift(position, environment)` receives an airborne fighter's body center and returns horizontal drift in units per second. These hooks run on the simulation clock, which stops during the countdown, pauses, and Snake Dance. To add a visual theme, register its drawing functions in `src/render/arena.js` and give the arena definition the same theme name. The renderer reads the same platform positions and environmental state as combat.

@@ -1,4 +1,4 @@
-import { arena, rules } from '../combat/arena.js';
+import { rules } from '../combat/arena.js';
 import { combatants } from '../combat/state.js';
 import { boundTime, captureProgress, capturingAttack, frozenTime, isZombie, shockedTime } from '../combat/status.js';
 import { bommBurstScale } from '../fighters/bomm/profile.js';
@@ -8,7 +8,7 @@ import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { drawDanceSnake } from '../fighters/shark-67/model.js';
 import { drawIce, drawSerpentBind } from '../fighters/vidarr/model.js';
 import { playerColors } from '../player-colors.js';
-import { drawHero, drawPlatform, drawScenery } from './arena.js';
+import { drawBattleArena, drawHero } from './arena.js';
 import { drawCharacter, drawProjectiles, portraitCamera } from './characters.js';
 import { BattleEffects } from './effects.js';
 import { TAU, zero } from './math.js';
@@ -49,9 +49,9 @@ export class Graphics {
     const [width, height] = renderer.measure();
     const horizontalFit = Math.max(1, 1.55 / (width / height));
     const shakeX = this.effects.cameraOffset(time, dt);
-    renderer.begin(width, height, [shakeX, 7.8, 29.5 * horizontalFit], [shakeX, 1.8, 0], .64);
-    drawScenery(renderer, time);
-    for (const platform of arena.platforms) drawPlatform(renderer, platform);
+    const { x = 0, height: cameraHeight = 7.8, distance = 29.5, targetY = 1.8, fov = .64 } = match.arena.definition.camera ?? {};
+    renderer.begin(width, height, [x + shakeX, cameraHeight, distance * horizontalFit], [x + shakeX, targetY, 0], fov);
+    drawBattleArena(renderer, match.arena, time);
     const star = match.superstar;
     if (star && !star.holder && !star.cooldown) {
       const y = star.y + Math.sin(time * 4) * .16;

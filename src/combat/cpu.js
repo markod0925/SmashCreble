@@ -1,3 +1,4 @@
+import { platformCenter } from './arena.js';
 import { canSummonClones, canUseSuper } from './clones.js';
 import { bodyContactDistance, combatants, idleInput, scaleOf } from './state.js';
 import { boundTime, frozenTime } from './status.js';
@@ -5,6 +6,21 @@ import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { direction } from '../math.js';
+
+function recoveryPlatform(player, arena) {
+  if (player.grounded?.main) return player.grounded;
+  let nearest;
+  let distance = Infinity;
+  for (const platform of arena.platforms) {
+    if (!platform.main) continue;
+    const gap = Math.max(0, platform.left - player.x, player.x - platform.right);
+    const candidate = Math.hypot(gap, player.y - platform.y);
+    if (candidate >= distance) continue;
+    nearest = platform;
+    distance = candidate;
+  }
+  return nearest;
+}
 
 export function cpuInput(player, match, dt) {
   if (boundTime(player, match) || frozenTime(player, match)) return idleInput;
@@ -15,12 +31,15 @@ export function cpuInput(player, match, dt) {
   }
   player.aiDelay -= dt;
   player.aiJump -= dt;
-  const offstage = Math.abs(player.x) > 10.9 || player.y < -0.7;
+  const floor = recoveryPlatform(player, match.arena);
+  const edgeMargin = floor ? Math.min(.6, (floor.right - floor.left) / 4) : 0;
+  const offstage = floor && (!player.grounded || player.grounded.main) &&
+    (player.x < floor.left + edgeMargin || player.x > floor.right - edgeMargin || player.y < floor.y - .7);
   if (offstage) {
-    const moving = direction(-player.x);
-    const jumpPressed = player.y < 1 && player.vy < 2 && player.aiJump <= 0 && player.jumps > 0;
+    const moving = direction(platformCenter(floor) - player.x);
+    const jumpPressed = player.y < floor.y + 1 && player.vy < 2 && player.aiJump <= 0 && player.jumps > 0;
     if (jumpPressed) player.aiJump = 0.44;
-    return { x: moving, y: 1, jumpPressed, specialPressed: player.y < -1.4 && player.vy < 0 && !player.recovered && !player.jumps };
+    return { x: moving, y: 1, jumpPressed, specialPressed: player.y < floor.y - 1.4 && player.vy < 0 && !player.recovered && !player.jumps };
   }
   if (!target) return idleInput;
   const dx = target.x - player.x;
