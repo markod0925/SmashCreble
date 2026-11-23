@@ -1,18 +1,20 @@
 # Rift Ruckus for Wii
 
-This native Homebrew Channel prototype supports two to four local players using Rivet in Cloudbreak Foundry. It includes movement, double jump, a neutral punch, knockback, stocks, respawns, and a match timer. The Windows/browser game remains the authoring project. The prototype has its own simplified C++ combat implementation. It omits the full roster, special moves, CPU players, and audio.
+This native Homebrew Channel build supports one to four local players in Cloudbreak Foundry. The Wii release uses the Web roster, fighter models, combat rules, moves, and battle effects. The browser game remains the authoring project.
+
+The Wii renderer draws Cloudbreak Foundry from prebuilt display lists and keeps its background clouds still. Clones use prebuilt idle, running, and airborne poses during ordinary movement. Their attacks and status effects use the shared battle renderer. The Wii build uses the Web geometry and clone behavior.
 
 ## Build a release
 
-Install Node.js and the [devkitPro Wii development tools](https://devkitpro.org/wiki/Getting_Started), including devkitPPC, libogc 3.x, and gamecube-tools. The script checks `DEVKITPRO`, a workspace-local SDK under `wii/.sdk/opt/devkitpro`, and the default installation path (`C:/devkitPro` on Windows or `/opt/devkitpro` on Linux), in that order. It accepts a separate `DEVKITPPC` path when needed.
+Install Node.js, a `tar` command that can extract XZ archives, and the [devkitPro Wii development tools](https://devkitpro.org/wiki/Getting_Started), including devkitPPC, libogc 3.x, and gamecube-tools. The script checks `DEVKITPRO`, a workspace-local SDK under `wii/.sdk/opt/devkitpro`, and the default installation path (`C:/devkitPro` on Windows or `/opt/devkitpro` on Linux), in that order. It accepts a separate `DEVKITPPC` path when needed.
 
 Run this from the project root when a Web snapshot is ready:
 
 ```sh
-node wii/release.mjs 0.1.0-wii.1
+node wii/release.mjs 0.1.0-wii.6
 ```
 
-The script loads the Web modules, captures the stage and fighter meshes, samples the neutral punch, and exports the supported match rules and spawn data. It compiles the Wii application, converts the resulting ELF to DOL, verifies its section table and entry point, and writes `wii/dist/<version>/apps/RiftRuckus/boot.dol` with its Homebrew Channel metadata. Pick a new version for each release. Changes to supported Web assets and values are picked up on the next release. New combat mechanics and changes to the prototype's supported slice require extending its C++ code.
+The script exports the roster portraits and geometry and embeds the Web combat and battle scene modules. It builds the bundled QuickJS engine from source, compiles the native Wii application, converts the ELF to DOL, and verifies its section table and entry point. The release includes `wii/dist/<version>/apps/RiftRuckus/boot.dol`, Homebrew Channel metadata, and the QuickJS license. Pick a new version for each release. The script picks up changes to the shared modules when building a new release.
 
 To inspect the generated data without a Wii toolchain, run `node wii/release.mjs --export-only`. Generated files go in `wii/build/generated`.
 
@@ -20,12 +22,21 @@ To inspect the generated data without a Wii toolchain, run `node wii/release.mjs
 
 Copy the release's `apps/RiftRuckus` directory into `apps` on the SD card and launch **Rift Ruckus Wii** from the Homebrew Channel.
 
-| Action | Wii Remote held sideways, pointing left | Classic Controller |
-| --- | --- | --- |
-| Join or jump | 2 | A |
-| Move | D-pad left or right in the sideways orientation | D-pad left or right |
-| Punch | 1 | B |
-| Start or rematch | + | + |
-| Exit | HOME | HOME |
+| Action | Wii Remote + Nunchuk | Wii Remote held sideways, pointing left | Classic Controller |
+| --- | --- | --- | --- |
+| Browse the roster | Nunchuk stick | D-pad in the sideways orientation | D-pad |
+| Confirm fighter | A (Wii Remote) | 2 | A |
+| Cancel fighter confirmation | B (Wii Remote) | 1 | B |
+| Jump in a match | C (Nunchuk) | 2 | A |
+| Move or aim | Nunchuk stick | D-pad in the sideways orientation | D-pad |
+| Light attack | A (Wii Remote) | 1 | B |
+| Special, tap or hold depending on the fighter | B (Wii Remote) | B | X |
+| Upward recovery | Up + B | Up + B | Up + X |
+| Heavy attack, where available | - | - | Y |
+| Shield | Hold Z (Nunchuk) | Hold A | Hold ZL or ZR |
+| Dodge | Z + C | A + 2 | ZL or ZR + A |
+| Superstar move, after collecting the star | A + B | 1 + B | B + X |
+| Start or return to character select after the match | + | + | + |
+| Exit | HOME | HOME | HOME |
 
-Join with at least two controllers before starting. A disconnected player pauses an active match until that controller channel is available again. The first hardware check should cover all four controllers, disconnect and reconnect, a full match, and a rematch.
+Each connected controller gets a numbered preview and a cursor. Press + once anyone has confirmed a fighter. Other connected controllers enter with the fighter under their cursor. With one controller, the match runs as solo practice. A disconnected participant pauses an active match until that controller channel is available again.
