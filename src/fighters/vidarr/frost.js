@@ -13,7 +13,7 @@ function freezeRivals(owner, attack, match) {
       .sort((a, b) => b.y - a.y);
     return [6.8, 3.88, 1.49].map((height, i) => {
       const target = rivals[i];
-      return target ? [target.x, target.y + bodyCenter(target) + .13] : [side * 14.3, height];
+      return target ? [target.x, target.y + bodyCenter(target, match) + .13] : [side * 14.3, height];
     });
   });
 }
@@ -30,6 +30,6 @@ export function advanceFrost(owner, attack, match) {
     const hit = { damage: 24, force: 12, x: direction(target.x - owner.x, owner.facing), stationary: true };
     if (!strike(owner, target, hit, match)) continue;
     attack.victims.add(target);
-    match.events.push({ type: 'frostBite', x: target.x, y: target.y + bodyCenter(target), color: '#c9f5ff' });
+    match.events.push({ type: 'frostBite', x: target.x, y: target.y + bodyCenter(target, match), color: '#c9f5ff' });
   }
 }

@@ -1,11 +1,13 @@
 import { defaultArena } from '../arenas/index.js';
-import { createArena, platformCenter, rules } from './arena.js';
+import { createArena, platformCenter, platformHeight, rules } from './arena.js';
 import { bommBurstScale } from '../fighters/bomm/profile.js';
+import { shrinkScale } from '../fighters/zunchy/profile.js';
 
 export const cloneScale = 0.5;
 export const scaleOf = (player) => player.owner ? cloneScale : 1;
-export const bodyCenter = (player) => 1.05 * scaleOf(player);
-export const bodySize = (player, match) => player.fighter.size * bommBurstScale(player, match);
+export const bodyScale = (player, match) => scaleOf(player) * shrinkScale(player, match);
+export const bodyCenter = (player, match) => 1.05 * bodyScale(player, match);
+export const bodySize = (player, match) => player.fighter.size * bommBurstScale(player, match) * shrinkScale(player, match);
 export const bodyHalfWidth = (player, size) => (player.fighter.bodyHalfWidth ?? .55) * size;
 
 export function bodyContactDistance(a, b, match) {
@@ -15,9 +17,9 @@ export function bodyContactDistance(a, b, match) {
 export function spawn(slot, initial, fighter, arena) {
   const entry = arena.definition.spawns[slot];
   const platform = arena.platforms.find(({ id }) => id === entry.platform);
-  const x = platformCenter(platform) + entry.x;
+  const x = platformCenter(platform) + entry.x * Math.cos(platform.angle);
   return {
-    x, y: platform.y + (initial ? 0 : arena.definition.respawnHeight), vx: 0, vy: 0, facing: entry.facing ?? (x < 0 ? 1 : -1),
+    x, y: platformHeight(platform, x) + (initial ? 0 : arena.definition.respawnHeight), vx: 0, vy: 0, facing: entry.facing ?? (x < 0 ? 1 : -1),
     grounded: initial ? platform : null, jumps: fighter.airJumps ?? 2, recovered: false,
     damage: 0, hitstun: 0, invulnerable: initial ? 0 : 1.5, respawn: 0,
     attack: null, shield: 1, guarding: false, dodge: 0, drop: 0, charge: 0, charging: false,

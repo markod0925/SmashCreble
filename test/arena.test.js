@@ -1,15 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { arenas, defaultArena } from '../src/arenas/index.js';
-import { advanceArena, platformCenter, rules } from '../src/combat/arena.js';
+import { advanceArena, platformCenter, platformHeight, rules } from '../src/combat/arena.js';
 import { createMatch, tickMatch } from '../src/combat/match.js';
 import { landOnPlatform } from '../src/combat/movement.js';
 import { advanceProjectiles } from '../src/combat/projectiles.js';
 import { fighters } from '../src/fighters/index.js';
 import { drawBattleArena } from '../src/render/arena.js';
 import { shapes } from '../src/render/geometry.js';
+import { transform, transformPoint } from '../src/render/math.js';
 
 const storm = arenas.find(({ id }) => id === 'stormcoil-array');
+const gdmr = arenas.find(({ id }) => id === 'gdmr');
 const lineup = [0, 1].map((slot) => ({ slot, fighter: fighters[slot] }));
 const controls = new Map();
 
@@ -132,4 +134,64 @@ test('the storm renderer draws a platform at its current collision position', ()
   drawBattleArena(renderer, match.arena, 1);
   assert.ok(positions.some((position) => position.every((value, i) => value === platformTop[i])));
   drawBattleArena(renderer, createMatch(lineup).arena, 0);
+});
+
+test('GDMR rocks one rigid platform and keeps both riders on its surface', () => {
+  const match = createMatch(lineup, gdmr);
+  match.countdown = 0;
+  const [deck] = match.arena.platforms;
+  assert.equal(match.arena.platforms.length, 1);
+  assert.equal(deck.angle, -Math.PI / 6);
+  const anchor = (rider) => (rider.x - platformCenter(deck)) / Math.cos(deck.angle);
+  const initialAnchors = match.fighters.map(anchor);
+  const renderer = {
+    object(shape, position, size, color, rotation) {
+      if (shape !== 'box' || size[0] !== deck.width || size[1] !== .36) return;
+      const matrix = transform(position, size, rotation);
+      for (const end of [-.5, .5]) {
+        const [x, y] = transformPoint(matrix, [end, .5, 0]);
+        assert.ok(Math.abs(x - (end < 0 ? deck.left : deck.right)) < 1e-9);
+        assert.ok(Math.abs(y - platformHeight(deck, x)) < 1e-9);
+      }
+      this.checked = true;
+    },
+  };
+  drawBattleArena(renderer, match.arena, 0);
+  assert.ok(renderer.checked);
+  for (let i = 0; i < 8 / rules.step; i++) {
+    tickMatch(match, controls);
+    for (const [slot, rider] of match.fighters.entries()) {
+      assert.equal(rider.grounded, deck);
+      assert.ok(Math.abs(anchor(rider) - initialAnchors[slot]) < 1e-8);
+      assert.equal(rider.y, platformHeight(deck, rider.x));
+    }
+    assert.ok(Math.abs(deck.angle) <= Math.PI / 6);
+    if (i + 1 === 4 / rules.step) assert.equal(deck.angle, Math.PI / 6);
+  }
+  assert.equal(deck.angle, -Math.PI / 6);
+
+  const [rider] = match.fighters;
+  tickMatch(match, new Map([[rider.slot, { x: 0, y: 0, jumpPressed: true }]]));
+  assert.equal(rider.grounded, null);
+  for (let i = 0; i < 1.5 / rules.step && !rider.grounded; i++) tickMatch(match, controls);
+  assert.equal(rider.grounded, deck);
+  assert.equal(rider.y, platformHeight(deck, rider.x));
+});
+
+test('GDMR grants two arena clones to each active rival when a Superstar move starts', () => {
+  const caster = fighters.find(({ id }) => id === 'harri-potter');
+  const seats = [{ slot: 0, fighter: caster }, ...[1, 2, 3].map((slot) => ({ slot, fighter: fighters[slot] }))];
+  const match = createMatch(seats, gdmr);
+  match.countdown = 0;
+  const [owner, ...rivals] = match.fighters;
+  match.superstar.holder = owner;
+  tickMatch(match, new Map([[owner.slot, { x: 0, y: 0, superPressed: true }]]));
+  assert.equal(owner.attack.type, caster.moves.super);
+  assert.equal(match.superstar.holder, null);
+  assert.deepEqual(rivals.map((rival) => match.clones.filter(({ owner }) => owner === rival).length), [2, 2, 2]);
+  assert.equal(match.clones.length, 6);
+  for (const clone of match.clones) {
+    assert.equal(clone.grounded, match.arena.platforms[0]);
+    assert.equal(clone.y, platformHeight(clone.grounded, clone.x));
+  }
 });

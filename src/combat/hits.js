@@ -1,6 +1,7 @@
 import { vanishClone } from './clones.js';
 import { boundTime, captureProgress, capturingAttack, freezeFighter, frozenTime, interruptAttack, isInvulnerable } from './status.js';
 import { clamp } from '../math.js';
+import { tryGulp } from '../fighters/zunchy/swallow.js';
 
 export function strike(attacker, victim, hit, match) {
   if (attacker.slot === victim.slot || isInvulnerable(victim) || victim.dodge || victim.respawn || !victim.stocks) return false;
@@ -27,6 +28,7 @@ export function strike(attacker, victim, hit, match) {
     return true;
   }
   if (capture) capture.capture = null;
+  else if (tryGulp(attacker, victim, hit, match)) return true;
   victim.damage += damage;
   if (hit.zombieDuration) {
     victim.zombieUntil = match.time - hit.zombieDuration;
@@ -40,7 +42,7 @@ export function strike(attacker, victim, hit, match) {
   if (hit.shockDuration) {
     victim.shockedUntil = match.time - hit.shockDuration;
   }
-  const launch = (force + victim.damage * 0.145) * attacker.fighter.power / victim.fighter.weight;
+  const launch = Math.min(hit.maxLaunch ?? Infinity, (force + victim.damage * 0.145) * attacker.fighter.power / victim.fighter.weight);
   if (hit.bindDuration) {
     if (!boundTime(victim, match)) {
       victim.boundUntil = match.time - hit.bindDuration;

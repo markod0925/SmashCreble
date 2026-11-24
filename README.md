@@ -1,6 +1,6 @@
 # Rift Ruckus
 
-Rift Ruckus is a local platform fighter for desktop and mobile browsers. Combat takes place on a 2D plane in low-poly 3D arenas. The game features thirty-three fighters and synthesized sound effects.
+Rift Ruckus is a local platform fighter for desktop and mobile browsers. Combat takes place on a 2D plane in low-poly 3D arenas. The game features thirty-five fighters and synthesized sound effects.
 
 ## Screenshots
 
@@ -16,7 +16,7 @@ See the [Wii build and play instructions](wii/README.md).
 
 ## Play on a phone
 
-Open [Rift Ruckus on GitHub Pages](https://markod0925.github.io/SmashCreble/), then tap **Play match** and **Start fight**. Turn your phone sideways to play. The default **Touch / Keyboard** player faces a CPU.
+Open [Rift Ruckus on GitHub Pages](https://markod0925.github.io/SmashCreble/), then tap **Play match** and **Start fight**. Turn your phone sideways to play. The default **Touch / Keyboard** player faces a CPU. The fight opens in fullscreen when the browser allows it. Fighter damage and stocks appear at the sides of the arena.
 
 - Use the analog stick to move and aim. Flick up to jump or down to drop through a raised platform. Use **Up + B** to recover.
 - Press **A** for a light attack and **B** for a special. Superstar fighters can hold **B** for a charged special.
@@ -32,6 +32,8 @@ Open [Rift Ruckus on GitHub Pages](https://markod0925.github.io/SmashCreble/), t
 Pair Bluetooth controllers in Windows first, focus the game tab, then press the bottom face button or Start to join. Up to four controllers can play simultaneously. The first two controllers take over the default keyboard and CPU seats as they join. To play with both keyboard and controllers, use **Add keyboard** in the lobby. The game uses the browser’s [standard Gamepad mapping](https://www.w3.org/TR/gamepad/#remapping). A gamepad that the browser exposes without that mapping may need its Windows-compatible controller mode. Start begins the fight from the lobby and pauses during a match. The match pauses if a joined controller disconnects.
 
 **Cloudbreak Foundry** has fixed platforms. **Stormcoil Array** has two lifts that carry fighters standing on them. The current visible between the pylons changes direction and pushes airborne fighters within it.
+
+**GDMR** fills the screen with one platform that rocks between −30° and +30°. Using a Superstar move gives each active rival up to two arena clones.
 
 ## Controls
 
@@ -54,12 +56,12 @@ Each fighter starts with three stocks. Damage makes subsequent hits launch a fig
 
 Jump and double jump use Space or X. Hold Down with the jump button to drop through a raised platform.
 
-| Dragon Boy | Eid | Incantus | Beina | Gangar | Vi | Bomm | Gioppino | Huuuuu!! | 67 | Inga inga | Bid | Olivar | Packman | Ciclope | Vidarr | Funny Kings | Nuvol | ii! | DragonBall | Luffy | Maestra | Nurofen Caps | Pinco Palino | Che Addominali! | Budino | SuperLibroGirl | Murena Man | HarriPotter | Keyboard | Controller (Xbox labels) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Claw & Kick | Kick & Punch | Belly Bump | Kick & Punch | Punch & Kick | Horn Jab | Headbutts | Punch & Kicks | Slap | Kick & Headbutt | Headbutt | Claw Swipe | Kick & Punch | Chomp | Lasso Throw | Serpent Bites | Double Slap | Rain | Punch & Kicks | Bite | Kick & Punch | Hair Pull | Vitamin C | Headbutt | Jabs | Punch & Kick | Heel Kick | Snap Bite | Punch & Kick | J | A |
-| Flame Breath | Pulse Shot | Ear Stench | Peel Flip | Lunge Bite | Hoof Kick | Quick Bomb | Zombie Bite | Choking Puff | Briefcase Swing | Draw & Slash | Flying Kicks | Sprout Blade | Gas Cloud | Club Smash | Flying Fangs | Tomato Toss | Hail Shower | Sword Thrust | Navel Beam | Headbutt | Ruler Strike | Mini Bomb | Flying Tongue | Triple Punch | 5K Blaster | Steel Sword | Flame Jet | Magic Bolt | Tap L | Tap B |
-| Spine Shot | Blink Scythe | Stagger Hex | Banana Toss | Eye Lasers | Rainbow Arc | Power Steal | Brain Toss | Bandage Bind | 67 Venom Snakes | Lance Throw | Goblin Pair | Sprout Assault | Blue Eye Lasers | Gas Cloud | Serpent Coils | Blade Fan | Deep Freeze | Twin Slash | Clone Pair | Gum-Gum Punch | Sonic Shout | Mega Bomb | Bald Flash | Six-Punch Barrage | 20K Blaster | Mighty Slash | Blade Vortex | Magic Bombs | Hold L | Hold B |
-| Scale Burst | Robot Spin | Hypnotic Chomp | Banana Barrage | Gulp & Spit | Clone Herd | Bomm Burst | Zombie Horde | Sarcophagus | Snake Dance | Blade Storm | Goblin Horde | Laser Burst | Trace 67 | Red Eye Beam | Frost Serpents | Royal Finale | Lightning Storm | Triple Blade Dive | Bacteria Burst | Rubber Dance | Mighty Shove | Clone Squad | Flying 67 | Acid Rain | 800-Round Reserve | Blinding Light | Atomic Salvo | Wand Lightning | J + L | A + B |
+| Dragon Boy | Eid | Incantus | Beina | Gangar | Vi | Bomm | Gioppino | Huuuuu!! | 67 | Inga inga | Bid | Olivar | Packman | Ciclope | Vidarr | Funny Kings | Nuvol | ii! | DragonBall | Luffy | Maestra | Nurofen Caps | Pinco Palino | Che Addominali! | Budino | SuperLibroGirl | Murena Man | HarriPotter | Cerbero | Zunchy | Keyboard | Controller (Xbox labels) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Claw & Kick | Kick & Punch | Belly Bump | Kick & Punch | Punch & Kick | Horn Jab | Headbutts | Punch & Kicks | Slap | Kick & Headbutt | Headbutt | Claw Swipe | Kick & Punch | Chomp | Lasso Throw | Serpent Bites | Double Slap | Rain | Punch & Kicks | Bite | Kick & Punch | Hair Pull | Vitamin C | Headbutt | Jabs | Punch & Kick | Heel Kick | Snap Bite | Punch & Kick | Triple Bite | Hypnosis | J | A |
+| Flame Breath | Pulse Shot | Ear Stench | Peel Flip | Lunge Bite | Hoof Kick | Quick Bomb | Zombie Bite | Choking Puff | Briefcase Swing | Draw & Slash | Flying Kicks | Sprout Blade | Gas Cloud | Club Smash | Flying Fangs | Tomato Toss | Hail Shower | Sword Thrust | Navel Beam | Headbutt | Ruler Strike | Mini Bomb | Flying Tongue | Triple Punch | 5K Blaster | Steel Sword | Flame Jet | Magic Bolt | Hairspray | Crack Stomp | Tap L | Tap B |
+| Spine Shot | Blink Scythe | Stagger Hex | Banana Toss | Eye Lasers | Rainbow Arc | Power Steal | Brain Toss | Bandage Bind | 67 Venom Snakes | Lance Throw | Goblin Pair | Sprout Assault | Blue Eye Lasers | Gas Cloud | Serpent Coils | Blade Fan | Deep Freeze | Twin Slash | Clone Pair | Gum-Gum Punch | Sonic Shout | Mega Bomb | Bald Flash | Six-Punch Barrage | 20K Blaster | Mighty Slash | Blade Vortex | Magic Bombs | Tooth Barrage | Atomic Bombs | Hold L | Hold B |
+| Scale Burst | Robot Spin | Hypnotic Chomp | Banana Barrage | Gulp & Spit | Clone Herd | Bomm Burst | Zombie Horde | Sarcophagus | Snake Dance | Blade Storm | Goblin Horde | Laser Burst | Trace 67 | Red Eye Beam | Frost Serpents | Royal Finale | Lightning Storm | Triple Blade Dive | Bacteria Burst | Rubber Dance | Mighty Shove | Clone Squad | Flying 67 | Acid Rain | 800-Round Reserve | Blinding Light | Atomic Salvo | Wand Lightning | Giant Sit | Shrink & Gulp | J + L | A + B |
 
 Touch the golden Superstar at center stage to stock one super attack. The star above the fighter and on the HUD shows when the move is ready. The Superstar returns after the move is used or its holder is knocked out. Upward recovery still uses Up + L or Up + B.
 
@@ -100,6 +102,8 @@ Touch the golden Superstar at center stage to stock one super attack. The star a
 | SuperLibroGirl | Spellbook knight | **Heel Kick** strikes with her blue heel. **Steel Sword** swings her pink blade. **Mighty Slash** deals more damage and launches rivals farther. **Blinding Light** opens the book and dazes every rival in the arena for three seconds, blocking their controls. |
 | Murena Man | Moray blades | **Snap Bite** lunges and snaps his jaws. **Flame Jet** breathes fire forward. **Blade Vortex** spins both arm blades for three hits and launches nearby rivals on the last sweep. **Atomic Salvo** tosses three bombs in a spread. |
 | HarriPotter | Wand caster | **Punch & Kick** strings a jab into a kick. **Magic Bolt** fires a spell from the wand. **Magic Bombs** hurls three translucent bombs that explode on impact. **Wand Lightning** sends a branch of lightning from the wand to every active rival across the arena. |
+| Cerbero | Three-headed hound | **Triple Bite** snaps all three jaws in sequence. **Hairspray** fires a short-range cloud. **Tooth Barrage** rapidly spits twelve teeth from alternating mouths. **Giant Sit** makes Cerbero grow and sit in the foreground, dazing every rival for three seconds. |
+| Zunchy | Spiral chomper | **Hypnosis** releases a spiral that briefly interrupts a rival. **Crack Stomp** cracks the ground and hits nearby rivals. **Atomic Bombs** throws two bombs in an arc. **Shrink & Gulp** halves rivals’ size for five seconds. Zunchy can swallow a shrunken rival on hit and spit them forward with capped knockback. |
 
 ## Code layout
 

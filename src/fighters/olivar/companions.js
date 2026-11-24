@@ -68,7 +68,7 @@ export function advanceCompanions(owner, match, dt) {
     const circling = unit.cooldown > 0 || assault.hitCooldown > 0;
     const radius = circling ? .99 + index * .17 : 0;
     const dx = target.x + Math.cos(angle) * radius;
-    const dy = target.y + bodyCenter(target) + Math.sin(angle) * radius * .74;
+    const dy = target.y + bodyCenter(target, match) + Math.sin(angle) * radius * .74;
     const distance = moveToward(unit, dx, dy, 8.9 + index * .55, dt);
     if (!circling && distance < .48 && strike(owner, target, { damage: 3, force: 2.7, x: unit.facing, y: .2, lift: .38 }, match)) {
       unit.cooldown = 1.4;

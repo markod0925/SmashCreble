@@ -27,7 +27,7 @@ export function advanceThunder(owner, attack, match) {
     match.events.push({ type: 'nuvolBolt', x, y: 0, seed: wave.index * 3 + i, color: '#b1e7ff' });
     for (const rival of targets) {
       if (rival.slot === owner.slot || attack.victims.has(rival) || Math.abs(rival.x - x) > .97) continue;
-      const centerY = rival.y + bodyCenter(rival);
+      const centerY = rival.y + bodyCenter(rival, match);
       if (centerY < boltBottom || centerY > boltTop) continue;
       const hit = {
         damage: first ? 17 : 6, force: first ? 12.6 : 6.9, x: direction(rival.x - owner.x, owner.facing),

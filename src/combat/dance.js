@@ -35,7 +35,7 @@ function advanceSnake(snake, dance, match, dt) {
   const orbit = dance.elapsed * 4.3 + snake.index * 1.25;
   const spread = snake.cooldown > 0 ? 1.35 : Math.max(0, 1 - (dance.elapsed - snake.delay) * 1.55) * 2.2;
   const dx = target.x - snake.x + Math.cos(orbit) * spread;
-  const dy = target.y + bodyCenter(target) - snake.y + Math.sin(orbit) * spread * .64;
+  const dy = target.y + bodyCenter(target, match) - snake.y + Math.sin(orbit) * spread * .64;
   const distance = Math.hypot(dx, dy);
   if (distance > .01) {
     const speed = Math.min(distance, (7.4 + snake.index * .49) * dt);

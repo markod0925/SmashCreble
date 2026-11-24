@@ -1,4 +1,5 @@
 import { drawCharacter } from './characters.js';
+import { drawGdmrPlatform, drawGdmrScenery } from './gdmr.js';
 import { TAU, zero } from './math.js';
 
 const rockColors = ['#2d4154', '#394254', '#4b4657', '#34374c', '#575066'];
@@ -121,6 +122,7 @@ function drawStormPlatform(renderer, { left, right, y, main }) {
 const arenaViews = {
   foundry: { drawScenery: (renderer, arena, time) => drawFoundryScenery(renderer, time), drawPlatform: drawFoundryPlatform },
   storm: { drawScenery: drawStormScenery, drawPlatform: drawStormPlatform },
+  gdmr: { drawScenery: (renderer, arena, time) => drawGdmrScenery(renderer, time), drawPlatform: drawGdmrPlatform },
 };
 
 export function drawBattleArena(renderer, arena, time) {

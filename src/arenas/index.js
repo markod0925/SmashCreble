@@ -43,5 +43,20 @@ const stormcoilArray = {
   airDrift: stormDrift,
 };
 
-export const arenas = [cloudbreakFoundry, stormcoilArray];
+const gdmr = {
+  id: 'gdmr',
+  name: 'GDMR',
+  theme: 'gdmr',
+  platforms: [
+    { id: 'deck', left: -13, right: 13, y: 0, main: true, rotation: (time) => -Math.PI / 6 * Math.cos(time * Math.PI / 4) },
+  ],
+  bounds: { side: 19, top: 17, bottom: -13 },
+  spawns: [-6, 6, -1.8, 1.8].map((x) => ({ platform: 'deck', x })),
+  respawnHeight: 7.8,
+  superstar: { x: 0, y: 1.35 },
+  rivalClonesOnSuper: 2,
+  camera: { height: 5, distance: 32, targetY: 1.4, fov: .68 },
+};
+
+export const arenas = [cloudbreakFoundry, stormcoilArray, gdmr];
 export const defaultArena = cloudbreakFoundry;

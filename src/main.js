@@ -34,6 +34,7 @@ let match = null;
 let elapsed = 0;
 let controllerLabel = '';
 let accumulator = 0;
+let matchFullscreen = false;
 const queued = new Map();
 const battle = $('battle');
 const rotateHint = $('touch-rotate');
@@ -45,6 +46,24 @@ const showSelection = createRoster(portrait, changeSelection);
 const hud = new BattleHud(portrait);
 const inputs = new Inputs(() => view === 'battle' && !modal, touch);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+function exitMatchFullscreen() {
+  if (!matchFullscreen) return;
+  matchFullscreen = false;
+  if (document.fullscreenElement === document.documentElement) {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+
+function enterMatchFullscreen() {
+  const root = document.documentElement;
+  if (!document.fullscreenEnabled || document.fullscreenElement || !root.requestFullscreen ||
+      navigator.userActivation?.isActive === false) return;
+  root.requestFullscreen({ navigationUI: 'hide' }).then(() => {
+    matchFullscreen = true;
+    if (view !== 'battle' || (!battle.classList.contains('touch-battle') && battle.dataset.arenaTheme !== 'gdmr')) exitMatchFullscreen();
+  }).catch(() => {});
+}
 
 function syncTouchControls() {
   const touchBattle = view === 'battle' && battle.classList.contains('touch-battle');
@@ -121,12 +140,14 @@ function startMatch() {
   hud.update(match);
   if (rotateHint.hidden) playSound('countdown');
   document.activeElement?.blur();
+  if (useTouch || match.arena.definition.theme === 'gdmr') enterMatchFullscreen();
 }
 
 function goHome() {
   closeDialog();
   match = null;
   view = 'home';
+  exitMatchFullscreen();
   battle.hidden = true;
   syncTouchControls();
   $('home').hidden = false;
@@ -275,6 +296,9 @@ $('sound-button').addEventListener('click', () => {
 $('pause-button').addEventListener('click', openPause);
 $('touch-exit').addEventListener('click', goHome);
 portraitViewport.addEventListener('change', syncTouchControls);
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) matchFullscreen = false;
+});
 $('home-button').addEventListener('click', () => { if (view === 'battle') openPause(); else $('play-button').focus(); });
 handleDismiss(dismissDialog);
 document.addEventListener('visibilitychange', () => {

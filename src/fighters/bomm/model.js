@@ -20,6 +20,7 @@ import { drawBorrowedBlade } from '../olivar/model.js';
 import { drawGasCloud } from '../packman/model.js';
 import { drawFlyingTongue } from '../pinco-palino/model.js';
 import { drawBorrowedSteelSword } from '../super-libro-girl/model.js';
+import { drawStompCracks } from '../zunchy/model.js';
 
 const bombParts = [
   part('bombShell', zero, one, '#333a47'),
@@ -123,6 +124,7 @@ export function draw(renderer, fighter, position, time, options) {
   if (attack.borrowed && attack.type === 'absTriple') drawBorrowedTriple(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'budinoFiveK') drawBorrowedFiveK(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'libroSword') drawBorrowedSteelSword(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'zunchyStomp') drawStompCracks(renderer, position, size, attack);
   if (attack.borrowed && attack.type === 'pincoTongue') drawFlyingTongue(renderer, transformPoint(body, [0, -.19, .93]), position, attack, size);
   if (attack.borrowed && attack.type === 'dragonBallNavelLaser') {
     drawNavelBeam(renderer, transformPoint(body, [0, -.41, .84]), x, attack, size);

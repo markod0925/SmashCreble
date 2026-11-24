@@ -31,8 +31,10 @@ import * as budino from './budino/profile.js';
 import * as superLibroGirl from './super-libro-girl/profile.js';
 import * as murenaMan from './murena-man/profile.js';
 import * as harriPotter from './harri-potter/profile.js';
+import * as cerbero from './cerbero/profile.js';
+import * as zunchy from './zunchy/profile.js';
 
-const roster = [rivet, bramble, vesper, kiln, dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, shark67, ingaInga, bid, olivar, packman, ciclope, vidarr, funnyKings, nuvol, ii, dragonball, luffy, maestra, nurofenCaps, pincoPalino, cheAddominali, budino, superLibroGirl, murenaMan, harriPotter];
+const roster = [rivet, bramble, vesper, kiln, dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, shark67, ingaInga, bid, olivar, packman, ciclope, vidarr, funnyKings, nuvol, ii, dragonball, luffy, maestra, nurofenCaps, pincoPalino, cheAddominali, budino, superLibroGirl, murenaMan, harriPotter, cerbero, zunchy];
 
 export const fighters = roster.map(({ fighter }) => fighter);
 export const signatureAttacks = Object.assign({}, ...roster.map(({ attacks }) => attacks));

@@ -1,7 +1,8 @@
 import { vanishClone } from './clones.js';
 import { strike } from './hits.js';
 import { combatants } from './state.js';
-import { captureProgress, capturingAttack, interruptAttack, isInvulnerable } from './status.js';
+import { captureProgress, captureTarget, capturingAttack, isInvulnerable } from './status.js';
+import { clamp } from '../math.js';
 
 export function beginCapture(player, attack, match) {
   let target;
@@ -21,11 +22,7 @@ export function beginCapture(player, attack, match) {
     vanishClone(target, match);
     return;
   }
-  attack.capture = { target, x: target.x, y: target.y };
-  interruptAttack(target);
-  target.vx = 0;
-  target.vy = 0;
-  target.grounded = null;
+  captureTarget(attack, target);
 }
 
 export function advanceCapture(player, attack, match) {
@@ -38,9 +35,15 @@ export function advanceCapture(player, attack, match) {
   }
   if (!attack.sarcophagus) {
     const progress = captureProgress(attack);
-    const { reach = 0.52, height = 1.8 } = attack.mouth ?? {};
+    const mouth = (attack.age >= attack.biteAt ? attack.releaseMouth : undefined) ?? attack.mouth;
+    const { reach = 0.52, height = 1.8 } = mouth ?? {};
     target.x = x + (player.x + attack.facing * reach - x) * progress;
     target.y = y + (player.y + height - y) * progress;
+    if (attack.gulpSpit) {
+      const { side, top, bottom } = match.arena.definition.bounds;
+      target.x = clamp(target.x, -side + .25, side - .25);
+      target.y = clamp(target.y, bottom + .4, top - .65);
+    }
   }
   if (attack.age < attack.biteAt) return;
   attack.capture = null;

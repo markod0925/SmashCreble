@@ -24,7 +24,7 @@ function strikeAlongTrace(player, attack, match, [ax, ay], [bx, by]) {
   const travel = dx * dx + dy * dy;
   for (const target of combatants(match)) {
     if (target.slot === player.slot || attack.victims.has(target)) continue;
-    const center = target.y + bodyCenter(target);
+    const center = target.y + bodyCenter(target, match);
     const t = travel > 0 ? clamp(((target.x - ax) * dx + (center - ay) * dy) / travel, 0, 1) : 0;
     const gapX = target.x - ax - dx * t;
     const gapY = center - ay - dy * t;

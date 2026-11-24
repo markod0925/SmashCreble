@@ -1,6 +1,6 @@
-import { crossedPlatform } from './arena.js';
+import { crossedPlatform, platformHeight } from './arena.js';
 import { strike } from './hits.js';
-import { bodyCenter, combatants, scaleOf } from './state.js';
+import { bodyCenter, bodyScale, combatants } from './state.js';
 import { isInvulnerable } from './status.js';
 import { projectileLaunchers } from '../fighters/index.js';
 import { direction } from '../math.js';
@@ -9,11 +9,11 @@ export function fireProjectiles(player, attack, match) {
   projectileLaunchers[attack.projectile](player, attack, match);
 }
 
-function projectileTouches(projectile, target) {
-  const scale = scaleOf(target);
+function projectileTouches(projectile, target, match) {
+  const scale = bodyScale(target, match);
   const projectileScale = projectile.scale ?? 1;
   return target.slot !== projectile.owner.slot && !projectile.victims?.has(target) &&
-    Math.abs(target.x - projectile.x) <= .2 * projectileScale + .45 * scale && Math.abs(target.y + bodyCenter(target) - projectile.y) <= .3 * projectileScale + .52 * scale;
+    Math.abs(target.x - projectile.x) <= .2 * projectileScale + .45 * scale && Math.abs(target.y + bodyCenter(target, match) - projectile.y) <= .3 * projectileScale + .52 * scale;
 }
 
 function detonateBomb(projectile, targets, match) {
@@ -21,7 +21,7 @@ function detonateBomb(projectile, targets, match) {
   for (const target of targets) {
     if (target.slot === owner.slot || victims.has(target)) continue;
     const dx = target.x - x;
-    const dy = target.y + bodyCenter(target) - y;
+    const dy = target.y + bodyCenter(target, match) - y;
     if (Math.hypot(dx, dy * .78) > blast) continue;
     if (strike(owner, target, { ...hit, x: direction(dx, direction(vx)) }, match)) victims.add(target);
   }
@@ -47,15 +47,16 @@ export function advanceProjectiles(match, dt) {
       projectile.y += projectile.vy * dt;
     }
     const lands = projectile.gravity && crossedPlatform(match.arena, from, projectile);
+    if (lands?.slope) projectile.y = platformHeight(lands, projectile.x);
     if (projectile.blast) {
-      if (lands || projectile.remaining <= 0 || targets.some((target) => target.stocks && !target.respawn && !isInvulnerable(target) && !target.dodge && projectileTouches(projectile, target))) {
+      if (lands || projectile.remaining <= 0 || targets.some((target) => target.stocks && !target.respawn && !isInvulnerable(target) && !target.dodge && projectileTouches(projectile, target, match))) {
         detonateBomb(projectile, targets, match);
       }
       continue;
     }
     if (projectile.recalling) continue;
     for (const target of targets) {
-      if (!projectileTouches(projectile, target)) continue;
+      if (!projectileTouches(projectile, target, match)) continue;
       if (strike(projectile.owner, target, projectile.hit, match)) {
         projectile.victims?.add(target);
         projectile.onImpact?.(projectile, match, target);

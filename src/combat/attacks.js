@@ -4,7 +4,7 @@ import { canSummonClones, canUseSuper, summonClones } from './clones.js';
 import { startDance } from './dance.js';
 import { strike } from './hits.js';
 import { fireProjectiles } from './projectiles.js';
-import { bodyCenter, bodyContactDistance, combatants, scaleOf } from './state.js';
+import { bodyCenter, bodyContactDistance, bodyScale, combatants, scaleOf } from './state.js';
 import { dazeRivals, interruptAttack } from './status.js';
 import { advanceTrace, startTrace } from './trace.js';
 import { signatureAttacks } from '../fighters/index.js';
@@ -148,6 +148,7 @@ export function advanceAttack(player, dt, match) {
     if (attack.startsAcidRain) startAcidRain(player, attack, match);
     if (attack.refillReserve) player.reserveAmmo = attack.refillReserve;
     if (attack.dazzlesRivals) dazeRivals(player, match, attack.dazzlesRivals);
+    if (attack.shrinksRivals) player.shrinkRivalsUntil = match.time - attack.shrinksRivals;
     if (attack.wandLightning) castWandLightning(player, attack, match);
     if (attack.deploysCompanions) deployCompanions(player, match);
     if (attack.stealsPower) stealPower(player, attack, match);
@@ -185,11 +186,11 @@ export function advanceAttack(player, dt, match) {
     // Short strikes can still connect at body contact, including against wider fighters.
     if (Math.abs(dx) > range && Math.abs(dx) > bodyContactDistance(player, target, match) + 1e-9) continue;
     if (!attack.all && dx * attack.facing < -0.23 * attack.scale) continue;
-    const height = target.y + bodyCenter(target) - player.y;
+    const height = target.y + bodyCenter(target, match) - player.y;
     if (attack.arcStart) {
       const progress = clamp((dx * attack.facing - attack.arcStart) / (attack.range - attack.arcStart), 0, 1);
-      if (Math.abs(height - rainbowHeight(attack, progress)) > attack.vertical + .52 * scaleOf(target)) continue;
-    } else if (Math.abs(height - bodyCenter(player) - (attack.offset ?? 0)) > attack.vertical) continue;
+      if (Math.abs(height - rainbowHeight(attack, progress)) > attack.vertical + .52 * bodyScale(target, match)) continue;
+    } else if (Math.abs(height - bodyCenter(player, match) - (attack.offset ?? 0)) > attack.vertical) continue;
     const x = attack.all && attack.x > 0.5 && attack.type !== 'dash' ? Math.abs(attack.x) * direction(dx, attack.facing) : attack.x;
     if (strike(player, target, { ...attack, x }, match)) attack.victims.add(target);
   }
@@ -203,6 +204,12 @@ function signatureAttack(player, input, match, dt) {
     superstar.holder = null;
     superstar.cooldown = superstarDelay;
     startAttack(player, moves.super, input, match);
+    const cloneLimit = match.arena.definition.rivalClonesOnSuper;
+    if (cloneLimit) {
+      for (const rival of match.fighters) {
+        if (rival !== player && rival.stocks && !rival.respawn) summonClones(rival, match, cloneLimit, true);
+      }
+    }
   } else if (!player.attack) {
     if (player.charging) {
       if (input.special) player.charge = clamp(player.charge + dt / chargeTime, 0, 1);

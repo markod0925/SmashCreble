@@ -22,7 +22,7 @@ export function advanceAcidRain(match) {
     if (match.time - rain.nextPulse > 1e-9) continue;
     rain.nextPulse -= 1;
     for (const target of targets) {
-      const height = target.y + bodyCenter(target);
+      const height = target.y + bodyCenter(target, match);
       if (Math.abs(target.x - rain.x) > rain.radius || height < rain.bottom || height > rain.top) continue;
       const x = direction(target.x - rain.x, rain.owner.facing);
       strike(rain.owner, target, { damage: 4, force: 2.9, x, stationary: true }, match);

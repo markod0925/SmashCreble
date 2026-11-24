@@ -1,11 +1,11 @@
-import { platformCenter } from './arena.js';
+import { platformCenter, platformHeight } from './arena.js';
 import { canSummonClones, canUseSuper } from './clones.js';
 import { bodyContactDistance, combatants, idleInput, scaleOf } from './state.js';
 import { boundTime, dazedTime, frozenTime } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
-import { direction } from '../math.js';
+import { clamp, direction } from '../math.js';
 
 function recoveryPlatform(player, arena) {
   if (player.grounded?.main) return player.grounded;
@@ -14,7 +14,7 @@ function recoveryPlatform(player, arena) {
   for (const platform of arena.platforms) {
     if (!platform.main) continue;
     const gap = Math.max(0, platform.left - player.x, player.x - platform.right);
-    const candidate = Math.hypot(gap, player.y - platform.y);
+    const candidate = Math.hypot(gap, player.y - platformHeight(platform, clamp(player.x, platform.left, platform.right)));
     if (candidate >= distance) continue;
     nearest = platform;
     distance = candidate;
@@ -33,13 +33,14 @@ export function cpuInput(player, match, dt) {
   player.aiJump -= dt;
   const floor = recoveryPlatform(player, match.arena);
   const edgeMargin = floor ? Math.min(.6, (floor.right - floor.left) / 4) : 0;
+  const floorY = floor && platformHeight(floor, clamp(player.x, floor.left, floor.right));
   const offstage = floor && (!player.grounded || player.grounded.main) &&
-    (player.x < floor.left + edgeMargin || player.x > floor.right - edgeMargin || player.y < floor.y - .7);
+    (player.x < floor.left + edgeMargin || player.x > floor.right - edgeMargin || player.y < floorY - .7);
   if (offstage) {
     const moving = direction(platformCenter(floor) - player.x);
-    const jumpPressed = player.y < floor.y + 1 && player.vy < 2 && player.aiJump <= 0 && player.jumps > 0;
+    const jumpPressed = player.y < floorY + 1 && player.vy < 2 && player.aiJump <= 0 && player.jumps > 0;
     if (jumpPressed) player.aiJump = 0.44;
-    return { x: moving, y: 1, jumpPressed, specialPressed: player.y < floor.y - 1.4 && player.vy < 0 && !player.recovered && !player.jumps };
+    return { x: moving, y: 1, jumpPressed, specialPressed: player.y < floorY - 1.4 && player.vy < 0 && !player.recovered && !player.jumps };
   }
   if (!target) return idleInput;
   const dx = target.x - player.x;
@@ -72,6 +73,7 @@ export function cpuInput(player, match, dt) {
     const budino = player.fighter.id === 'budino';
     const murena = player.fighter.id === 'murena-man';
     const harri = player.fighter.id === 'harri-potter';
+    const cerbero = player.fighter.id === 'cerbero';
     const deployed = assaultRemaining(player, match) > 1e-9;
     const summonLimit = signatureAttacks[player.fighter.moves.hold].summonsClones;
     const roomToSummon = summonLimit && canSummonClones(player, match, summonLimit);
@@ -86,6 +88,7 @@ export function cpuInput(player, match, dt) {
       (player.fighter.id === 'maestra' && Math.abs(dx) < signatureAttacks.maestraShove.range * .87 && Math.abs(dy) < 1.05) ||
       (player.fighter.id === 'pinco-palino' && Math.abs(dx) < 7 && Math.abs(dy) < 4.7) ||
       (murena && Math.abs(dx) < superMove.range * .92 && dy > -2.3 && dy < 4) ||
+      (superMove.shrinksRivals && Math.abs(dx) < 7.2 && Math.abs(dy) < 3.6) ||
       (player.fighter.id === 'che-addominali' && Math.abs(dx) < signatureAttacks.absAcidRain.range && Math.abs(dy) < 3.5);
     if ((active || (superInRange && !player.attack && !player.hitstun)) && canUseSuper(player, match)) return { x, y: 0, superPressed: true };
     if (olivar && !deployed && !close && Math.abs(dx) < 5.9 && Math.abs(dy) < 2.3 &&
@@ -114,7 +117,12 @@ export function cpuInput(player, match, dt) {
       player.aiDelay = .98;
       return { x, y: 0, specialPressed: true, special: Math.abs(dx) >= boltRange || Math.abs(dy) > .72 };
     }
-    const rangedCharge = ['vi', 'gioppino', 'huuuuu', 'shark-67', 'packman', 'vidarr', 'funny-kings', 'nuvol', 'luffy', 'maestra', 'nurofen-caps', 'pinco-palino', 'budino', 'super-libro-girl'].includes(player.fighter.id);
+    if (cerbero && !close && Math.abs(dx) < signatureAttacks.cerberoTeeth.range * .88 && Math.abs(dy) < .92 &&
+        player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
+      player.aiDelay = 1.02;
+      return { x, y: 0, specialPressed: true, special: Math.abs(dx) > signatureAttacks.cerberoSpray.range * .9 };
+    }
+    const rangedCharge = ['vi', 'gioppino', 'huuuuu', 'shark-67', 'packman', 'vidarr', 'funny-kings', 'nuvol', 'luffy', 'maestra', 'nurofen-caps', 'pinco-palino', 'budino', 'super-libro-girl', 'zunchy'].includes(player.fighter.id);
     if (rangedCharge && !close && Math.abs(dx) < signatureAttacks[player.fighter.moves.hold].range * scaleOf(player) && Math.abs(dy) < 0.9 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
       player.aiDelay = 0.96;

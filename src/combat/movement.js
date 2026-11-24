@@ -1,4 +1,4 @@
-import { crossedPlatform, leavePlatform, rules } from './arena.js';
+import { crossedPlatform, leavePlatform, platformHeight, rules } from './arena.js';
 import { handleAttackInput } from './attacks.js';
 import { bodyCenter, idleInput } from './state.js';
 import { boundTime, capturingAttack, dazedTime, frozenTime, isZombie } from './status.js';
@@ -68,7 +68,7 @@ export function move(player, input, dt, match) {
   leavePlatform(player);
   if (player.grounded) return;
   const { arena } = match;
-  const drift = arena.definition.airDrift?.({ x: player.x, y: player.y + bodyCenter(player) }, arena.environment) ?? 0;
+  const drift = arena.definition.airDrift?.({ x: player.x, y: player.y + bodyCenter(player, match) }, arena.environment) ?? 0;
   player.x += drift * dt;
   player.vy = Math.max(-25, player.vy - dt * rules.gravity);
   player.y += player.vy * dt;
@@ -81,7 +81,7 @@ export function landOnPlatform(player, from, arena) {
   const surface = crossedPlatform(arena, from, player);
   if (surface) {
     player.landing = 0.15;
-    player.y = surface.y;
+    player.y = platformHeight(surface, player.x);
     player.vy = 0;
     player.grounded = surface;
     player.jumps = player.fighter.airJumps ?? 2;

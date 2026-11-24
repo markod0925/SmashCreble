@@ -1,13 +1,13 @@
 import { rules } from '../combat/arena.js';
-import { combatants } from '../combat/state.js';
+import { bodySize, combatants } from '../combat/state.js';
 import { boundTime, captureProgress, capturingAttack, dazedTime, frozenTime, isZombie, shockedTime } from '../combat/status.js';
-import { bommBurstScale } from '../fighters/bomm/profile.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { drawAcidRain } from '../fighters/che-addominali/model.js';
 import { drawBoundWrap, drawSarcophagus } from '../fighters/huuuuu/model.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { drawDanceSnake } from '../fighters/shark-67/model.js';
 import { drawIce, drawSerpentBind } from '../fighters/vidarr/model.js';
+import { shrinkTime } from '../fighters/zunchy/profile.js';
 import { playerColors } from '../player-colors.js';
 import { drawBattleArena, drawHero } from './arena.js';
 import { drawCharacter, drawProjectiles, portraitCamera } from './characters.js';
@@ -70,14 +70,15 @@ export class Graphics {
         tagPoints.push(null);
         continue;
       }
-      const shrink = capture?.sarcophagus ? 0 : capture?.type === 'gangarGulp' ? progress : Math.pow(progress, 3);
-      const burstScale = bommBurstScale(fighter, match);
-      const size = fighter.fighter.size * (1 - shrink * .93) * burstScale;
+      const pulledToMouth = capture?.type === 'gangarGulp' || capture?.gulpSpit;
+      const shrink = capture?.sarcophagus ? 0 : pulledToMouth ? progress : Math.pow(progress, 3);
+      const standingSize = bodySize(fighter, match);
+      const size = standingSize * (1 - shrink * .93);
       if (!clone) tagPoints.push(renderer.project(fighter.x, fighter.y + 3.94 * size, .5));
       if (!fighter.stocks || fighter.respawn > 0) continue;
-      const depth = clone ? fighter.depth : capture?.type === 'gangarGulp' ? .21 + progress * .87 : .21;
-      const shadowScale = (clone ? .5 : 1) * burstScale;
-      if (fighter.grounded) renderer.object('disk', [fighter.x, fighter.y + .019, clone ? depth : .2], [1.58 * shadowScale, .026, .95 * shadowScale], '#192731', zero, .87, .58);
+      const depth = clone ? fighter.depth : pulledToMouth ? .21 + progress * .87 : .21;
+      const shadowScale = (clone ? .5 : 1) * standingSize / fighter.fighter.size;
+      if (fighter.grounded) renderer.object('disk', [fighter.x, fighter.y + .019, clone ? depth : .2], [1.58 * shadowScale, .026, .95 * shadowScale], '#192731', [0, 0, fighter.grounded.angle], .87, .58);
       const model = size === fighter.fighter.size ? fighter.fighter : { ...fighter.fighter, size };
       const zombie = isZombie(fighter, match);
       const power = borrowedPower(fighter, match);
@@ -107,6 +108,7 @@ export class Graphics {
         companionClock: rules.duration - match.time - match.countdown + frozen,
         companionAssault: fighter.companionAssault,
         companionRemaining: assaultRemaining(fighter, match),
+        hungry: shrinkTime(fighter, match) > 0,
       });
       const bound = boundTime(fighter, match);
       if (bound > 0) {

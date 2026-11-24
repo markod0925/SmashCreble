@@ -36,7 +36,7 @@ export function freezeFighter(player, match, duration) {
   player.dodge = 0;
   player.vx = 0;
   player.vy = 0;
-  match.events.push({ type: 'frost', x: player.x, y: player.y + bodyCenter(player), color: '#a8efff' });
+  match.events.push({ type: 'frost', x: player.x, y: player.y + bodyCenter(player, match), color: '#a8efff' });
 }
 
 export function dazeRivals(source, match, duration) {
@@ -65,6 +65,14 @@ export function capturingAttack(target, match) {
 
 export function captureProgress(attack) {
   return clamp((attack.age - attack.from) / (attack.swallowAt - attack.from), 0, 1);
+}
+
+export function captureTarget(attack, target) {
+  attack.capture = { target, x: target.x, y: target.y };
+  interruptAttack(target);
+  target.vx = 0;
+  target.vy = 0;
+  target.grounded = null;
 }
 
 export function interruptAttack(player) {

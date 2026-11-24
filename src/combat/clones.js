@@ -1,3 +1,4 @@
+import { platformHeight } from './arena.js';
 import { cloneScale, spawn } from './state.js';
 import { interruptAttack } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
@@ -14,8 +15,8 @@ export function vanishClone(clone, match) {
   match.events.push({ type: 'clonePop', x: clone.x, y: clone.y + .7, color: clone.fighter.id === 'vi' ? '#f3b5fc' : clone.fighter.color });
 }
 
-function livingClones(player, match) {
-  return match.clones.filter((clone) => clone.owner === player && clone.stocks).length;
+function livingClones(player, match, arenaClone = false) {
+  return match.clones.filter((clone) => clone.owner === player && clone.stocks && clone.arenaClone === arenaClone).length;
 }
 
 export function canUseSuper(player, match) {
@@ -28,8 +29,8 @@ export function canSummonClones(player, match, limit) {
   return !player.owner && livingClones(player, match) < limit;
 }
 
-export function summonClones(player, match, limit) {
-  const missing = limit - livingClones(player, match);
+export function summonClones(player, match, limit, arenaClone = false) {
+  const missing = limit - livingClones(player, match, arenaClone);
   if (player.owner || missing <= 0) return;
   const offsets = cloneFormations[missing - 1];
   const fighter = { ...player.fighter, size: player.fighter.size * cloneScale };
@@ -43,12 +44,12 @@ export function summonClones(player, match, limit) {
   const spread = offsets.at(-1);
   const fit = spread ? Math.min(1, (right - left) / (2 * spread)) : 1;
   const center = clamp(player.x, left + spread * fit, right - spread * fit);
-  const y = platform?.y ?? Math.min(player.y, top - .3);
   for (let i = 0; i < missing; i++) {
     const x = center + offsets[i] * fit;
+    const y = platform ? platformHeight(platform, x) : Math.min(player.y, top - .3);
     const clone = {
       ...spawn(player.slot, true, fighter, arena), slot: player.slot, fighter, owner: player, stocks: 1, cpu: true,
-      x, y, facing: player.facing, grounded: platform, vy: platform ? 0 : Math.max(0, player.vy * .55), aiDelay: .08 + i * .12,
+      x, y, arenaClone, facing: player.facing, grounded: platform, vy: platform ? 0 : Math.max(0, player.vy * .55), aiDelay: .08 + i * .12,
       depth: offsets[i] === 0 ? .95 : i % 2 ? .46 : -.18,
     };
     match.clones.push(clone);

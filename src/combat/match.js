@@ -46,19 +46,21 @@ export function tickMatch(match, controls, dt = rules.step) {
   match.time = Math.max(0, match.time - dt);
   for (const player of match.fighters) advancePoison(player, match);
   advanceAcidRain(match);
+  const { arena } = match;
+  const actors = combatants(match);
+  if (!match.dance || arena.definition.platforms.some(({ rotation }) => rotation)) {
+    advanceArena(arena, dt);
+    for (const player of actors) {
+      if (player.stocks && !player.respawn && player.owner?.stocks !== 0) carryRider(player);
+    }
+  }
   if (match.dance) {
     advanceDance(match, dt);
     if (!match.dance) checkResult(match);
     return;
   }
 
-  const { arena } = match;
   const { side, top, bottom } = arena.definition.bounds;
-  const actors = combatants(match);
-  advanceArena(arena, dt);
-  for (const player of actors) {
-    if (player.stocks && !player.respawn && player.owner?.stocks !== 0) carryRider(player);
-  }
   const movement = new Map();
   for (const player of actors) {
     if (!player.stocks || player.owner?.stocks === 0) continue;
