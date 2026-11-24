@@ -1,6 +1,6 @@
 import { rules } from '../combat/arena.js';
 import { combatants } from '../combat/state.js';
-import { boundTime, captureProgress, capturingAttack, frozenTime, isZombie, shockedTime } from '../combat/status.js';
+import { boundTime, captureProgress, capturingAttack, dazedTime, frozenTime, isZombie, shockedTime } from '../combat/status.js';
 import { bommBurstScale } from '../fighters/bomm/profile.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { drawAcidRain } from '../fighters/che-addominali/model.js';
@@ -83,8 +83,9 @@ export class Graphics {
       const power = borrowedPower(fighter, match);
       const fuseColor = power && (match.time - power.arrivesAt > 1e-9 ? power.previousColor : power.color);
       const frozen = frozenTime(fighter, match);
+      const dazed = dazedTime(fighter, match);
       const danceBeat = dance ? dance.elapsed * TAU * 2 + fighter.slot * .7 : 0;
-      const dancing = dance && !frozen;
+      const dancing = dance && !frozen && !dazed;
       const sway = dancing ? Math.sin(danceBeat) : 0;
       const bounce = dancing ? Math.abs(Math.cos(danceBeat)) * .18 : 0;
       const poseTime = frozen ? time + frozen : dancing ? danceBeat / 14 : time;
@@ -95,9 +96,11 @@ export class Graphics {
         running: dancing ? .65 : fighter.grounded ? Math.min(1, Math.abs(fighter.vx) / 7) : 0,
         airborne: !dance && !fighter.grounded, verticalSpeed: fighter.vy, landing: fighter.landing, attack: fighter.attack, charging: fighter.charging,
         guarding: fighter.guarding, flash: fighter.invulnerable && Math.sin(time * 55) > .15,
-        wobble: frozen ? 0 : dance ? sway * .24 : fighter.stagger ? Math.sin(time * 18) * .18 : capture ? Math.sin(time * 12) * .14 : zombie ? Math.sin(time * 12) * .16 : 0,
+        wobble: frozen ? 0 : dazed ? Math.sin(time * 9) * .2 : dance ? sway * .24 : fighter.stagger ? Math.sin(time * 18) * .18 :
+          capture ? Math.sin(time * 12) * .14 : zombie ? Math.sin(time * 12) * .16 : 0,
         zombie,
         fuseColor,
+        reserveAmmo: fighter.reserveAmmo,
         caseAway: caseOwners.has(fighter),
         danceTime: dance?.elapsed ?? null,
         leadsDance: dance?.owner === fighter,
@@ -121,11 +124,12 @@ export class Graphics {
       const top = fighter.y + 3.53 * size;
       if (star?.holder === fighter) renderer.object('star', [fighter.x, top, .5], [.52, .52, .4], '#ffdb70', [0, Math.sin(time * 3) * .45, 0], .92);
       else renderer.object('gem', [fighter.x, top, .5], clone ? [.22, .2, .18] : [.36, .33, .27], playerColors[fighter.slot], [0, time, Math.PI], .95);
-      if (fighter.stagger || capture?.type === 'incantusChomp') {
-        for (const side of [-1, 1]) {
-          const angle = side * Math.PI / 2 + time * 7;
+      if (dazed || fighter.stagger || capture?.type === 'incantusChomp') {
+        const count = dazed ? 3 : 2;
+        for (let i = 0; i < count; i++) {
+          const angle = i * TAU / count - Math.PI / 2 + time * 7;
           renderer.object('star', [fighter.x + Math.sin(angle) * .65 * size, top - .24 * size, .54 + Math.cos(angle) * .43],
-            [.25, .25, .2], '#deaeff', [0, angle, -angle], .94);
+            [.25, .25, .2], dazed ? '#ffda88' : '#deaeff', [0, angle, -angle], .94);
         }
       }
       if (fighter.charging) {

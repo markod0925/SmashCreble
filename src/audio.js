@@ -44,6 +44,8 @@ const soundEffects = {
   shockEcho: [690, 233, .11, 'triangle', .079],
   shout: [520, 812, .32, 'triangle', .115],
   shove: [260, 53, .22, 'triangle', .17],
+  dazzleBurst: [420, 1430, .48, 'sine', .14],
+  wandLightning: [1290, 110, .32, 'sawtooth', .105],
   block: [700, 450, .12, 'triangle', .09],
   break: [650, 89, .25, 'sawtooth', .09],
   finish: [450, 910, .39, 'triangle', .13],

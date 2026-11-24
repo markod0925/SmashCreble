@@ -35,6 +35,9 @@ let elapsed = 0;
 let controllerLabel = '';
 let accumulator = 0;
 const queued = new Map();
+const battle = $('battle');
+const rotateHint = $('touch-rotate');
+const portraitViewport = window.matchMedia('(orientation: portrait)');
 const touch = navigator.maxTouchPoints > 0 || window.matchMedia('(any-pointer: coarse)').matches
   ? new TouchControls($('touch-controls')) : null;
 const lobby = new Lobby(portrait, (index) => changeSelection(index, true), startMatch, Boolean(touch));
@@ -42,6 +45,18 @@ const showSelection = createRoster(portrait, changeSelection);
 const hud = new BattleHud(portrait);
 const inputs = new Inputs(() => view === 'battle' && !modal, touch);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+function syncTouchControls() {
+  const touchBattle = view === 'battle' && battle.classList.contains('touch-battle');
+  const waitingForRotation = touchBattle && portraitViewport.matches;
+  rotateHint.hidden = !waitingForRotation;
+  battle.inert = waitingForRotation;
+  touch?.show(touchBattle && !waitingForRotation && !modal);
+  if (waitingForRotation) {
+    queued.clear();
+    accumulator = 0;
+  }
+}
 
 function changeSelection(index, quiet = false) {
   const next = (index + fighters.length) % fighters.length;
@@ -55,7 +70,7 @@ function changeSelection(index, quiet = false) {
 
 function openDialog(type, kicker, title) {
   modal = type;
-  touch?.show(false);
+  syncTouchControls();
   updateDanceMusic(null);
   showDialog(type, kicker, title);
 }
@@ -65,7 +80,7 @@ function closeDialog() {
   hideDialog();
   queued.clear();
   accumulator = 0;
-  touch?.show(view === 'battle' && $('battle').classList.contains('touch-battle'));
+  syncTouchControls();
 }
 
 function dismissDialog() {
@@ -95,16 +110,16 @@ function startMatch() {
   view = 'battle';
   $('home').hidden = true;
   $('site-footer').hidden = true;
-  $('battle').hidden = false;
+  battle.hidden = false;
   const useTouch = Boolean(touch && lobby.seats.some((seat) => seat?.source === 'keyboard'));
-  $('battle').classList.toggle('touch-battle', useTouch);
-  touch?.show(useTouch);
-  $('battle').dataset.arenaTheme = match.arena.definition.theme;
+  battle.classList.toggle('touch-battle', useTouch);
+  syncTouchControls();
+  battle.dataset.arenaTheme = match.arena.definition.theme;
   $('arena-name').textContent = match.arena.definition.name.toUpperCase();
-  $('battle').prepend(canvas);
+  battle.prepend(canvas);
   hud.reset(match);
   hud.update(match);
-  playSound('countdown');
+  if (rotateHint.hidden) playSound('countdown');
   document.activeElement?.blur();
 }
 
@@ -112,8 +127,8 @@ function goHome() {
   closeDialog();
   match = null;
   view = 'home';
-  $('battle').hidden = true;
-  touch?.show(false);
+  battle.hidden = true;
+  syncTouchControls();
   $('home').hidden = false;
   $('site-footer').hidden = false;
   $('hero-world').prepend(canvas);
@@ -237,7 +252,7 @@ function frame(now) {
   if (view === 'home') {
     elapsed += reducedMotion.matches ? 0 : dt;
     graphics.hero(fighters[lobby.selection], elapsed);
-  } else {
+  } else if (rotateHint.hidden) {
     const live = !modal && !previousModal;
     if (live) {
       elapsed += dt;
@@ -246,7 +261,7 @@ function frame(now) {
     const points = graphics.battle(match, elapsed, live ? dt : 0);
     hud.updateTags(match, points);
   }
-  updateDanceMusic(view === 'battle' && !modal ? match.dance : null);
+  updateDanceMusic(view === 'battle' && !modal && rotateHint.hidden ? match.dance : null);
   requestAnimationFrame(frame);
 }
 
@@ -258,6 +273,8 @@ $('sound-button').addEventListener('click', () => {
   playSound('select');
 });
 $('pause-button').addEventListener('click', openPause);
+$('touch-exit').addEventListener('click', goHome);
+portraitViewport.addEventListener('change', syncTouchControls);
 $('home-button').addEventListener('click', () => { if (view === 'battle') openPause(); else $('play-button').focus(); });
 handleDismiss(dismissDialog);
 document.addEventListener('visibilitychange', () => {

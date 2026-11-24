@@ -1,7 +1,7 @@
 import { $, node } from './dom.js';
 import { playerColors } from '../player-colors.js';
 import { rules } from '../combat/arena.js';
-import { boundTime, frozenTime, isZombie } from '../combat/status.js';
+import { boundTime, dazedTime, frozenTime, isZombie } from '../combat/status.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { danceSeconds } from '../fighters/shark-67/profile.js';
@@ -27,7 +27,7 @@ export class BattleHud {
       star.hidden = true;
       card.append(this.portrait(fighter, 'hud-face'), node('strong', '', fighter.name), amount, stockLine);
       if (fighter.moves) card.append(star);
-      const power = fighter.id === 'bomm' ? node('span', 'hud-power') : null;
+      const power = ['bomm', 'budino'].includes(fighter.id) ? node('span', 'hud-power') : null;
       if (power) {
         power.hidden = true;
         card.append(power);
@@ -58,9 +58,10 @@ export class BattleHud {
       const zombie = isZombie(fighter, match);
       const bound = Math.ceil(boundTime(fighter, match));
       const frozen = Math.ceil(frozenTime(fighter, match));
+      const dazed = Math.ceil(dazedTime(fighter, match));
       const dancing = match.dance ? Math.ceil(danceSeconds - match.dance.elapsed - 1e-9) : 0;
       const sprouts = Math.ceil(assaultRemaining(fighter, match) - 1e-9);
-      const status = frozen ? ` · FROZEN ${frozen}s` : dancing ? ` · DANCE ${dancing}s` : bound ? ` · BOUND ${bound}s` : fighter.poison ? ' · POISONED'
+      const status = dazed ? ` · DAZED ${dazed}s` : frozen ? ` · FROZEN ${frozen}s` : dancing ? ` · DANCE ${dancing}s` : bound ? ` · BOUND ${bound}s` : fighter.poison ? ' · POISONED'
         : zombie ? ' · ZOMBIE' : sprouts > 0 ? ` · SPROUTS ${sprouts}s` : '';
       const tagLabel = `P${fighter.slot + 1}${fighter.cpu ? ' CPU' : ''}${status}`;
       if (tag.textContent !== tagLabel) tag.textContent = tagLabel;
@@ -69,15 +70,15 @@ export class BattleHud {
       tag.classList.toggle('poisoned', Boolean(fighter.poison));
       tag.classList.toggle('dancing', dancing > 0);
       tag.classList.toggle('frozen', frozen > 0);
+      tag.classList.toggle('dazed', dazed > 0);
       if (power) {
         const borrowed = borrowedPower(fighter, match);
-        power.hidden = !borrowed || !fighter.stocks;
-        if (borrowed) {
-          const label = `${borrowed.name} · ${Math.ceil(match.time - borrowed.expiresAt)}s`;
-          if (power.textContent !== label) {
-            power.textContent = label;
-            power.style.color = borrowed.color;
-          }
+        const reserve = !fighter.respawn && fighter.reserveAmmo;
+        const label = borrowed ? `${borrowed.name} · ${Math.ceil(match.time - borrowed.expiresAt)}s` : reserve ? `RESERVE · ${reserve}` : '';
+        power.hidden = !label || !fighter.stocks;
+        if (power.textContent !== label) {
+          power.textContent = label;
+          power.style.color = borrowed?.color ?? fighter.fighter.color;
         }
       }
       stockLine.setAttribute('aria-label', `${fighter.stocks} stocks`);

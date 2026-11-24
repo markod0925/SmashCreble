@@ -3,6 +3,7 @@ import { powerStealCloud } from '../fighters/bomm/model.js';
 import { powerStealTravelTime } from '../fighters/bomm/profile.js';
 import { drawTomatoSplat } from '../fighters/funny-kings/model.js';
 import { drawThunderbolt } from '../fighters/nuvol/model.js';
+import { drawDazzleBurst } from '../fighters/super-libro-girl/model.js';
 import { drawShockSkeleton } from './skeleton.js';
 import { drawTrace67 } from './trace.js';
 
@@ -30,6 +31,10 @@ export class BattleEffects {
       }
       if (event.type === 'tomatoSplat') {
         this.effects.push({ ...event, lifetime: .55, age: 0 });
+        continue;
+      }
+      if (event.type === 'dazzleBurst') {
+        this.effects.push({ ...event, lifetime: .69, age: 0 });
         continue;
       }
       if (event.type === 'nuvolBolt' || event.type === 'shockEcho') {
@@ -66,6 +71,10 @@ export class BattleEffects {
       }
       if (effect.type === 'tomatoSplat') {
         drawTomatoSplat(renderer, effect);
+        continue;
+      }
+      if (effect.type === 'dazzleBurst') {
+        drawDazzleBurst(renderer, effect);
         continue;
       }
       if (effect.type === 'nuvolBolt') {

@@ -8,7 +8,7 @@ const captured = new Set([...directions, ...Object.values(keyboardMapping).flat(
 const digital = (negative, positive) => Number(positive) - Number(negative);
 const axis = (value = 0) => Math.abs(value) < .22 ? 0 : Math.sign(value) * Math.min(1, (Math.abs(value) - .22) / .78);
 
-export const combatEdges = ['jumpPressed', 'lightPressed', 'heavyPressed', 'specialPressed', 'superPressed', 'dodgePressed'];
+export const combatEdges = ['jumpPressed', 'dropPressed', 'lightPressed', 'heavyPressed', 'specialPressed', 'superPressed', 'dodgePressed'];
 
 export function fighterInput(state, fighter, controller) {
   if (!fighter.moves) return { ...state };

@@ -2,6 +2,7 @@ import { multiply, one, smoothStep, TAU, transform, transformPoint, zero } from 
 import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 import { drawFlyingKickTrail } from '../bid/model.js';
+import { drawBorrowedFiveK } from '../budino/model.js';
 import { drawBorrowedTriple } from '../che-addominali/model.js';
 import { drawClubImpact } from '../ciclope/model.js';
 import { bommBurstScale } from './profile.js';
@@ -12,11 +13,13 @@ import { zombieSnap } from '../gioppino/model.js';
 import { drawChokingPuff } from '../huuuuu/model.js';
 import { drawBorrowedThrust } from '../ii/model.js';
 import { drawBorrowedRuler } from '../maestra/model.js';
+import { drawFlameJet } from '../murena-man/model.js';
 import { drawCapsBomb } from '../nurofen-caps/model.js';
 import { stenchEffect } from '../incantus/model.js';
 import { drawBorrowedBlade } from '../olivar/model.js';
 import { drawGasCloud } from '../packman/model.js';
 import { drawFlyingTongue } from '../pinco-palino/model.js';
+import { drawBorrowedSteelSword } from '../super-libro-girl/model.js';
 
 const bombParts = [
   part('bombShell', zero, one, '#333a47'),
@@ -118,12 +121,15 @@ export function draw(renderer, fighter, position, time, options) {
   if (attack.borrowed && attack.type === 'iiThrust') drawBorrowedThrust(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'maestraRuler') drawBorrowedRuler(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'absTriple') drawBorrowedTriple(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'budinoFiveK') drawBorrowedFiveK(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'libroSword') drawBorrowedSteelSword(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'pincoTongue') drawFlyingTongue(renderer, transformPoint(body, [0, -.19, .93]), position, attack, size);
   if (attack.borrowed && attack.type === 'dragonBallNavelLaser') {
     drawNavelBeam(renderer, transformPoint(body, [0, -.41, .84]), x, attack, size);
   }
   if (!attack.borrowed || attack.age < attack.from || attack.age > (attack.until ?? attack.from + .12)) return;
   if (attack.type === 'dragonFlame') flameEffect(renderer, position, facing, attack);
+  else if (attack.type === 'murenaFlame') drawFlameJet(renderer, transformPoint(body, [0, -.27, .9]), x, attack);
   else if (attack.type === 'incantusStench') stenchEffect(renderer, position, attack, 1.92);
   else if (attack.type === 'gangarBite') biteEffect(renderer, position, facing, attack);
   else if (attack.type === 'gioppinoBite') zombieSnap(renderer, position, facing, attack);

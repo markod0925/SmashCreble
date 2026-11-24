@@ -87,7 +87,7 @@ h1 span:nth-child(2) { color: var(--mint); }
 .portrait img { position: absolute; width: 124%; height: 133%; top: 5%; left: -12%; object-fit: contain; object-position: center 19%; }
 .fighter-card-info { z-index: 1; display: grid; align-content: center; gap: 3px; padding: 6px 8px 7px; min-height: 47px; background: #1a2329; border-top: 1px solid #344850; grid-row: 2; }
 .fighter-card[aria-pressed='true'] .fighter-card-info { background: #243536; border-color: #4d8880; }
-.fighter-card-info strong { font: clamp(15px, 1.1vw, 20px)/.9 var(--display); letter-spacing: .075em; text-transform: uppercase; }
+.fighter-card-info strong { font: clamp(15px, 1.1vw, 20px)/.9 var(--display); letter-spacing: .075em; text-transform: uppercase; overflow-wrap: anywhere; }
 .fighter-card-info small { color: #b9c6c7; font-size: 11px; }
 .selected-marker { display: none; z-index: 2; position: absolute; top: 9px; left: 10px; color: #112b24; background: var(--fighter); font: 800 10px var(--mono); padding: 3px 5px; }
 .fighter-card[aria-pressed='true'] .selected-marker { display: block; }
@@ -128,6 +128,7 @@ h1 span:nth-child(2) { color: var(--mint); }
 .player-tag.poisoned { color: #9bea78; }
 .player-tag.dancing { color: #ffc891; }
 .player-tag.frozen { color: #b4efff; }
+.player-tag.dazed { color: #ffdc8a; }
 
 dialog { width: min(590px, calc(100vw - 48px)); padding: 23px 25px 25px; border: 1px solid #697d82; border-top: 3px solid var(--mint); background: #19232b; color: var(--ink); box-shadow: 0 22px 80px #000a; }
 dialog:has(.controls-table) { width: min(1370px, calc(100vw - 48px)); }
@@ -165,8 +166,8 @@ dialog h2 { margin: 8px 0 15px; font: 41px/.97 var(--display); text-transform: u
 .fatal { position: fixed; inset: 0; z-index: 5; display: grid; place-content: center; padding: 30px; background: #11191e; color: #ffcea4; }
 
 #shell:has(.touch-battle:not([hidden])) {
-  --touch-cell: clamp(44px, 12dvh, 56px);
-  --touch-gap: 4px;
+  --touch-button-size: clamp(46px, 15dvh, 68px);
+  --touch-stick-size: clamp(100px, 38dvh, 172px);
   position: relative;
   height: 100dvh;
   min-height: 0;
@@ -178,49 +179,93 @@ dialog h2 { margin: 8px 0 15px; font: 41px/.97 var(--display); text-transform: u
 .touch-battle .battle-top {
   inset: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto max(12px, env(safe-area-inset-left));
 }
-.touch-battle .hud { top: calc(58px + env(safe-area-inset-top)); bottom: auto; }
+.touch-battle .hud { top: calc(58px + env(safe-area-inset-top)); bottom: auto; display: flex; width: min(86%, 880px); }
 .touch-battle .pause-button { min-height: 44px; }
 .touch-battle .pause-button kbd { display: none; }
 .touch-controls {
   position: absolute;
   z-index: 4;
-  bottom: max(8px, env(safe-area-inset-bottom));
-  left: max(8px, env(safe-area-inset-left));
-  right: max(8px, env(safe-area-inset-right));
+  bottom: calc(clamp(12px, 5dvh, 32px) + env(safe-area-inset-bottom));
+  left: calc(clamp(14px, 3vw, 44px) + env(safe-area-inset-left));
+  right: calc(clamp(14px, 3vw, 44px) + env(safe-area-inset-right));
   display: flex;
   justify-content: space-between;
   align-items: end;
   pointer-events: none;
 }
-.touch-dpad, .touch-actions {
-  display: grid;
-  grid-template-columns: repeat(3, var(--touch-cell));
+.touch-stick, .touch-actions button {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   pointer-events: auto;
 }
-.touch-dpad { overflow: hidden; border-radius: 25%; }
-.touch-actions { gap: var(--touch-gap); }
-.touch-dpad span, .touch-actions button {
+.touch-stick, .touch-actions button {
   display: grid;
   place-items: center;
-  height: var(--touch-cell);
-  border: 1px solid #8fa6a4a6;
-  background: #172534e8;
+  border: 1px solid #c6e8e791;
+  border-radius: 50%;
+  background: #17253466;
   color: var(--ink);
 }
-.touch-dpad span { font-size: 22px; border-color: #8fa6a459; }
-.touch-dpad span:empty { background: #172534a8; }
-.touch-actions button { padding: 0; border-radius: 12px; font-size: clamp(10px, 2.9vw, 13px); font-weight: 750; }
-.touch-dpad span.held, .touch-actions button.held { background: var(--mint); color: #102823; }
-
-@media (orientation: portrait) {
-  #shell:has(.touch-battle:not([hidden])) { --touch-cell: clamp(44px, 14vw, 60px); }
-  .battle.touch-battle { height: calc(100% - 3 * var(--touch-cell) - 16px - env(safe-area-inset-bottom)); }
-  .touch-battle .hud { top: auto; bottom: 8px; }
+.touch-stick {
+  position: relative;
+  width: var(--touch-stick-size);
+  aspect-ratio: 1;
 }
+.touch-stick::before {
+  content: '';
+  position: absolute;
+  inset: 17%;
+  border: 1px solid #c6e8e748;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.touch-stick-thumb {
+  width: 48%;
+  aspect-ratio: 1;
+  border: 1px solid #defff2b3;
+  border-radius: 50%;
+  background: #79e7c659;
+  box-shadow: 0 3px 12px #10141944;
+  pointer-events: none;
+}
+.touch-actions {
+  display: grid;
+  grid-template-areas: 'shield shield' 'attack special';
+  grid-template-columns: repeat(2, var(--touch-button-size));
+  gap: clamp(4px, 1.6dvh, 8px);
+}
+.touch-actions button {
+  width: var(--touch-button-size);
+  aspect-ratio: 1;
+  padding: 0;
+  font-size: clamp(18px, 6dvh, 25px);
+  font-weight: 750;
+  text-shadow: 0 1px 4px #101419;
+}
+.touch-actions [data-action='light'] { grid-area: attack; }
+.touch-actions [data-action='special'] { grid-area: special; }
+.touch-actions [data-action='guard'] {
+  grid-area: shield;
+  justify-self: center;
+  font-size: clamp(10px, 3.5dvh, 13px);
+}
+.touch-actions button.held { background: #79e7c6a6; border-color: var(--mint); }
+.touch-rotate {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: var(--bg);
+  text-align: center;
+}
+.touch-rotate h2 { margin: 0; font: 28px var(--display); }
+.touch-rotate button { min-height: 44px; }
 
 @media (max-width: 1150px) {
   .roster { grid-template-columns: repeat(5, minmax(0, 1fr)); }

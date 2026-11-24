@@ -1,5 +1,5 @@
 import { clamp } from '../math.js';
-import { bodyCenter } from './state.js';
+import { bodyCenter, combatants } from './state.js';
 
 export function isInvulnerable(player) {
   return Boolean(player.invulnerable || player.attack?.untouchable);
@@ -15,6 +15,10 @@ export function boundTime(player, match) {
 
 export function frozenTime(player, match) {
   return statusTime(player.frozenUntil, match);
+}
+
+export function dazedTime(player, match) {
+  return statusTime(player.dazedUntil, match);
 }
 
 export function shockedTime(player, match) {
@@ -33,6 +37,16 @@ export function freezeFighter(player, match, duration) {
   player.vx = 0;
   player.vy = 0;
   match.events.push({ type: 'frost', x: player.x, y: player.y + bodyCenter(player), color: '#a8efff' });
+}
+
+export function dazeRivals(source, match, duration) {
+  for (const player of combatants(match)) {
+    if (player.slot === source.slot || !player.stocks || player.respawn) continue;
+    player.dazedUntil = Math.min(player.dazedUntil ?? match.time, match.time - duration);
+    interruptAttack(player);
+    player.guarding = false;
+    player.dodge = 0;
+  }
 }
 
 export function advancePoison(player, match) {

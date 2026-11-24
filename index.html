@@ -60,20 +60,19 @@
       </main>
 
       <div class="touch-controls" id="touch-controls" role="group" aria-label="Touch controls" hidden>
-        <div class="touch-dpad" role="group" aria-label="Move and aim">
-          <span></span><span>↑</span><span></span>
-          <span>←</span><span></span><span>→</span>
-          <span></span><span>↓</span><span></span>
+        <div class="touch-stick" role="group" aria-label="Move, aim and jump">
+          <span class="touch-stick-thumb" aria-hidden="true"></span>
         </div>
         <div class="touch-actions">
-          <button type="button" tabindex="-1" data-action="guard">Shield</button>
-          <button type="button" tabindex="-1" data-action="dodge">Dodge</button>
-          <button type="button" tabindex="-1" data-action="heavy">Heavy</button>
-          <button type="button" tabindex="-1" data-action="light">Light</button>
-          <button type="button" tabindex="-1" data-action="special">Special</button>
-          <button type="button" tabindex="-1" data-action="jump">Jump</button>
+          <button type="button" tabindex="-1" aria-label="A: attack" data-action="light">A</button>
+          <button type="button" tabindex="-1" aria-label="B: special attack" data-action="special">B</button>
+          <button type="button" tabindex="-1" aria-label="Scudo: shield" data-action="guard">Scudo</button>
         </div>
       </div>
+      <section class="touch-rotate" id="touch-rotate" aria-labelledby="touch-rotate-title" hidden>
+        <h2 id="touch-rotate-title" role="status">Rotate your phone to play</h2>
+        <button type="button" class="text-button" id="touch-exit">Return to roster</button>
+      </section>
 
       <footer class="site-footer" id="site-footer">
         <span><span class="footer-mark" aria-hidden="true"></span> LOCAL VS <span class="footer-divider"></span> 1–4 PLAYERS</span>
@@ -91,7 +90,7 @@
     </dialog>
 
     <template id="controls-template">
-      <p class="dialog-note touch-guide" hidden>On a touch screen, use the direction pad and the labeled buttons. Hold Heavy to charge, combine Shield + Dodge to evade, and press Light + Special together to use a collected Superstar. Use Up + Special to recover and Down + Jump to drop through a platform.</p>
+      <p class="dialog-note touch-guide" hidden>Play in landscape. Use the stick to move, flick up to jump, or flick down to drop through a raised platform. Press A to attack and B for a special. Hold Scudo to shield, then tap A to dodge. Use Up + B to recover. Press A + B to charge a heavy attack or use a collected Superstar, depending on your fighter.</p>
       <table class="controls-table">
         <caption>Standard controls</caption>
         <thead><tr><th scope="col">Action</th><th scope="col">Keyboard</th><th scope="col">Controller</th></tr></thead>
@@ -110,14 +109,14 @@
       <div class="controls-scroll" role="region" aria-label="Superstar fighter controls" tabindex="0">
       <table class="controls-table">
         <caption>Superstar fighters</caption>
-        <thead><tr><th scope="col">Dragon Boy</th><th scope="col">Eid</th><th scope="col">Incantus</th><th scope="col">Beina</th><th scope="col">Gangar</th><th scope="col">Vi</th><th scope="col">Bomm</th><th scope="col">Gioppino</th><th scope="col">Huuuuu!!</th><th scope="col">67</th><th scope="col">Inga inga</th><th scope="col">Bid</th><th scope="col">Olivar</th><th scope="col">Packman</th><th scope="col">Ciclope</th><th scope="col">Vidarr</th><th scope="col">Funny Kings</th><th scope="col">Nuvol</th><th scope="col">ii!</th><th scope="col">DragonBall</th><th scope="col">Luffy</th><th scope="col">Maestra</th><th scope="col">Nurofen Caps</th><th scope="col">Pinco Palino</th><th scope="col">Che Addominali!</th><th scope="col">Keyboard</th><th scope="col">Controller</th></tr></thead>
+        <thead><tr><th scope="col">Dragon Boy</th><th scope="col">Eid</th><th scope="col">Incantus</th><th scope="col">Beina</th><th scope="col">Gangar</th><th scope="col">Vi</th><th scope="col">Bomm</th><th scope="col">Gioppino</th><th scope="col">Huuuuu!!</th><th scope="col">67</th><th scope="col">Inga inga</th><th scope="col">Bid</th><th scope="col">Olivar</th><th scope="col">Packman</th><th scope="col">Ciclope</th><th scope="col">Vidarr</th><th scope="col">Funny Kings</th><th scope="col">Nuvol</th><th scope="col">ii!</th><th scope="col">DragonBall</th><th scope="col">Luffy</th><th scope="col">Maestra</th><th scope="col">Nurofen Caps</th><th scope="col">Pinco Palino</th><th scope="col">Che Addominali!</th><th scope="col">Budino</th><th scope="col">SuperLibroGirl</th><th scope="col">Murena Man</th><th scope="col">HarriPotter</th><th scope="col">Keyboard</th><th scope="col">Controller</th></tr></thead>
         <tbody>
-          <tr><th scope="row" colspan="25">Jump / double jump</th><td>Space</td><td>X</td></tr>
-          <tr><th scope="row" colspan="25">Drop through platform</th><td>Down + Space</td><td>Down + X</td></tr>
-          <tr><td>Claw &amp; Kick</td><td>Kick &amp; Punch</td><td>Belly Bump</td><td>Kick &amp; Punch</td><td>Punch &amp; Kick</td><td>Horn Jab</td><td>Headbutts</td><td>Punch &amp; Kicks</td><td>Slap</td><td>Kick &amp; Headbutt</td><td>Headbutt</td><td>Claw Swipe</td><td>Kick &amp; Punch</td><td>Chomp</td><td>Lasso Throw</td><td>Serpent Bites</td><td>Double Slap</td><td>Rain</td><td>Punch &amp; Kicks</td><td>Bite</td><td>Kick &amp; Punch</td><td>Hair Pull</td><td>Vitamin C</td><td>Headbutt</td><td>Jabs</td><td>J</td><td>A</td></tr>
-          <tr><td>Flame Breath</td><td>Pulse Shot</td><td>Ear Stench</td><td>Peel Flip</td><td>Lunge Bite</td><td>Hoof Kick</td><td>Quick Bomb</td><td>Zombie Bite</td><td>Choking Puff</td><td>Briefcase Swing</td><td>Draw &amp; Slash</td><td>Flying Kicks</td><td>Sprout Blade</td><td>Gas Cloud</td><td>Club Smash</td><td>Flying Fangs</td><td>Tomato Toss</td><td>Hail Shower</td><td>Sword Thrust</td><td>Navel Beam</td><td>Headbutt</td><td>Ruler Strike</td><td>Mini Bomb</td><td>Flying Tongue</td><td>Triple Punch</td><td>Tap L</td><td>Tap B</td></tr>
-          <tr><td>Spine Shot</td><td>Blink Scythe</td><td>Stagger Hex</td><td>Banana Toss</td><td>Eye Lasers</td><td>Rainbow Arc</td><td>Power Steal</td><td>Brain Toss</td><td>Bandage Bind</td><td>67 Venom Snakes</td><td>Lance Throw</td><td>Goblin Pair</td><td>Sprout Assault</td><td>Blue Eye Lasers</td><td>Gas Cloud</td><td>Serpent Coils</td><td>Blade Fan</td><td>Deep Freeze</td><td>Twin Slash</td><td>Clone Pair</td><td>Gum-Gum Punch</td><td>Sonic Shout</td><td>Mega Bomb</td><td>Bald Flash</td><td>Six-Punch Barrage</td><td>Hold L</td><td>Hold B</td></tr>
-          <tr><td>Scale Burst</td><td>Robot Spin</td><td>Hypnotic Chomp</td><td>Banana Barrage</td><td>Gulp &amp; Spit</td><td>Clone Herd</td><td>Bomm Burst</td><td>Zombie Horde</td><td>Sarcophagus</td><td>Snake Dance</td><td>Blade Storm</td><td>Goblin Horde</td><td>Laser Burst</td><td>Trace 67</td><td>Red Eye Beam</td><td>Frost Serpents</td><td>Royal Finale</td><td>Lightning Storm</td><td>Triple Blade Dive</td><td>Bacteria Burst</td><td>Rubber Dance</td><td>Mighty Shove</td><td>Clone Squad</td><td>Flying 67</td><td>Acid Rain</td><td>J + L</td><td>A + B</td></tr>
+          <tr><th scope="row" colspan="29">Jump / double jump</th><td>Space</td><td>X</td></tr>
+          <tr><th scope="row" colspan="29">Drop through platform</th><td>Down + Space</td><td>Down + X</td></tr>
+          <tr><td>Claw &amp; Kick</td><td>Kick &amp; Punch</td><td>Belly Bump</td><td>Kick &amp; Punch</td><td>Punch &amp; Kick</td><td>Horn Jab</td><td>Headbutts</td><td>Punch &amp; Kicks</td><td>Slap</td><td>Kick &amp; Headbutt</td><td>Headbutt</td><td>Claw Swipe</td><td>Kick &amp; Punch</td><td>Chomp</td><td>Lasso Throw</td><td>Serpent Bites</td><td>Double Slap</td><td>Rain</td><td>Punch &amp; Kicks</td><td>Bite</td><td>Kick &amp; Punch</td><td>Hair Pull</td><td>Vitamin C</td><td>Headbutt</td><td>Jabs</td><td>Punch &amp; Kick</td><td>Heel Kick</td><td>Snap Bite</td><td>Punch &amp; Kick</td><td>J</td><td>A</td></tr>
+          <tr><td>Flame Breath</td><td>Pulse Shot</td><td>Ear Stench</td><td>Peel Flip</td><td>Lunge Bite</td><td>Hoof Kick</td><td>Quick Bomb</td><td>Zombie Bite</td><td>Choking Puff</td><td>Briefcase Swing</td><td>Draw &amp; Slash</td><td>Flying Kicks</td><td>Sprout Blade</td><td>Gas Cloud</td><td>Club Smash</td><td>Flying Fangs</td><td>Tomato Toss</td><td>Hail Shower</td><td>Sword Thrust</td><td>Navel Beam</td><td>Headbutt</td><td>Ruler Strike</td><td>Mini Bomb</td><td>Flying Tongue</td><td>Triple Punch</td><td>5K Blaster</td><td>Steel Sword</td><td>Flame Jet</td><td>Magic Bolt</td><td>Tap L</td><td>Tap B</td></tr>
+          <tr><td>Spine Shot</td><td>Blink Scythe</td><td>Stagger Hex</td><td>Banana Toss</td><td>Eye Lasers</td><td>Rainbow Arc</td><td>Power Steal</td><td>Brain Toss</td><td>Bandage Bind</td><td>67 Venom Snakes</td><td>Lance Throw</td><td>Goblin Pair</td><td>Sprout Assault</td><td>Blue Eye Lasers</td><td>Gas Cloud</td><td>Serpent Coils</td><td>Blade Fan</td><td>Deep Freeze</td><td>Twin Slash</td><td>Clone Pair</td><td>Gum-Gum Punch</td><td>Sonic Shout</td><td>Mega Bomb</td><td>Bald Flash</td><td>Six-Punch Barrage</td><td>20K Blaster</td><td>Mighty Slash</td><td>Blade Vortex</td><td>Magic Bombs</td><td>Hold L</td><td>Hold B</td></tr>
+          <tr><td>Scale Burst</td><td>Robot Spin</td><td>Hypnotic Chomp</td><td>Banana Barrage</td><td>Gulp &amp; Spit</td><td>Clone Herd</td><td>Bomm Burst</td><td>Zombie Horde</td><td>Sarcophagus</td><td>Snake Dance</td><td>Blade Storm</td><td>Goblin Horde</td><td>Laser Burst</td><td>Trace 67</td><td>Red Eye Beam</td><td>Frost Serpents</td><td>Royal Finale</td><td>Lightning Storm</td><td>Triple Blade Dive</td><td>Bacteria Burst</td><td>Rubber Dance</td><td>Mighty Shove</td><td>Clone Squad</td><td>Flying 67</td><td>Acid Rain</td><td>800-Round Reserve</td><td>Blinding Light</td><td>Atomic Salvo</td><td>Wand Lightning</td><td>J + L</td><td>A + B</td></tr>
         </tbody>
       </table>
       </div>

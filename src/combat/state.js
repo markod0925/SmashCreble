@@ -22,7 +22,7 @@ export function spawn(slot, initial, fighter, arena) {
     damage: 0, hitstun: 0, invulnerable: initial ? 0 : 1.5, respawn: 0,
     attack: null, shield: 1, guarding: false, dodge: 0, drop: 0, charge: 0, charging: false,
     aiDelay: 0, aiJump: 0, landing: 0, stagger: 0, zombieUntil: null, boundUntil: null, boundStyle: null,
-    frozenUntil: null, shockedUntil: null, poison: null, bommBurstAt: null, companionAssault: null,
+    frozenUntil: null, dazedUntil: null, shockedUntil: null, poison: null, bommBurstAt: null, companionAssault: null, reserveAmmo: 0,
   };
 }
 

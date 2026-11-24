@@ -27,8 +27,12 @@ import * as maestra from '../fighters/maestra/model.js';
 import * as nurofenCaps from '../fighters/nurofen-caps/model.js';
 import * as pincoPalino from '../fighters/pinco-palino/model.js';
 import * as cheAddominali from '../fighters/che-addominali/model.js';
+import * as budino from '../fighters/budino/model.js';
+import * as superLibroGirl from '../fighters/super-libro-girl/model.js';
+import * as murenaMan from '../fighters/murena-man/model.js';
+import * as harriPotter from '../fighters/harri-potter/model.js';
 
-const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar, packman, ciclope, vidarr, 'funny-kings': funnyKings, nuvol, ii, dragonball, luffy, maestra, 'nurofen-caps': nurofenCaps, 'pinco-palino': pincoPalino, 'che-addominali': cheAddominali };
+const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar, packman, ciclope, vidarr, 'funny-kings': funnyKings, nuvol, ii, dragonball, luffy, maestra, 'nurofen-caps': nurofenCaps, 'pinco-palino': pincoPalino, 'che-addominali': cheAddominali, budino, 'super-libro-girl': superLibroGirl, 'murena-man': murenaMan, 'harri-potter': harriPotter };
 const projectileModels = Object.assign({}, ...Object.values(models).map(({ projectiles }) => projectiles));
 
 export function drawCharacter(renderer, fighter, position, time, options = {}) {
