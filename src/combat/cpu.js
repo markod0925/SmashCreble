@@ -52,6 +52,7 @@ export function cpuInput(player, match, dt) {
   const active = close && player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger;
   const guard = !player.owner && close && target.attack && player.aiDelay > 0.35;
   if (active) player.aiDelay = 0.6 + Math.random() * 0.42;
+  if (player.owner && player.fighter.cloneLight) return { x, y: 0, jumpPressed, lightPressed: active };
   if (player.fighter.moves) {
     const star = match.superstar;
     if (!player.owner && star && !star.holder && star.cooldown <= 0 && !close && !player.charging && Math.abs(star.x - player.x) > 0.45) {
@@ -71,12 +72,15 @@ export function cpuInput(player, match, dt) {
     const deployed = assaultRemaining(player, match) > 1e-9;
     const summonLimit = signatureAttacks[player.fighter.moves.hold].summonsClones;
     const roomToSummon = summonLimit && canSummonClones(player, match, summonLimit);
-    const superInRange = shark || vidarr || nuvol || (inga && Math.hypot(dx, dy) < signatureAttacks.ingaBladeStorm.range * .83) ||
+    const superInRange = shark || vidarr || nuvol || signatureAttacks[player.fighter.moves.super].rubberDance || player.fighter.cloneLight ||
+      (inga && Math.hypot(dx, dy) < signatureAttacks.ingaBladeStorm.range * .83) ||
       (summonLimit && !dragonball && Math.abs(dx) < 5.9) || (olivar && Math.hypot(dx, dy) < 5.5) || (packman && Math.abs(target.x) < 6.25) ||
       (ciclope && Math.abs(dx) < signatureAttacks.ciclopeLaser.range * .84 && Math.abs(dy) < 1.6) ||
       (kings && Math.hypot(dx, dy) < signatureAttacks.kingsFinale.range * .86) ||
       (duelist && Math.abs(dx) < 3.65 && dy < 1.08 && dy > -2.1) ||
-      (dragonball && Math.abs(dx) < signatureAttacks.dragonBallBacteria.range * .83 && Math.abs(dy) < 1.65);
+      (dragonball && Math.abs(dx) < signatureAttacks.dragonBallBacteria.range * .83 && Math.abs(dy) < 1.65) ||
+      (player.fighter.id === 'maestra' && Math.abs(dx) < signatureAttacks.maestraShove.range * .87 && Math.abs(dy) < 1.05) ||
+      (player.fighter.id === 'pinco-palino' && Math.abs(dx) < 7 && Math.abs(dy) < 4.7);
     if ((active || (superInRange && !player.attack && !player.hitstun)) && canUseSuper(player, match)) return { x, y: 0, superPressed: true };
     if (olivar && !deployed && !close && Math.abs(dx) < 5.9 && Math.abs(dy) < 2.3 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
@@ -93,7 +97,7 @@ export function cpuInput(player, match, dt) {
       player.aiDelay = .85;
       return { x, y: 0, lightPressed: true };
     }
-    const rangedCharge = ['vi', 'gioppino', 'huuuuu', 'shark-67', 'packman', 'vidarr', 'funny-kings', 'nuvol'].includes(player.fighter.id);
+    const rangedCharge = ['vi', 'gioppino', 'huuuuu', 'shark-67', 'packman', 'vidarr', 'funny-kings', 'nuvol', 'luffy', 'maestra', 'nurofen-caps', 'pinco-palino'].includes(player.fighter.id);
     if (rangedCharge && !close && Math.abs(dx) < signatureAttacks[player.fighter.moves.hold].range * scaleOf(player) && Math.abs(dy) < 0.9 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
       player.aiDelay = 0.96;

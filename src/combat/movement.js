@@ -1,6 +1,6 @@
 import { crossedPlatform, leavePlatform, rules } from './arena.js';
 import { handleAttackInput } from './attacks.js';
-import { bodyCenter } from './state.js';
+import { bodyCenter, idleInput } from './state.js';
 import { boundTime, capturingAttack, frozenTime, isZombie } from './status.js';
 import { bommBurstAge, bommBurstRecovery } from '../fighters/bomm/profile.js';
 import { approach, clamp, direction } from '../math.js';
@@ -18,6 +18,7 @@ export function move(player, input, dt, match) {
     return;
   }
   if (player.attack?.trace67 || capturingAttack(player, match)) return;
+  if (player.attack?.rubberDance && player.attack.fired) input = idleInput;
   const bound = boundTime(player, match) > 0;
   const free = !player.hitstun && !player.dodge && !bound;
   const mobility = player.attack ? 0.54 : player.charging ? 0.36 : 1;

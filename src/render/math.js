@@ -27,6 +27,14 @@ export function transform([x, y, z], [sx, sy, sz], [rx, ry, rz]) {
   ];
 }
 
+export function transformPoint(matrix, [x, y, z]) {
+  return [
+    matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12],
+    matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13],
+    matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14],
+  ];
+}
+
 export function viewProjection(eye, target, aspect, fov) {
   const z = normalize(sub(eye, target));
   const x = normalize(cross([0, 1, 0], z));
@@ -34,6 +42,16 @@ export function viewProjection(eye, target, aspect, fov) {
   const view = [x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, eye), -dot(y, eye), -dot(z, eye), 1];
   const f = 1 / Math.tan(fov / 2);
   return multiply([f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, -1.002, -1, 0, 0, -0.4, 0], view);
+}
+
+export function battleCamera(definition, aspect, shakeX = 0) {
+  const { x = 0, height = 7.8, distance = 29.5, targetY = 1.8, fov = .64 } = definition.camera ?? {};
+  const horizontalFit = Math.max(1, 1.55 / aspect);
+  return {
+    eye: [x + shakeX, height, distance * horizontalFit],
+    target: [x + shakeX, targetY, 0],
+    fov,
+  };
 }
 
 export const zero = [0, 0, 0];

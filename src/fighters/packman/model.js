@@ -1,7 +1,7 @@
 import { clamp } from '../../math.js';
-import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { multiply, one, TAU, transform, transformPoint, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
-import { interpolate, traceAfterglow, traceDigits, traceDistance, traceDuration } from './path.js';
 
 const amber = '#e9b64b';
 const yellow = '#facd65';
@@ -85,17 +85,18 @@ export function draw(renderer, fighter, position, time, options) {
   const dent = landing * .95 + (guarding ? .18 : charging ? .12 : 0);
   const bob = trace ? Math.sin(age * 18) * .035 : Math.sin(time * 6) * .07 + stride * .045;
   const thrust = biting ? pulse((age - .02) / .3) : 0;
-  const jaw = trace ? 1.18 * (.5 + .5 * Math.sin(age * TAU * 10.6))
-    : biting ? .93 * pulse(age < .15 ? age / .25 : (age - .19) / .23)
+  const jaw = trace ? 1.54 * (.5 + .5 * Math.sin(age * TAU * 10.6))
+    : biting ? 1.29 * pulse(age < .15 ? age / .25 : (age - .19) / .23)
       : (pose ? .56 : .14 + .087 * Math.sin(time * 5.2)) + gas * .12 + recover * .32;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + facing * thrust * .13,
-    wobble - facing * (running * .115 + thrust * .12 - gas * .21)]);
+  const root = fighterRoot(position, size, [0, heading + facing * thrust * .13,
+    wobble - facing * (running * .115 + thrust * .12 - gas * .21)], attack);
   const body = joint(root, [0, bob - dent, thrust * .11], [.128 * running - rise * .13 - recover * .42, 0, 0]);
   const rig = trace ? traceRig : normalRig;
   const blink = flash && !trace;
   renderer.parts(rig.shell, body, blink);
-  renderer.parts(rig.hood, joint(body, [0, 1.489, -.33], [-jaw * .48 - aiming * .14, 0, -.037]), blink);
+  const upperJaw = joint(body, [0, 1.489, -.33], [-jaw * .48 - aiming * .14, 0, -.037]);
+  renderer.parts(rig.hood, upperJaw, blink);
   renderer.parts(rig.chin, joint(body, [0, 1.407, -.35], [jaw * .8 + aiming * .12, 0, .027]), blink);
 
   for (const side of [-1, 1]) {
@@ -117,7 +118,7 @@ export function draw(renderer, fighter, position, time, options) {
     }
   } else if (attack?.until && age >= attack.from && age <= attack.until) {
     if (attack.type === 'packmanGas') drawGasCloud(renderer, position, facing, attack, size);
-    if (attack.type === 'packmanLaser') drawEyeLasers(renderer, position, facing, attack, size);
+    if (attack.type === 'packmanLaser') drawEyeLasers(renderer, upperJaw, x + facing * attack.range, attack);
     if (biting) renderer.object('leaf', [x + facing * 1.2 * size, y + 1.34 * size, z + .64], [.3, .78, .11],
       '#cef3fc', [0, 0, -facing * .97], .77, thrust * .67);
   }
@@ -134,33 +135,17 @@ export function drawGasCloud(renderer, [x, y, z], facing, attack, size) {
   }
 }
 
-function drawEyeLasers(renderer, [x, y, z], facing, attack, size) {
-  const span = attack.range - .76;
+function drawEyeLasers(renderer, upperJaw, endpoint, attack) {
   const opacity = 1 - (attack.age - attack.from) / (attack.until - attack.from) * .78;
-  for (const [height, depth] of [[2.02, .53], [2.2, .85]]) {
-    const origin = x + facing * .76 * size;
-    const center = [origin + facing * span * .5, y + height * size, z + depth];
-    renderer.object('box', center, [span, .143, .112], '#3e9dff', zero, .98, opacity * .73);
-    renderer.object('box', [center[0], center[1], center[2] + .07], [span, .059, .068], '#cbfbff', zero, 1, opacity);
-    renderer.object('gem', [origin, center[1], center[2] + .08], [.329, .255, .193], '#9eefec', [0, attack.age * 9, .23], .98, opacity);
-  }
-}
-
-export function drawTrace67(renderer, age) {
-  const fade = clamp((traceDuration + traceAfterglow - age) / traceAfterglow, 0, 1);
-  for (const stroke of traceDigits) {
-    const covered = traceDistance(stroke, age);
-    for (const { from, to, offset, distance } of stroke.segments) {
-      const painted = Math.min(distance, covered - offset);
-      if (painted <= 0) break;
-      const [bx, by] = interpolate(from, to, painted / distance);
-      const [ax, ay] = from;
-      const x = (ax + bx) * .5;
-      const y = (ay + by) * .5;
-      const angle = Math.atan2(by - ay, bx - ax);
-      renderer.object('box', [x, y, 2.43], [painted + .094, .42, .116], '#369aff', [0, 0, angle], 1, fade * .37);
-      renderer.object('box', [x, y, 2.49], [painted + .081, .194, .12], '#91dcff', [0, 0, angle], 1, fade * .77);
-      renderer.object('box', [x, y, 2.57], [painted + .068, .079, .079], '#e6fcff', [0, 0, angle], 1, fade * .91);
-    }
+  for (const side of [-1, 1]) {
+    const [x, y, z] = transformPoint(upperJaw, [.434 * side, .388, .966]);
+    const dx = endpoint - x;
+    const dy = side * .23;
+    const span = Math.hypot(dx, dy);
+    const center = [x + dx * .5, y + dy * .5, z];
+    const angle = [0, 0, Math.atan2(dy, dx)];
+    renderer.object('box', center, [span, .143, .112], '#3e9dff', angle, .98, opacity * .73);
+    renderer.object('box', [center[0], center[1], center[2] + .07], [span, .059, .068], '#cbfbff', angle, 1, opacity);
+    renderer.object('gem', [x, y, z + .08], [.329, .255, .193], '#9eefec', [0, attack.age * 9, .23], .98, opacity);
   }
 }

@@ -11,7 +11,7 @@ import { playerColors } from '../player-colors.js';
 import { drawBattleArena, drawHero } from './arena.js';
 import { drawCharacter, drawProjectiles, portraitCamera } from './characters.js';
 import { BattleEffects } from './effects.js';
-import { TAU, zero } from './math.js';
+import { battleCamera, TAU, zero } from './math.js';
 import { drawShockSkeleton } from './skeleton.js';
 import { WebGLRenderer } from './webgl.js';
 
@@ -47,10 +47,9 @@ export class Graphics {
   battle(match, time, dt) {
     const renderer = this.renderer;
     const [width, height] = renderer.measure();
-    const horizontalFit = Math.max(1, 1.55 / (width / height));
     const shakeX = this.effects.cameraOffset(time, dt);
-    const { x = 0, height: cameraHeight = 7.8, distance = 29.5, targetY = 1.8, fov = .64 } = match.arena.definition.camera ?? {};
-    renderer.begin(width, height, [x + shakeX, cameraHeight, distance * horizontalFit], [x + shakeX, targetY, 0], fov);
+    const { eye, target, fov } = battleCamera(match.arena.definition, width / height, shakeX);
+    renderer.begin(width, height, eye, target, fov);
     drawBattleArena(renderer, match.arena, time);
     const star = match.superstar;
     if (star && !star.holder && !star.cooldown) {

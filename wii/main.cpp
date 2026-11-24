@@ -86,11 +86,13 @@ void initVideo() {
         DCFlushRange(const_cast<unsigned char*>(visual.portrait.commands), visual.portrait.bytes);
     }
 
-    guVector eye{web::cameraEye[0], web::cameraEye[1], web::cameraEye[2]}, up{0, 1, 0};
+    const bool widescreen = CONF_GetAspectRatio() == CONF_ASPECT_16_9;
+    const auto& position = widescreen ? web::cameraEyeWidescreen : web::cameraEyeStandard;
+    const float aspect = widescreen ? 16.0f / 9 : 4.0f / 3;
+    guVector eye{position[0], position[1], position[2]}, up{0, 1, 0};
     guVector target{web::cameraTarget[0], web::cameraTarget[1], web::cameraTarget[2]};
     guLookAt(camera, &eye, &up, &target);
-    const float aspect = CONF_GetAspectRatio() == CONF_ASPECT_16_9 ? 16.0f / 9 : 4.0f / 3;
-    guPerspective(perspective, 40, aspect, 1, 100);
+    guPerspective(perspective, web::cameraFovDegrees, aspect, 1, 100);
     guOrtho(overlay, 0, 480, 0, 640, 0, 1);
     Mtx identity;
     guMtxIdentity(identity);
@@ -201,7 +203,7 @@ void renderSelection(const Selection& selection, bool error) {
         rect(x - 39, y - 41, 78, 108, 0x1a2434ffu);
         char title[] = {'P', char('1' + slot), 0};
         centerLabel(x, y - 34, title, 2.3f, color);
-        centerLabel(x, y + 50, !selection.connected[slot] ? "OPEN" : selection.ready[slot] ? "READY" : "PICK", 2.0f, color);
+        centerLabel(x, y + 50, !selection.connected[slot] ? "CPU" : selection.ready[slot] ? "READY" : "PICK", 2.0f, color);
     }
 
     GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
@@ -240,7 +242,7 @@ void renderSelection(const Selection& selection, bool error) {
     present();
 }
 
-void renderMatch(const Fight& fight, const std::array<bool, 4>& joined, bool paused) {
+void renderMatch(const Fight& fight, const std::array<bool, 4>& humans, bool paused) {
     GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
     GX_LoadProjectionMtx(perspective, GX_PERSPECTIVE);
     GX_SetCurrentMtx(arenaMatrix);
@@ -257,9 +259,10 @@ void renderMatch(const Fight& fight, const std::array<bool, 4>& joined, bool pau
     label(290, 37, text, 4);
     if (paused) label(270, 120, "PAUSED", 4);
     else if (frame.finished) {
-        if (fight.solo) std::snprintf(text, sizeof(text), "PRACTICE OVER");
-        else if (frame.winner >= 0) std::snprintf(text, sizeof(text), "P%d WINS", int(frame.winner) + 1);
-        else std::snprintf(text, sizeof(text), "DRAW");
+        if (frame.winner >= 0) {
+            const int winner = int(frame.winner);
+            std::snprintf(text, sizeof(text), humans[winner] ? "P%d WINS" : "CPU %d WINS", winner + 1);
+        } else std::snprintf(text, sizeof(text), "DRAW");
         centerLabel(320, 120, text, 4);
         centerLabel(320, 153, "+ SELECT FIGHTERS", 3);
     } else if (frame.countdown > 0) {
@@ -269,11 +272,11 @@ void renderMatch(const Fight& fight, const std::array<bool, 4>& joined, bool pau
     for (int slot = 0; slot < 4; ++slot) {
         const float x = 49.0f + slot * 141.0f;
         const auto& player = frame.fighters[slot];
-        const uint32_t color = joined[slot] ? web::playerColors[slot] : 0x6e7b8affu;
+        const uint32_t color = web::playerColors[slot];
         rect(x, 425, 117, 24, 0x101622ddu);
-        std::snprintf(text, sizeof(text), "P%d", slot + 1);
-        label(x + 7, 432, text, 2, color);
-        if (joined[slot] && player.visible) {
+        std::snprintf(text, sizeof(text), humans[slot] ? "P%d" : "CPU%d", slot + 1);
+        label(x + 7, 432, text, 1.75f, color);
+        if (player.visible) {
             guVector world{player.tagX, player.tagY, .5f};
             guVector view;
             guVecMultiply(camera, &world, &view);
@@ -281,13 +284,13 @@ void renderMatch(const Fight& fight, const std::array<bool, 4>& joined, bool pau
             const float screenY = 240.0f - 240.0f * perspective[1][1] * view.y / -view.z;
             if (screenX > 25 && screenX < 615 && screenY > 25 && screenY < 410) {
                 rect(screenX - 10, screenY - 2, 20, 14, 0x101622ddu);
+                std::snprintf(text, sizeof(text), "P%d", slot + 1);
                 label(screenX - 7, screenY, text, 2, color);
                 if (player.guarding) rect(screenX - 10, screenY + 12, 20 * player.shield, 3, color);
             }
         }
-        if (!joined[slot]) continue;
         std::snprintf(text, sizeof(text), "%d%%", int(player.damage));
-        label(x + 30, 432, text, 2);
+        label(x + 41, 432, text, 2);
         for (int stock = 0; stock < player.stocks; ++stock) rect(x + 77 + stock * 11, 433, 7, 7, color);
     }
     present();
@@ -360,9 +363,10 @@ Remote readRemote(int slot) {
 int main() {
     initVideo();
     WPAD_Init();
-    Fight fight(modules, std::size(modules), geometry, std::size(geometry), clonePoses, std::size(clonePoses));
+    Fight fight(modules, std::size(modules), geometry, std::size(geometry), clonePoses, std::size(clonePoses),
+        {camera[2][0], camera[2][1], camera[2][2]});
     Selection selection;
-    std::array<bool, 4> joined{};
+    std::array<bool, 4> humans{};
     std::array<Input, 4> inputs{};
     bool inMatch = false;
     bool error = false;
@@ -386,7 +390,7 @@ int main() {
                     remote.confirm, remote.cancel, delta);
                 continue;
             }
-            if (!joined[slot]) continue;
+            if (!humans[slot]) continue;
             paused |= !remote.connected;
             inputs[slot].x = remote.input.x;
             inputs[slot].y = remote.input.y;
@@ -394,10 +398,10 @@ int main() {
             inputs[slot].pressed |= remote.input.pressed;
         }
         if (!inMatch && start && selection.canStart()) {
-            joined = selection.connected;
+            humans = selection.connected;
             inputs = {};
             accumulator = 0;
-            inMatch = fight.start(joined, selection.choices) && fight.advance(0, 0, inputs);
+            inMatch = fight.start(humans, selection.choices) && fight.advance(0, 0, inputs);
             error = !inMatch;
         } else if (inMatch && fight.frame.finished && start) {
             selection.ready.fill(false);
@@ -415,7 +419,7 @@ int main() {
             inputs = {};
             accumulator = 0;
         }
-        if (inMatch) renderMatch(fight, joined, paused && !fight.frame.finished);
+        if (inMatch) renderMatch(fight, humans, paused && !fight.frame.finished);
         else renderSelection(selection, error);
     }
     WPAD_Shutdown();

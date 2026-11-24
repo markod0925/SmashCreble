@@ -1,4 +1,5 @@
 import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 
 const bananaParts = [
@@ -67,7 +68,7 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = landing * 1.25 + (guarding ? .21 : charging ? .13 : 0);
   const bob = Math.abs(stride) * .09 + Math.sin(time * 5.1) * .034 - crouch;
   const size = fighter.size;
-  const base = transform(position, [size, size, size], [0, heading * .47 + punch * facing * .46, wobble - running * facing * .15]);
+  const base = fighterRoot(position, size, [0, heading * .47 + punch * facing * .46, wobble - running * facing * .15], attack);
   const pivot = multiply(base, transform([0, 1.42 + bob, 0], one, [0, 0, -facing * (TAU * flip + kick * .16)]));
   const figure = multiply(pivot, transform([0, -1.42, 0], one, zero));
   const body = multiply(figure, transform([0, 1.72, .015], one, [running * .10 - recover * .21, 0, running * facing * -.08]));

@@ -38,6 +38,47 @@ test('Wii battle models use at most a tenth of the source triangles in movement 
   }
 });
 
+test('Wii fills vacant slots with CPU fighters that can win a match', () => {
+  const draw = Graphics.prototype.battle;
+  let match;
+  Graphics.prototype.battle = (current) => {
+    match = current;
+    return current.fighters.map(({ x, y }) => [x, y, .5]);
+  };
+  const frame = new Float32Array(32);
+  globalThis.wiiInit(new Float32Array(16).buffer, frame.buffer, new Float32Array(16).buffer);
+  const tick = () => globalThis.wiiAdvance(1, rules.step);
+  try {
+    for (const choices of [[-1, -1, 2, -1], [0, -1, 2, -1], [0, 1, 2, -1], [0, 1, 2, 3]]) {
+      globalThis.wiiStart(...choices);
+      globalThis.wiiAdvance(0, 0);
+      assert.deepEqual(match.fighters.map(({ slot }) => slot), [0, 1, 2, 3]);
+      assert.deepEqual(match.fighters.map(({ cpu }) => cpu), choices.map((index) => index < 0));
+      assert.equal(new Set(match.fighters.map(({ fighter }) => fighter)).size, 4);
+      match.fighters.forEach(({ fighter, slot }) => {
+        if (choices[slot] >= 0) assert.equal(fighter, fighters[choices[slot]]);
+        assert.equal(frame[5 + slot * 7], rules.stocks);
+      });
+    }
+
+    globalThis.wiiStart(-1, -1, 2, -1);
+    globalThis.wiiAdvance(0, 0);
+    match.countdown = 0;
+    const cpu = match.fighters[0];
+    const spawnX = cpu.x;
+    tick();
+    assert.notEqual(cpu.x, spawnX);
+    for (const player of match.fighters) {
+      if (player !== cpu) player.stocks = 0;
+    }
+    tick();
+    assert.equal(frame[2], 1);
+    assert.equal(frame[3], cpu.slot);
+  } finally {
+    Graphics.prototype.battle = draw;
+  }
+});
+
 test('Wii controls activate and render the Web roster moves', () => {
   const draw = Graphics.prototype.battle;
   let match, meshes = 0;
@@ -61,7 +102,7 @@ test('Wii controls activate and render the Web roster moves', () => {
     globalThis.wiiAdvance(steps, steps * rules.step);
   };
   const start = (index) => {
-    globalThis.wiiStart(index, (index + 1) % fighters.length, -1, -1);
+    globalThis.wiiStart(index, (index + 1) % fighters.length, (index + 2) % fighters.length, (index + 3) % fighters.length);
     const before = meshes;
     tick();
     assert.ok(meshes > before);

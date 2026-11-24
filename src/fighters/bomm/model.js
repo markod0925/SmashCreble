@@ -1,4 +1,5 @@
-import { multiply, one, smoothStep, TAU, transform, zero } from '../../render/math.js';
+import { multiply, one, smoothStep, TAU, transform, transformPoint, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 import { drawFlyingKickTrail } from '../bid/model.js';
 import { drawClubImpact } from '../ciclope/model.js';
@@ -9,9 +10,12 @@ import { biteEffect } from '../gangar/model.js';
 import { zombieSnap } from '../gioppino/model.js';
 import { drawChokingPuff } from '../huuuuu/model.js';
 import { drawBorrowedThrust } from '../ii/model.js';
+import { drawBorrowedRuler } from '../maestra/model.js';
+import { drawCapsBomb } from '../nurofen-caps/model.js';
 import { stenchEffect } from '../incantus/model.js';
 import { drawBorrowedBlade } from '../olivar/model.js';
 import { drawGasCloud } from '../packman/model.js';
+import { drawFlyingTongue } from '../pinco-palino/model.js';
 
 const bombParts = [
   part('bombShell', zero, one, '#333a47'),
@@ -56,14 +60,15 @@ export function draw(renderer, fighter, position, time, options) {
   const unit = (value) => Math.max(0, Math.min(1, value));
   const pulse = (value) => Math.sin(Math.PI * unit(value));
   const phase = attack ? attack.age / attack.duration : 0;
-  const headbutting = attack?.type === 'bommHeadbutts';
+  const headbutting = attack?.type === 'bommHeadbutts' || attack?.type === 'luffyHeadbutt';
   const headbutt = headbutting ? Math.max(
     pulse((attack.age - attack.from + .08) / .19),
     pulse((attack.age - (attack.followUp?.from ?? attack.from) + .08) / .19),
   ) : 0;
   const arming = attack?.type === 'bommBurst';
   const stealing = attack?.type === 'bommSteal';
-  const tossing = attack?.projectile === 'bomb';
+  const capsBomb = attack?.projectile === 'capsMiniBomb';
+  const tossing = attack?.projectile === 'bomb' || capsBomb;
   const kicking = attack?.type === 'viHoof' || attack?.type === 'bidKicks';
   const kick = kicking ? pulse((attack.age - attack.from + .125) / .35) : 0;
   const flip = attack?.type === 'beinaFlip' ? unit((attack.age - .04) / (attack.duration - .07)) : 0;
@@ -77,8 +82,8 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = landing * 1.25 + (guarding ? .2 : charging ? .14 : 0);
   const bob = Math.abs(stride) * .075 + Math.sin(time * 5.3) * .035 - crouch;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + facing * headbutt * .27,
-    wobble - facing * (running * .12 + dash * .27 + headbutt * .14)]);
+  const root = fighterRoot(position, size, [0, heading + facing * headbutt * .27,
+    wobble - facing * (running * .12 + dash * .27 + headbutt * .14)], attack);
   const pivot = multiply(root, transform([0, 1.48, 0], one, [0, 0, -facing * TAU * flip]));
   const base = multiply(pivot, transform([0, -1.48, 0], one, zero));
   const squash = 1 + .12 * puff + .13 * inhale + .12 * crouch;
@@ -105,12 +110,15 @@ export function draw(renderer, fighter, position, time, options) {
   const [x, y, z] = position;
   if (tossing && attack.age >= attack.from - .06 && attack.age < attack.from) {
     const bomb = transform([x + facing * .76, y + 1.12, z + .31], [.55, .55, .55], [0, time, -.19 * facing]);
-    renderer.parts(bombParts, bomb, false);
+    if (capsBomb) drawCapsBomb(renderer, bomb, false, time);
+    else renderer.parts(bombParts, bomb, false);
   }
   if (attack.borrowed && attack.type === 'olivarBlade') drawBorrowedBlade(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'iiThrust') drawBorrowedThrust(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'maestraRuler') drawBorrowedRuler(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'pincoTongue') drawFlyingTongue(renderer, transformPoint(body, [0, -.19, .93]), position, attack, size);
   if (attack.borrowed && attack.type === 'dragonBallNavelLaser') {
-    drawNavelBeam(renderer, [x + attack.facing * .52 * size, y + 1.17 * size, z + .71 * size], x, attack, size);
+    drawNavelBeam(renderer, transformPoint(body, [0, -.41, .84]), x, attack, size);
   }
   if (!attack.borrowed || attack.age < attack.from || attack.age > (attack.until ?? attack.from + .12)) return;
   if (attack.type === 'dragonFlame') flameEffect(renderer, position, facing, attack);

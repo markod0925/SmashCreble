@@ -10,7 +10,7 @@ import { drawCharacter } from '../src/render/characters.js';
 import { shapes } from '../src/render/geometry.js';
 import { multiply, transform } from '../src/render/math.js';
 import { clonePoses, cloneRoster } from './clone-poses.mjs';
-import { cameraEye, cameraTarget, modelDetail, modelShape } from './model-detail.mjs';
+import { modelDetail, modelShape, standardCamera, widescreenCamera } from './model-detail.mjs';
 
 function number(value) {
   if (!Number.isFinite(value)) throw new Error(`Invalid Wii export number: ${value}`);
@@ -194,8 +194,10 @@ export async function exportWeb(output) {
   const tables = `// Generated from the Web game. Do not edit.
 namespace web {
 constexpr float step = ${number(rules.step)};
-constexpr float cameraEye[] = {${values(cameraEye)}};
-constexpr float cameraTarget[] = {${values(cameraTarget)}};
+constexpr float cameraEyeStandard[] = {${values(standardCamera.eye)}};
+constexpr float cameraEyeWidescreen[] = {${values(widescreenCamera.eye)}};
+constexpr float cameraTarget[] = {${values(widescreenCamera.target)}};
+constexpr float cameraFovDegrees = ${number(widescreenCamera.fov * 180 / Math.PI)};
 constexpr size_t shapeCount = ${Object.keys(shapes).length};
 constexpr FighterSpec roster[] = {
 ${fighters.map((entry) => {

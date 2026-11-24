@@ -1,5 +1,6 @@
 import { clamp } from '../../math.js';
 import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 import { briefcaseGrip, briefcaseFlight } from './profile.js';
 
@@ -112,15 +113,17 @@ export function draw(renderer, fighter, position, time, options) {
   const headbutt = combo ? pulse((age - .18) / .34) : 0;
   const cast = attack?.type === 'sharkBriefcase' ? pulse(age / .39) : 0;
   const venom = attack?.type === 'sharkVenom' ? pulse(age / .68) : 0;
+  const cueDance = attack?.startsDance ? pulse(age / attack.from) : 0;
   const recovery = attack?.type === 'recovery' ? pulse(age / attack.duration) : 0;
   const beat = danceTime === null ? 0 : Math.sin(danceTime * TAU * 2);
+  const groove = leadsDance ? beat : 0;
   const stride = Math.sin(time * 14) * running;
   const jump = airborne ? clamp(verticalSpeed / 8, -1, 1) : 0;
   const crouch = landing + (guarding ? .23 : charging ? .14 : 0);
   const bob = Math.abs(stride) * .079 + Math.sin(time * 4) * .027 - crouch;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + facing * headbutt * .33, wobble - facing * running * .08]);
-  const body = attach(root, [0, bob, .14 * headbutt], [.11 * running + headbutt * .31 - recovery * .26, 0, .07 * beat]);
+  const root = fighterRoot(position, size, [0, heading + facing * headbutt * .33, wobble - facing * running * .08 + .14 * groove], attack);
+  const body = attach(root, [0, bob, .14 * headbutt], [.11 * running + headbutt * .31 - recovery * .26, .26 * groove, .07 * beat]);
   renderer.parts(torso, body, flash);
   renderer.parts(head, attach(body, [0, 1.996, .017 + headbutt * .235], [headbutt * .32 - recovery * .25, 0, -.12 * beat]), flash);
   renderer.parts(tail, attach(body, [0, 1.026, -.306], [0, .34 * stride + .15 * Math.sin(time * 5), 0]), flash);
@@ -128,9 +131,10 @@ export function draw(renderer, fighter, position, time, options) {
   for (const side of [-1, 1]) {
     const lead = side === facing;
     const legBend = airborne ? side * .41 - jump * .42 : side * stride * .73;
+    const danceKick = Math.max(0, side * groove) * .82;
     renderer.parts(leg, attach(root, [side * .249, .833 - crouch * .34, 0],
-      [legBend - (lead ? kick * 1.65 : 0) - recovery * .41, 0, side * .115]), flash);
-    const props = side > 0 ? -.96 * cast - .5 * venom : -.76 - .46 * beat;
+      [legBend - (lead ? kick * 1.65 : 0) - recovery * .41 - danceKick, 0, side * (.115 + .28 * danceKick)]), flash);
+    const props = side > 0 ? -.96 * cast - .5 * venom : -.76 - .46 * beat - .69 * groove - 1.26 * cueDance;
     const pitch = guarding ? -1.19 : props - side * stride * .39 - jump * .31 - recovery * .92;
     const hand = attach(body, [side * .461, 1.801, -.001], [pitch, 0, side * (.29 + (pose ? .19 : 0))]);
     renderer.parts(arm, hand, flash);

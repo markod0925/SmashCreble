@@ -1,5 +1,6 @@
 import { clamp } from '../../math.js';
 import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 import { boltBottom, boltTop } from './thunder.js';
 
@@ -56,8 +57,8 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = landing * 1.35 + (guarding ? .21 : charging ? .13 : 0);
   const bob = Math.sin(time * 5.37) * (.07 + running * .07) - crouch + recover * .08;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading * .69 + hail * facing * .19,
-    wobble - facing * (running * .15 + hail * .17 - ice * .083)]);
+  const root = fighterRoot(position, size, [0, heading * .69 + hail * facing * .19,
+    wobble - facing * (running * .15 + hail * .17 - ice * .083)], attack);
   const shape = multiply(root, transform([0, bob, hail * .137], [1 + rain * .13 + crouch * .21, 1 - crouch * .24 + ice * .12 + rise * .047, 1],
     [.104 * running - recover * .31, 0, pose ? .045 : Math.sin(time * 4) * .036]));
   renderer.parts(puffs, shape, flash);

@@ -33,6 +33,7 @@ export function summonClones(player, match, limit) {
   if (player.owner || missing <= 0) return;
   const offsets = cloneFormations[missing - 1];
   const fighter = { ...player.fighter, size: player.fighter.size * cloneScale };
+  if (fighter.cloneLight) fighter.moves = { ...fighter.moves, light: fighter.cloneLight };
   const platform = player.grounded;
   const { arena } = match;
   const { side, top } = arena.definition.bounds;

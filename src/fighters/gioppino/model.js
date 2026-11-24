@@ -1,4 +1,5 @@
 import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 
 const brainParts = [
@@ -91,8 +92,8 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = landing * 1.22 + (guarding ? .21 : charging ? .15 : 0);
   const bob = Math.abs(stride) * .118 + Math.sin(time * 4.1) * .023 - crouch;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + facing * (punch * .37 - firstKick * .18 + lastKick * .26),
-    wobble - facing * (.09 * running + .12 * lunge) + stride * .07]);
+  const root = fighterRoot(position, size, [0, heading + facing * (punch * .37 - firstKick * .18 + lastKick * .26),
+    wobble - facing * (.09 * running + .12 * lunge) + stride * .07], attack);
   const upper = multiply(root, transform([0, bob, .13 * lunge], one, [.23 * lunge + .15 * running - .14 * lastKick, 0, -.12 * punch]));
   renderer.parts(rig.torso, upper, flash);
   const head = multiply(upper, transform([0, 2.01, .023], one, [.12 * lunge - .17 * jaws - .31 * recovery, 0, (pose ? -.11 : -.071) + stride * .085]));

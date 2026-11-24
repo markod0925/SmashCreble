@@ -1,4 +1,5 @@
 import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 import { rainbowHeight } from './profile.js';
 
@@ -81,7 +82,7 @@ export function draw(renderer, fighter, position, time, options) {
   const bob = Math.sin(time * 5) * .032 + Math.abs(gallop) * .091 - crouch;
   const size = fighter.size;
   const turn = pose ? heading - 1.26 : heading * 1.37;
-  const root = transform(position, [size, size, size], [0, turn, wobble - running * facing * .075]);
+  const root = fighterRoot(position, size, [0, turn, wobble - running * facing * .075], attack);
   const balance = .042 * gallop - .48 * hoof - .34 * recovery + .113 * thrust - .14 * rise - summoning * .21;
   const pivot = multiply(root, transform([0, 1.12 + bob, 0], one, [balance, 0, 0]));
   const base = multiply(pivot, transform([0, -1.12, 0], one, zero));

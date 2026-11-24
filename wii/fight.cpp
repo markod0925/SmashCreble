@@ -17,6 +17,7 @@ struct Fight::Engine {
     size_t geometryCount;
     const Pose* clonePoses;
     size_t clonePoseCount;
+    const std::array<float, 3> cameraDirection;
     JSRuntime* runtime = nullptr;
     JSContext* context = nullptr;
     JSValue initialize = JS_UNDEFINED, start = JS_UNDEFINED, advance = JS_UNDEFINED;
@@ -30,9 +31,9 @@ struct Fight::Engine {
     size_t used = 0, capacity = 0;
 
     Engine(const ModuleSource* sources, size_t count, const Geometry* shapes, size_t shapeCount,
-        const Pose* poses, size_t poseCount)
+        const Pose* poses, size_t poseCount, const std::array<float, 3>& direction)
         : modules(sources), moduleCount(count), geometry(shapes), geometryCount(shapeCount),
-          clonePoses(poses), clonePoseCount(poseCount) {}
+          clonePoses(poses), clonePoseCount(poseCount), cameraDirection(direction) {}
 
     ~Engine() {
         if (context) {
@@ -199,7 +200,7 @@ struct Fight::Engine {
                 const float* column = matrix.data() + axis * 4;
                 float dot = 0, magnitude = 0;
                 for (unsigned i = 0; i < 3; ++i) {
-                    dot += column[i] * (web::cameraEye[i] - web::cameraTarget[i]);
+                    dot += column[i] * engine.cameraDirection[i];
                     magnitude += column[i] * column[i];
                 }
                 const float score = magnitude > 0 ? dot * dot / magnitude : -1;
@@ -325,19 +326,18 @@ struct Fight::Engine {
 static_assert(sizeof(MatchFrame) == sizeof(float) * 32);
 
 Fight::Fight(const ModuleSource* modules, size_t moduleCount, const Geometry* geometry, size_t geometryCount,
-    const Pose* clonePoses, size_t clonePoseCount)
-    : engine(new Engine(modules, moduleCount, geometry, geometryCount, clonePoses, clonePoseCount)) {
+    const Pose* clonePoses, size_t clonePoseCount, const std::array<float, 3>& cameraDirection)
+    : engine(new Engine(modules, moduleCount, geometry, geometryCount, clonePoses, clonePoseCount, cameraDirection)) {
     engine->init(frame);
 }
 
 Fight::~Fight() { delete engine; }
 
-bool Fight::start(const std::array<bool, 4>& joined, const std::array<size_t, 4>& choices) {
+bool Fight::start(const std::array<bool, 4>& humans, const std::array<size_t, 4>& choices) {
     if (!engine->ready) return false;
-    solo = std::count(joined.begin(), joined.end(), true) == 1;
     JSValue args[4];
     for (int slot = 0; slot < 4; ++slot) {
-        args[slot] = JS_NewInt32(engine->context, joined[slot] ? int(choices[slot]) : -1);
+        args[slot] = JS_NewInt32(engine->context, humans[slot] ? int(choices[slot]) : -1);
     }
     return engine->check(JS_Call(engine->context, engine->start, JS_UNDEFINED, 4, args));
 }

@@ -1,6 +1,18 @@
 # Rift Ruckus
 
-Rift Ruckus is a local platform fighter for Windows PCs. Combat takes place on a 2D plane in low-poly 3D arenas. The twenty-four fighters, their models, the arenas, and the synthesized sound effects are original to the project.
+Rift Ruckus is a local platform fighter for Windows PCs. Combat takes place on a 2D plane in low-poly 3D arenas. The game features twenty-eight fighters and synthesized sound effects.
+
+## Screenshots
+
+### Browser
+
+![A Rift Ruckus match in Cloudbreak Foundry in the desktop browser build](artifacts/screenshots/browser.png)
+
+### Wii (Dolphin)
+
+![The Rift Ruckus Wii fighter selection screen running in Dolphin](artifacts/screenshots/wii-dolphin.png)
+
+See the [Wii build and play instructions](wii/README.md).
 
 ## Play on Windows
 
@@ -33,12 +45,12 @@ Each fighter starts with three stocks. Damage makes subsequent hits launch a fig
 
 Jump and double jump use Space or X. Hold Down with the jump button to drop through a raised platform.
 
-| Dragon Boy | Eid | Incantus | Beina | Gangar | Vi | Bomm | Gioppino | Huuuuu!! | 67 | Inga inga | Bid | Olivar | Packman | Ciclope | Vidarr | Funny Kings | Nuvol | ii! | DragonBall | Keyboard | Controller (Xbox labels) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Claw & Kick | Kick & Punch | Belly Bump | Kick & Punch | Punch & Kick | Horn Jab | Headbutts | Punch & Kicks | Slap | Kick & Headbutt | Headbutt | Claw Swipe | Kick & Punch | Chomp | Lasso Throw | Serpent Bites | Double Slap | Rain | Punch & Kicks | Bite | J | A |
-| Flame Breath | Pulse Shot | Ear Stench | Peel Flip | Lunge Bite | Hoof Kick | Quick Bomb | Zombie Bite | Choking Puff | Briefcase Swing | Draw & Slash | Flying Kicks | Sprout Blade | Gas Cloud | Club Smash | Flying Fangs | Tomato Toss | Hail Shower | Sword Thrust | Navel Beam | Tap L | Tap B |
-| Spine Shot | Blink Scythe | Stagger Hex | Banana Toss | Eye Lasers | Rainbow Arc | Power Steal | Brain Toss | Bandage Bind | 67 Venom Snakes | Lance Throw | Goblin Pair | Sprout Assault | Blue Eye Lasers | Gas Cloud | Serpent Coils | Blade Fan | Deep Freeze | Twin Slash | Clone Pair | Hold L | Hold B |
-| Scale Burst | Robot Spin | Hypnotic Chomp | Banana Barrage | Gulp & Spit | Clone Herd | Bomm Burst | Zombie Horde | Sarcophagus | Snake Dance | Blade Storm | Goblin Horde | Laser Burst | Trace 67 | Red Eye Beam | Frost Serpents | Royal Finale | Lightning Storm | Triple Blade Dive | Bacteria Burst | J + L | A + B |
+| Dragon Boy | Eid | Incantus | Beina | Gangar | Vi | Bomm | Gioppino | Huuuuu!! | 67 | Inga inga | Bid | Olivar | Packman | Ciclope | Vidarr | Funny Kings | Nuvol | ii! | DragonBall | Luffy | Maestra | Nurofen Caps | Pinco Palino | Keyboard | Controller (Xbox labels) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Claw & Kick | Kick & Punch | Belly Bump | Kick & Punch | Punch & Kick | Horn Jab | Headbutts | Punch & Kicks | Slap | Kick & Headbutt | Headbutt | Claw Swipe | Kick & Punch | Chomp | Lasso Throw | Serpent Bites | Double Slap | Rain | Punch & Kicks | Bite | Kick & Punch | Hair Pull | Vitamin C | Headbutt | J | A |
+| Flame Breath | Pulse Shot | Ear Stench | Peel Flip | Lunge Bite | Hoof Kick | Quick Bomb | Zombie Bite | Choking Puff | Briefcase Swing | Draw & Slash | Flying Kicks | Sprout Blade | Gas Cloud | Club Smash | Flying Fangs | Tomato Toss | Hail Shower | Sword Thrust | Navel Beam | Headbutt | Ruler Strike | Mini Bomb | Flying Tongue | Tap L | Tap B |
+| Spine Shot | Blink Scythe | Stagger Hex | Banana Toss | Eye Lasers | Rainbow Arc | Power Steal | Brain Toss | Bandage Bind | 67 Venom Snakes | Lance Throw | Goblin Pair | Sprout Assault | Blue Eye Lasers | Gas Cloud | Serpent Coils | Blade Fan | Deep Freeze | Twin Slash | Clone Pair | Gum-Gum Punch | Sonic Shout | Mega Bomb | Bald Flash | Hold L | Hold B |
+| Scale Burst | Robot Spin | Hypnotic Chomp | Banana Barrage | Gulp & Spit | Clone Herd | Bomm Burst | Zombie Horde | Sarcophagus | Snake Dance | Blade Storm | Goblin Horde | Laser Burst | Trace 67 | Red Eye Beam | Frost Serpents | Royal Finale | Lightning Storm | Triple Blade Dive | Bacteria Burst | Rubber Dance | Mighty Shove | Clone Squad | Flying 67 | J + L | A + B |
 
 Touch the golden Superstar at center stage to stock one super attack. The star above the fighter and on the HUD shows when the move is ready. The Superstar returns after the move is used or its holder is knocked out. Upward recovery still uses Up + L or Up + B.
 
@@ -70,6 +82,10 @@ Touch the golden Superstar at center stage to stock one super attack. The star a
 | Nuvol | Storm cloud | Can jump three times in midair. **Rain** showers nearby rivals and reaches below Nuvol. **Hail Shower** drops chunks of hail straight down. **Deep Freeze** fires an ice projectile that immobilizes the first rival hit for five seconds. **Lightning Storm** marks columns and then strikes them in three waves. A direct hit briefly reveals a stylized skeleton. |
 | ii! | Three-sword duelist | **Punch & Kicks** chains a punch and two kicks. **Sword Thrust** lunges with one blade. **Twin Slash** draws two swords for two strikes. **Triple Blade Dive** launches ii! into the air and brings all three blades down together. |
 | DragonBall | Muscle brawler | **Bite** lunges and snaps at a nearby rival. **Navel Beam** fires a straight laser from his belly button. **Clone Pair** refills the group to two half-size fighters that attack on their own and vanish on the first hit. **Bacteria Burst** launches a fan of brown, rod-shaped projectiles. |
+| Luffy | Rubber brawler | **Kick & Punch** chains two close-range strikes. **Headbutt** lunges forward. **Gum-Gum Punch** stretches his arms for a long-range blow. **Rubber Dance** transforms Luffy into his white form and freezes every rival for three seconds as he dances and strikes them with elastic punches and kicks. |
+| Maestra | Sonic teacher | **Hair Pull** tugs a nearby rival toward Maestra. **Ruler Strike** swings a wooden ruler overhead. **Sonic Shout** sends visible sound waves forward that hit rivals as they reach them. **Mighty Shove** drives nearby rivals away with a strong two-handed push. |
+| Nurofen Caps | Capsule caster | **Vitamin C** shoots a tablet forward. **Mini Bomb** lobs a small bomb. **Mega Bomb** throws a bigger bomb with a wider blast. **Clone Squad** brings the group to four half-size CPU clones. They use explosive slaps and vanish on the first hit they take. |
+| Pinco Palino | Flying kicker | **Headbutt** lunges into a nearby rival. **Flying Tongue** lashes at medium range. **Bald Flash** dazzles nearby rivals and briefly blocks their attacks. **Flying 67** launches from Pinco Palino’s current position. He kicks through opponents while painting a green 67 in the air. |
 
 ## Code layout
 

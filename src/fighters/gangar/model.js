@@ -1,4 +1,5 @@
 import { multiply, one, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 
 const gangarEyes = [[-.301, .452, .407], [.287, .476, .416]];
@@ -90,7 +91,7 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = landing * 1.1 + (guarding ? .22 : charging ? .2 : 0);
   const bob = Math.abs(stride) * .083 + Math.sin(time * 4.5) * .031 - crouch;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + facing * (recoil * .235 + punch * .27), wobble - facing * (running * .12 + rush * .12)]);
+  const root = fighterRoot(position, size, [0, heading + facing * (recoil * .235 + punch * .27), wobble - facing * (running * .12 + rush * .12)], attack);
   const upper = multiply(root, transform([0, bob, .21 * rush], [1 + (full ? .115 : 0), 1, 1], [running * .15 + rush * .32 - recoil * .112, 0, -kick * .13]));
   renderer.parts(rig.torso, upper, flash);
   const head = multiply(upper, transform([0, 2.005, .039], [1 + (full ? .09 : 0), 1, 1], [-gape * .19 - recover * .31, 0, pose ? -.065 : 0]));

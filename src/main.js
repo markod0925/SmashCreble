@@ -261,5 +261,6 @@ canvas.addEventListener('webglcontextlost', (event) => {
   $('fatal').hidden = false;
 });
 
+$('hero-lineup').textContent = `${fighters.length} fighters across floating arenas.`;
 changeSelection(0, true);
 requestAnimationFrame(frame);

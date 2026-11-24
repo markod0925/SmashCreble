@@ -22,8 +22,12 @@ import * as funnyKings from './funny-kings/profile.js';
 import * as nuvol from './nuvol/profile.js';
 import * as ii from './ii/profile.js';
 import * as dragonball from './dragonball/profile.js';
+import * as luffy from './luffy/profile.js';
+import * as maestra from './maestra/profile.js';
+import * as nurofenCaps from './nurofen-caps/profile.js';
+import * as pincoPalino from './pinco-palino/profile.js';
 
-const roster = [rivet, bramble, vesper, kiln, dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, shark67, ingaInga, bid, olivar, packman, ciclope, vidarr, funnyKings, nuvol, ii, dragonball];
+const roster = [rivet, bramble, vesper, kiln, dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, shark67, ingaInga, bid, olivar, packman, ciclope, vidarr, funnyKings, nuvol, ii, dragonball, luffy, maestra, nurofenCaps, pincoPalino];
 
 export const fighters = roster.map(({ fighter }) => fighter);
 export const signatureAttacks = Object.assign({}, ...roster.map(({ attacks }) => attacks));

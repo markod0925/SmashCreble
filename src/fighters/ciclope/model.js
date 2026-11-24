@@ -1,5 +1,6 @@
 import { clamp } from '../../math.js';
-import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { multiply, one, TAU, transform, transformPoint, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 import { drawGasCloud } from '../packman/model.js';
 import { lassoGrip } from './profile.js';
@@ -109,8 +110,8 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = landing * 1.15 + (guarding ? .214 : charging ? .17 : 0);
   const bob = Math.abs(stride) * .089 + Math.sin(time * 4.4) * .029 - crouch;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + facing * (cast * .16 + smash * .34),
-    wobble - facing * (running * .105 + smash * .134 - laser * .08)]);
+  const root = fighterRoot(position, size, [0, heading + facing * (cast * .16 + smash * .34),
+    wobble - facing * (running * .105 + smash * .134 - laser * .08)], attack);
   const body = joint(root, [0, bob, .07 * smash], [.13 * running + smash * .23 + puff * .19 - recovery * .24, 0, -.09 * laser]);
   renderer.parts(torso, body, flash);
   const face = joint(body, [0, 2.051, .029], [smash * .16 - recovery * .24, 0, pose ? -.11 : stride * .091]);
@@ -139,11 +140,7 @@ export function draw(renderer, fighter, position, time, options) {
   if (!attack?.until || age < attack.from || age > attack.until) return;
   if (smashing) drawClubImpact(renderer, position, facing, attack, size);
   if (puff) drawGasCloud(renderer, position, facing, attack, size * 1.13);
-  if (firing) {
-    const eyeX = position[0] + facing * .56 * size;
-    const eyeY = position[1] + (2.55 + bob) * size;
-    drawLaser(renderer, [eyeX, eyeY, position[2] + .66], facing, attack, size);
-  }
+  if (firing) drawLaser(renderer, transformPoint(face, [0, .504, .69]), position[0] + facing * attack.range, attack, size);
 }
 
 export function drawClubImpact(renderer, [x, y, z], facing, attack, size) {
@@ -155,10 +152,10 @@ export function drawClubImpact(renderer, [x, y, z], facing, attack, size) {
   }
 }
 
-function drawLaser(renderer, [x, y, z], facing, attack, size) {
+function drawLaser(renderer, [x, y, z], endpoint, attack, size) {
   const progress = clamp((attack.age - attack.from) / (attack.until - attack.from), 0, 1);
-  const length = attack.range - .56 * size;
-  const beamX = x + facing * length / 2;
+  const length = Math.abs(endpoint - x);
+  const beamX = (x + endpoint) / 2;
   const glare = (1 - progress * .58) * (.88 + .12 * Math.sin(attack.age * 52));
   renderer.object('box', [beamX, y, z], [length, .41, .16], '#de3244', zero, 1, glare * .64);
   renderer.object('box', [beamX, y, z + .09], [length, .215, .117], '#ff6363', zero, 1, glare * .95);

@@ -1,5 +1,6 @@
 import { clamp } from '../../math.js';
 import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 
 const moss = '#518b48';
@@ -87,8 +88,8 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = landing * 1.26 + (guarding ? .2 : charging ? .21 : 0);
   const bob = Math.abs(stride) * .087 + Math.sin(time * 5.1) * .034 - crouch;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + facing * (.39 * swipe + .21 * kickA),
-    wobble + facing * (kickA * .3 + kickB * .17 - running * .14 - swipe * .22)]);
+  const root = fighterRoot(position, size, [0, heading + facing * (.39 * swipe + .21 * kickA),
+    wobble + facing * (kickA * .3 + kickB * .17 - running * .14 - swipe * .22)], attack);
   const body = joint(root, [0, bob, swipe * .1], [.15 * running - (kickA + kickB) * .52 - recovery * .23, 0, .087 * summon]);
   renderer.parts(torso, body, flash);
   renderer.parts(head, joint(body, [0, 1.963, .028], [-.3 * recovery - .12 * summon, swipe * .19, stride * .09 - .06]), flash);

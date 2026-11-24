@@ -38,17 +38,16 @@ struct ModuleSource { const char* name; const unsigned char* bytes; size_t lengt
 class Fight {
 public:
     Fight(const ModuleSource* modules, size_t moduleCount, const Geometry* geometry, size_t geometryCount,
-        const Pose* clonePoses, size_t clonePoseCount);
+        const Pose* clonePoses, size_t clonePoseCount, const std::array<float, 3>& cameraDirection);
     ~Fight();
     Fight(const Fight&) = delete;
     Fight& operator=(const Fight&) = delete;
 
-    bool start(const std::array<bool, 4>& joined, const std::array<size_t, 4>& choices);
+    bool start(const std::array<bool, 4>& humans, const std::array<size_t, 4>& choices);
     bool advance(int steps, float dt, const std::array<Input, 4>& input);
     void draw() const;
 
     MatchFrame frame{};
-    bool solo = false;
 
 private:
     struct Engine;

@@ -1,4 +1,5 @@
 import { multiply, one, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 
 function buildDragonRig() {
@@ -91,7 +92,7 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = (guarding ? .22 : charging ? .2 : 0) + landing * 1.1 + spines * .18;
   const hop = Math.sin(time * 5) * .035 + Math.abs(stride) * .09;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading - facing * (spines * 2.32 + burst * .34), wobble - facing * (running * .1 + breath * .13)]);
+  const root = fighterRoot(position, size, [0, heading - facing * (spines * 2.32 + burst * .34), wobble - facing * (running * .1 + breath * .13)], attack);
   const upper = multiply(root, transform([0, hop - crouch + recovery * .15, 0], one, [running * .16 + breath * .22 + spines * .59 - burst * .24, claw * -.72 + kick * .39, claw * -.2]));
   renderer.parts(torso, upper, flash);
   const headRoot = multiply(upper, transform([0, 1.99, .03], one, [-breath * .27 - recovery * .38 + charging * -.11, claw * .34, pose ? -.1 : 0]));

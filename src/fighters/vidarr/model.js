@@ -1,5 +1,6 @@
 import { clamp } from '../../math.js';
-import { multiply, one, smoothStep, TAU, transform, zero } from '../../render/math.js';
+import { multiply, one, smoothStep, TAU, transform, transformPoint, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 
 const green = '#4dae83';
@@ -110,7 +111,7 @@ function strand(renderer, start, end, size, phase, bite, index) {
 
 const hairTips = [[1.24, 2.8], [1.56, 2.1], [1.36, 1.4]];
 
-function drawHair(renderer, [x, y, z], size, time, attack, facing, bob) {
+function drawHair(renderer, face, [x, y, z], size, time, attack, facing, bob) {
   const age = attack?.age ?? 0;
   const close = attack?.type === 'vidarrBites' ? pulse((age - .026) / .31) : 0;
   const frost = attack?.serpentEnds;
@@ -121,12 +122,12 @@ function drawHair(renderer, [x, y, z], size, time, attack, facing, bob) {
       const index = sideIndex * hairTips.length + i;
       const detached = attack?.fired && side === facing &&
         (attack.type === 'vidarrHeads' && age < .48 || attack.type === 'vidarrCoils' && i < 2 && age < .58);
-      const start = [x + side * (.182 + i * .125) * size, y + (2.62 - i * .167 + bob) * size, z - .135];
+      const start = transformPoint(face, [side * (.182 + i * .125), .64 - i * .167, -.16]);
       if (detached) {
         renderer.object('tube', start, [.177 * size, .4 * size, .174 * size], jade, [0, 0, -side * 1.39], .21);
         continue;
       }
-      const reach = width + close * .58 * Number(side === facing);
+      const reach = width + close * .84 * Number(side === facing);
       const idle = [
         x + side * (reach + Math.sin(time * 4.2 + index) * .11) * size,
         y + (height + bob + Math.cos(time * 4.1 + index * .92) * .148) * size,
@@ -155,12 +156,13 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = landing * 1.08 + (guarding ? .19 : charging ? .17 : 0);
   const bob = Math.sin(time * 5) * (.071 + running * .021) - crouch;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + facing * strike * .39,
-    wobble - facing * (running * .142 + throwPose * .16)]);
+  const root = fighterRoot(position, size, [0, heading + facing * strike * .39,
+    wobble - facing * (running * .142 + throwPose * .16)], attack);
   const body = joint(root, [0, bob, throwPose * .09], [.08 * running + strike * .21 - recover * .25, 0, cast * .074]);
   renderer.parts(gown, joint(body, [0, 0, -.015], [.128 * rise + .103 * Math.sin(time * 4), 0, -.085 * running * facing]), flash);
   renderer.parts(torso, body, flash);
-  renderer.parts(head, joint(body, [0, 1.98, .014], [-.12 * cast - recover * .34, 0, pose ? -.11 : .07 * Math.sin(time * 5)]), flash);
+  const face = joint(body, [0, 1.98, .014], [-.12 * cast - recover * .34, 0, pose ? -.11 : .07 * Math.sin(time * 5)]);
+  renderer.parts(head, face, flash);
   for (const side of [-1, 1]) {
     const reach = .35 + cast * .97 + (pose ? .27 : 0);
     const pitch = guarding ? -1.15 : -.36 - side * Math.sin(time * 11) * running * .51 - rise * .36 - throwPose * 1.28 - recover * .98 - cast * 1.09;
@@ -168,7 +170,7 @@ export function draw(renderer, fighter, position, time, options) {
   }
   const [x, y, z] = position;
   renderer.object('disk', [x, y + .052, z - .04], [1.0 * size, .039, .68 * size], '#d184a6', [0, time, 0], .62, .43);
-  drawHair(renderer, position, size, time, attack, facing, bob);
+  drawHair(renderer, face, position, size, time, attack, facing, bob);
   if (frost && cast > 0) {
     for (let i = 0; i < 5; i++) {
       const angle = i * TAU / 5 + age * 2.7;

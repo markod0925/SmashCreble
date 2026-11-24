@@ -1,5 +1,6 @@
 import { clamp } from '../../math.js';
 import { multiply, one, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 
 const skin = '#db925d';
@@ -122,8 +123,8 @@ export function draw(renderer, fighter, position, time, options) {
   const stride = Math.sin(time * 15.4) * running;
   const crouch = landing * 1.19 + (guarding ? .22 : charging ? .17 : 0);
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + facing * (bite * .44 - laser * .33 + throwing * .38),
-    wobble - facing * (.102 * running + .24 * bite + .17 * throwing - .06 * laser)]);
+  const root = fighterRoot(position, size, [0, heading + facing * (bite * .44 - laser * .33 + throwing * .38),
+    wobble - facing * (.102 * running + .24 * bite + .17 * throwing - .06 * laser)], attack);
   const body = joint(root, [0, Math.abs(stride) * .081 + Math.sin(time * 4.3) * .021 - crouch, .16 * bite],
     [.26 * bite + .088 * running - .18 * laser + .14 * throwing, 0, pose ? .054 : .055 * stride]);
   renderer.parts(torso, body, flash);
@@ -132,8 +133,8 @@ export function draw(renderer, fighter, position, time, options) {
   renderer.parts(head, skull, flash);
   const open = bite * (age < (attack?.from ?? 0) ? 1 : .18);
   if (open > .15) {
-    renderer.mesh('bevel', multiply(skull, transform([0, .148, .405], [.403, .181 + open * .22, .097], zero)), '#542735');
-    renderer.parts(jaw, joint(skull, [0, .125 - .159 * open, .071], [.49 * open, 0, 0]), flash);
+    renderer.mesh('bevel', multiply(skull, transform([0, .148 - open * .045, .405], [.403, .181 + open * .34, .097], zero)), '#542735');
+    renderer.parts(jaw, joint(skull, [0, .125 - .218 * open, .071], [.63 * open, 0, 0]), flash);
   } else renderer.parts(grin, skull, flash);
   renderer.parts(bandTail, joint(skull, [.37, .666, -.313], [running * .81 + rise * .25, 0, .15 * Math.sin(time * 9) + bite * .25]), flash);
 

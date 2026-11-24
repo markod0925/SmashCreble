@@ -1,6 +1,6 @@
 # Rift Ruckus for Wii
 
-This native Homebrew Channel build supports one to four local players in Cloudbreak Foundry. The Wii release uses the Web roster, fighter models, combat rules, moves, and battle effects. The browser game remains the authoring project.
+This native Homebrew Channel build runs four-fighter matches in Cloudbreak Foundry with one to four local players. The Wii release uses the Web roster, fighter models, combat rules, moves, and battle effects. The browser game remains the authoring project.
 
 The Wii renderer draws Cloudbreak Foundry from prebuilt display lists and keeps its background clouds still. Clones use prebuilt idle, running, and airborne poses during ordinary movement. Their attacks and status effects use the shared battle renderer. The Wii build uses the Web combat rules and clone behavior.
 
@@ -41,4 +41,4 @@ Copy the release's `apps/RiftRuckus` directory into `apps` on the SD card and la
 | Start or return to character select after the match | + | + | + |
 | Exit | HOME | HOME | HOME |
 
-Each connected controller gets a numbered preview and a cursor. Press + once anyone has confirmed a fighter. Other connected controllers enter with the fighter under their cursor. With one controller, the match runs as solo practice. A disconnected participant pauses an active match until that controller channel is available again.
+Each connected controller gets a numbered preview and a cursor. Press + once anyone has confirmed a fighter. Other connected controllers enter with the fighter under their cursor. At the start of each match, the game fills the remaining slots with randomly chosen CPU fighters. A disconnected human participant pauses an active match until that controller channel is available again.

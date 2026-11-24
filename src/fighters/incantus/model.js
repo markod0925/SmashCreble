@@ -1,4 +1,5 @@
 import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 import { captureProgress } from '../../combat/status.js';
 
@@ -95,7 +96,7 @@ export function draw(renderer, fighter, position, time, options) {
   const crouch = landing * 1.3 + (guarding ? .24 : charging ? .16 : 0);
   const bob = Math.sin(time * 4.5) * .041 + Math.abs(stride) * .084 - crouch;
   const size = fighter.size;
-  const root = transform(position, [size, size, size], [0, heading + wobble * .41, wobble - facing * (running * .1 + bump * .09)]);
+  const root = fighterRoot(position, size, [0, heading + wobble * .41, wobble - facing * (running * .1 + bump * .09)], attack);
   const upper = multiply(root, transform([0, bob, bump * .19], one, [-bump * .34 + running * .13, 0, 0]));
   renderer.parts(rig.torso, multiply(upper, transform([0, 0, bump * .13], [1 + bump * .23, 1, 1 + bump * .4], zero)), flash);
   const head = multiply(upper, transform([0, 2.003, .04], [1 + swelling * .09, 1 + gape * .09, 1], [-recovery * .33 - gape * .18, 0, pose ? -.095 : wobble * .45]));

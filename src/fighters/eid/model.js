@@ -1,4 +1,5 @@
 import { multiply, one, TAU, transform, zero } from '../../render/math.js';
+import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 
 function buildEidRig() {
@@ -110,7 +111,7 @@ export function draw(renderer, fighter, position, time, options) {
   const bob = Math.abs(step) * .09 + Math.sin(time * 5) * .025 - crouch;
   const size = fighter.size;
   const turn = heading + facing * (spin * TAU * 3 - kick * .32 + punch * .48 + (blinking ? Math.sin(slash * TAU) * .58 : 0));
-  const root = transform(position, [size, size, size], [0, turn, wobble - running * .13 * facing]);
+  const root = fighterRoot(position, size, [0, turn, wobble - running * .13 * facing], attack);
   const upper = multiply(root, transform([0, bob, 0], one, [running * .2 + (armored ? .21 : 0) - aim * .09, 0, kick * .17 - punch * .19]));
   renderer.parts(armored ? rig.armor : rig.torso, upper, flash);
   if (!armored && !shooting) renderer.parts([rig.holster], upper, flash);

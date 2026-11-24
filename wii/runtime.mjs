@@ -46,8 +46,14 @@ globalThis.wiiInit = (controlsBuffer, frameBuffer, matrixBuffer) => {
 };
 
 globalThis.wiiStart = (...choices) => {
-  const lineup = choices.flatMap((index, slot) => index < 0 ? [] : [{ slot, fighter: fighters[index], cpu: false }]);
+  const available = fighters.filter((_, index) => !choices.includes(index));
+  const lineup = choices.map((index, slot) => {
+    if (index >= 0) return { slot, fighter: fighters[index], cpu: false };
+    const [fighter] = available.splice(Math.floor(Math.random() * available.length), 1);
+    return { slot, fighter, cpu: true };
+  });
   match = createMatch(lineup, defaultArena);
+  controls.clear();
   elapsed = 0;
   graphics.resetBattle();
 };
@@ -70,9 +76,10 @@ function controlFor(slot, first) {
 
 globalThis.wiiAdvance = (steps, dt) => {
   for (let step = 0; step < steps; step++) {
-    for (const player of match.fighters) controls.set(player.slot, controlFor(player.slot, step === 0));
+    for (const { slot, cpu } of match.fighters) {
+      if (!cpu) controls.set(slot, controlFor(slot, step === 0));
+    }
     tickMatch(match, controls);
-    if (match.fighters.length === 1 && match.fighters[0].stocks && match.time > 0) match.result = null;
   }
   if (steps) elapsed += dt;
   if (match.events.length) {

@@ -117,7 +117,7 @@ async function main() {
   <name>Rift Ruckus Wii</name>
   <version>${version}</version>
   <short_description>Local platform fighter prototype</short_description>
-  <long_description>Choose a fighter and play Cloudbreak Foundry with up to four local players.</long_description>
+  <long_description>Play four-fighter matches in Cloudbreak Foundry with up to four local players. CPU fighters fill the remaining slots.</long_description>
 </app>
 `);
     await cp(join(wii, 'README.md'), join(payload, 'README.md'));

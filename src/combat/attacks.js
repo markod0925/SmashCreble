@@ -6,11 +6,12 @@ import { strike } from './hits.js';
 import { fireProjectiles } from './projectiles.js';
 import { bodyCenter, bodyContactDistance, combatants, scaleOf } from './state.js';
 import { interruptAttack } from './status.js';
+import { advanceTrace, startTrace } from './trace.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower, powerStealTravelTime, stolenPowerTime } from '../fighters/bomm/profile.js';
+import { advanceRubberDance } from '../fighters/luffy/dance.js';
 import { assaultRemaining, deployCompanions } from '../fighters/olivar/companions.js';
 import { advanceThunder } from '../fighters/nuvol/thunder.js';
-import { advanceTrace, startTrace } from '../fighters/packman/trace.js';
 import { rainbowHeight } from '../fighters/vi/profile.js';
 import { advanceFrost } from '../fighters/vidarr/frost.js';
 import { clamp, direction } from '../math.js';
@@ -37,7 +38,8 @@ function startAttack(player, type, input, match, borrowed = null) {
 
   if (type === 'special' && !up) type = secondaryMove(player.fighter);
   if (Object.hasOwn(signatureAttacks, type)) {
-    attack = { type, x: facing, ...signatureAttacks[type] };
+    const signature = signatureAttacks[type];
+    attack = { type, x: signature.pull ? -facing : facing, ...signature };
     if (type === 'dash') {
       player.vx = facing * 19;
       player.vy = Math.max(player.vy, 2);
@@ -107,6 +109,10 @@ export function advanceAttack(player, dt, match) {
   const attack = player.attack;
   if (!attack) return;
   attack.age += dt;
+  if (attack.rubberDance) {
+    advanceRubberDance(player, attack, match);
+    return;
+  }
   if (attack.age >= attack.duration) {
     player.attack = null;
     return;
@@ -166,11 +172,12 @@ export function advanceAttack(player, dt, match) {
     attack.nextVolley += attack.volleyEvery;
   }
   if (attack.until === undefined || attack.age > attack.until) return;
+  const range = attack.waveSpeed ? Math.min(attack.range, (attack.age - attack.from) * attack.waveSpeed * attack.scale) : attack.range;
   for (const target of combatants(match)) {
     if (target.slot === player.slot || attack.victims.has(target)) continue;
     const dx = target.x - player.x;
     // Short strikes can still connect at body contact, including against wider fighters.
-    if (Math.abs(dx) > attack.range && Math.abs(dx) > bodyContactDistance(player, target, match) + 1e-9) continue;
+    if (Math.abs(dx) > range && Math.abs(dx) > bodyContactDistance(player, target, match) + 1e-9) continue;
     if (!attack.all && dx * attack.facing < -0.23 * attack.scale) continue;
     const height = target.y + bodyCenter(target) - player.y;
     if (attack.arcStart) {

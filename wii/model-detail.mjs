@@ -1,8 +1,10 @@
+import { defaultArena } from '../src/arenas/index.js';
 import { shapes } from '../src/render/geometry.js';
+import { battleCamera } from '../src/render/math.js';
 
-export const cameraEye = [0, 9, 36];
-export const cameraTarget = [0, 2.4, 0];
-const cameraDirection = cameraEye.map((value, axis) => value - cameraTarget[axis]);
+export const standardCamera = battleCamera(defaultArena, 4 / 3);
+export const widescreenCamera = battleCamera(defaultArena, 16 / 9);
+const cameraDirection = widescreenCamera.eye.map((value, axis) => value - widescreenCamera.target[axis]);
 const flatShapes = new Set(['box', 'grin', 'leaf']);
 
 function signedArea(a, b, c) {
