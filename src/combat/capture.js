@@ -1,6 +1,6 @@
 import { vanishClone } from './clones.js';
 import { strike } from './hits.js';
-import { combatants } from './state.js';
+import { areRivals, combatants } from './state.js';
 import { captureProgress, captureTarget, capturingAttack, isInvulnerable } from './status.js';
 import { clamp } from '../math.js';
 
@@ -8,7 +8,7 @@ export function beginCapture(player, attack, match) {
   let target;
   let nearest = Infinity;
   for (const other of combatants(match)) {
-    if (other.slot === player.slot || !other.stocks || other.respawn || isInvulnerable(other) || other.dodge || other.guarding || capturingAttack(other, match)) continue;
+    if (!areRivals(player, other) || !other.stocks || other.respawn || isInvulnerable(other) || other.dodge || other.guarding || capturingAttack(other, match)) continue;
     const dx = other.x - player.x;
     const dy = other.y - player.y;
     if (dx * attack.facing < -0.23 || Math.abs(dx) > attack.range || Math.abs(dy) > attack.vertical) continue;

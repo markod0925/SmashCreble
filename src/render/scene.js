@@ -1,4 +1,5 @@
 import { rules } from '../combat/arena.js';
+import { encounterGate, enemyColor } from '../combat/adventure.js';
 import { bodySize, combatants } from '../combat/state.js';
 import { boundTime, captureProgress, capturingAttack, dazedTime, frozenTime, isZombie, shockedTime } from '../combat/status.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
@@ -9,6 +10,7 @@ import { drawDanceSnake } from '../fighters/shark-67/model.js';
 import { drawIce, drawSerpentBind } from '../fighters/vidarr/model.js';
 import { shrinkTime } from '../fighters/zunchy/profile.js';
 import { playerColors } from '../player-colors.js';
+import { adventureCamera } from './adventure.js';
 import { drawBattleArena, drawHero } from './arena.js';
 import { drawCharacter, drawProjectiles, portraitCamera } from './characters.js';
 import { BattleEffects } from './effects.js';
@@ -24,6 +26,7 @@ export class Graphics {
 
   resetBattle() {
     this.effects = new BattleEffects();
+    this.adventureView = null;
   }
 
   addEffects(events) {
@@ -49,9 +52,22 @@ export class Graphics {
     const renderer = this.renderer;
     const [width, height] = renderer.measure();
     const shakeX = this.effects.cameraOffset(time, dt);
-    const { eye, target, fov } = battleCamera(match.arena.definition, width / height, shakeX);
+    const aspect = width / height;
+    const definition = match.arena.definition;
+    let course;
+    let camera = definition.camera;
+    if (match.adventure) {
+      const follow = adventureCamera(match);
+      this.adventureView ??= follow;
+      camera = this.adventureView;
+      const ease = 1 - Math.exp(-8 * dt);
+      camera.x += (follow.x - camera.x) * ease;
+      camera.distance += (follow.distance - camera.distance) * ease;
+      course = { x: camera.x, radius: camera.distance * Math.max(.8, aspect * .42) + 12, gate: encounterGate(match) };
+    }
+    const { eye, target, fov } = battleCamera({ camera }, aspect, shakeX);
     renderer.begin(width, height, eye, target, fov);
-    drawBattleArena(renderer, match.arena, time);
+    drawBattleArena(renderer, match.arena, time, course);
     const star = match.superstar;
     if (star && !star.holder && !star.cooldown) {
       const y = star.y + Math.sin(time * 4) * .16;
@@ -67,7 +83,7 @@ export class Graphics {
       const progress = capture ? captureProgress(capture) : 0;
       if (capture?.sarcophagus) drawSarcophagus(renderer, fighter, progress);
       if (progress >= 1) {
-        tagPoints.push(null);
+        if (!clone) tagPoints.push(null);
         continue;
       }
       const pulledToMouth = capture?.type === 'gangarGulp' || capture?.gulpSpit;
@@ -125,7 +141,7 @@ export class Graphics {
       }
       const top = fighter.y + 3.53 * size;
       if (star?.holder === fighter) renderer.object('star', [fighter.x, top, .5], [.52, .52, .4], '#ffdb70', [0, Math.sin(time * 3) * .45, 0], .92);
-      else renderer.object('gem', [fighter.x, top, .5], clone ? [.22, .2, .18] : [.36, .33, .27], playerColors[fighter.slot], [0, time, Math.PI], .95);
+      else renderer.object('gem', [fighter.x, top, .5], clone ? [.22, .2, .18] : [.36, .33, .27], fighter.team === 'enemies' ? enemyColor : playerColors[fighter.slot], [0, time, Math.PI], .95);
       if (dazed || fighter.stagger || capture?.type === 'incantusChomp') {
         const count = dazed ? 3 : 2;
         for (let i = 0; i < count; i++) {

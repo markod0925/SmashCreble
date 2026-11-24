@@ -1,11 +1,11 @@
 import { strike } from '../../combat/hits.js';
-import { bodyCenter, combatants } from '../../combat/state.js';
+import { areRivals, bodyCenter, combatants } from '../../combat/state.js';
 import { freezeFighter, frozenTime } from '../../combat/status.js';
 import { direction } from '../../math.js';
 import { frostSeconds } from './profile.js';
 
 function freezeRivals(owner, attack, match) {
-  const targets = combatants(match).filter(actor => actor.slot !== owner.slot && actor.stocks && !actor.respawn);
+  const targets = combatants(match).filter(actor => areRivals(owner, actor) && actor.stocks && !actor.respawn);
   for (const target of targets) freezeFighter(target, match, frostSeconds);
   attack.frostTargets = targets;
   attack.serpentEnds = [-1, 1].flatMap(side => {

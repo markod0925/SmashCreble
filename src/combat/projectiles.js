@@ -1,6 +1,6 @@
 import { crossedPlatform, platformHeight } from './arena.js';
 import { strike } from './hits.js';
-import { bodyCenter, bodyScale, combatants } from './state.js';
+import { areRivals, bodyCenter, bodyScale, combatants } from './state.js';
 import { isInvulnerable } from './status.js';
 import { projectileLaunchers } from '../fighters/index.js';
 import { direction } from '../math.js';
@@ -12,14 +12,14 @@ export function fireProjectiles(player, attack, match) {
 function projectileTouches(projectile, target, match) {
   const scale = bodyScale(target, match);
   const projectileScale = projectile.scale ?? 1;
-  return target.slot !== projectile.owner.slot && !projectile.victims?.has(target) &&
+  return areRivals(projectile.owner, target) && !projectile.victims?.has(target) &&
     Math.abs(target.x - projectile.x) <= .2 * projectileScale + .45 * scale && Math.abs(target.y + bodyCenter(target, match) - projectile.y) <= .3 * projectileScale + .52 * scale;
 }
 
 function detonateBomb(projectile, targets, match) {
   const { owner, x, y, vx, blast, hit, victims } = projectile;
   for (const target of targets) {
-    if (target.slot === owner.slot || victims.has(target)) continue;
+    if (!areRivals(owner, target) || victims.has(target)) continue;
     const dx = target.x - x;
     const dy = target.y + bodyCenter(target, match) - y;
     if (Math.hypot(dx, dy * .78) > blast) continue;

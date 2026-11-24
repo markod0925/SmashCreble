@@ -1,11 +1,11 @@
 import { briefcaseGrip, danceSeconds, danceSnakeCount } from '../fighters/shark-67/profile.js';
 import { strike } from './hits.js';
-import { bodyCenter, combatants } from './state.js';
+import { areRivals, bodyCenter, combatants } from './state.js';
 import { interruptAttack } from './status.js';
 
 export function startDance(owner, match) {
   const actors = combatants(match);
-  const rivals = actors.filter((actor) => actor.slot !== owner.slot && actor.stocks && !actor.respawn);
+  const rivals = actors.filter((actor) => areRivals(owner, actor) && actor.stocks && !actor.respawn);
   const [x, y] = briefcaseGrip(owner);
   const snakes = Array.from({ length: danceSnakeCount }, (_, i) => ({
     x, y, angle: owner.facing < 0 ? Math.PI : 0, index: i, delay: i * .076,
@@ -27,7 +27,7 @@ function advanceSnake(snake, dance, match, dt) {
   if (dance.elapsed < snake.delay) return;
   const { owner } = dance;
   if (!snake.target?.stocks || snake.target.respawn) {
-    snake.target = combatants(match).find((actor) => actor.slot !== owner.slot && actor.stocks && !actor.respawn);
+    snake.target = combatants(match).find((actor) => areRivals(owner, actor) && actor.stocks && !actor.respawn);
   }
   const target = snake.target;
   if (!target) return;

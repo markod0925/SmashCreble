@@ -4,7 +4,7 @@ import { canSummonClones, canUseSuper, summonClones } from './clones.js';
 import { startDance } from './dance.js';
 import { strike } from './hits.js';
 import { fireProjectiles } from './projectiles.js';
-import { bodyCenter, bodyContactDistance, bodyScale, combatants, scaleOf } from './state.js';
+import { areRivals, bodyCenter, bodyContactDistance, bodyScale, combatants, scaleOf } from './state.js';
 import { dazeRivals, interruptAttack } from './status.js';
 import { advanceTrace, startTrace } from './trace.js';
 import { signatureAttacks } from '../fighters/index.js';
@@ -92,7 +92,7 @@ function stealPower(player, attack, match) {
   let distance = Infinity;
   for (const other of combatants(match)) {
     const dx = other.x - player.x;
-    if (other.slot === player.slot || !other.stocks || other.respawn || dx * attack.facing <= 0) continue;
+    if (!areRivals(player, other) || !other.stocks || other.respawn || dx * attack.facing <= 0) continue;
     const gap = Math.hypot(dx, other.y - player.y);
     if (gap >= distance) continue;
     donor = other;
@@ -181,7 +181,7 @@ export function advanceAttack(player, dt, match) {
   if (attack.until === undefined || attack.age > attack.until) return;
   const range = attack.waveSpeed ? Math.min(attack.range, (attack.age - attack.from) * attack.waveSpeed * attack.scale) : attack.range;
   for (const target of combatants(match)) {
-    if (target.slot === player.slot || attack.victims.has(target)) continue;
+    if (!areRivals(player, target) || attack.victims.has(target)) continue;
     const dx = target.x - player.x;
     // Short strikes can still connect at body contact, including against wider fighters.
     if (Math.abs(dx) > range && Math.abs(dx) > bodyContactDistance(player, target, match) + 1e-9) continue;

@@ -1,22 +1,32 @@
-# Rift Ruckus
+# Smash Creble
 
-Rift Ruckus is a local platform fighter for desktop and mobile browsers. Combat takes place on a 2D plane in low-poly 3D arenas. The game features thirty-five fighters and synthesized sound effects.
+Smash Creble is a local platform fighter for desktop and mobile browsers. Combat takes place on a 2D plane in low-poly 3D arenas. The game features thirty-five fighters and synthesized sound effects.
 
 ## Screenshots
 
-### Browser
+### Mobile browser
 
-![A Rift Ruckus match in Cloudbreak Foundry in the desktop browser build](artifacts/screenshots/browser.png)
+![A two-fighter match in Cloudbreak Foundry with the touchscreen joystick and action buttons](artifacts/screenshots/mobile-cloudbreak.png)
+
+![A four-fighter match in Stormcoil Array with two status cards on each side](artifacts/screenshots/mobile-stormcoil.png)
+
+### Desktop browser
+
+![The desktop fighter selection screen with Che Addominali! in the arena preview](artifacts/screenshots/browser-roster.png)
+
+![A Smash Creble match in Cloudbreak Foundry in the desktop browser build](artifacts/screenshots/browser.png)
 
 ### Wii (Dolphin)
 
-![The Rift Ruckus Wii fighter selection screen running in Dolphin](artifacts/screenshots/wii-dolphin.png)
+![The Smash Creble Wii fighter selection screen running in Dolphin](artifacts/screenshots/wii-dolphin.png)
+
+![A four-fighter Wii match in Cloudbreak Foundry running in Dolphin](artifacts/screenshots/wii-dolphin-match.png)
 
 See the [Wii build and play instructions](wii/README.md).
 
 ## Play on a phone
 
-Open [Rift Ruckus on GitHub Pages](https://markod0925.github.io/SmashCreble/), then tap **Play match** and **Start fight**. Turn your phone sideways to play. The default **Touch / Keyboard** player faces a CPU. The fight opens in fullscreen when the browser allows it. Fighter damage and stocks appear at the sides of the arena.
+Open [Smash Creble on GitHub Pages](https://markod0925.github.io/SmashCreble/), then tap **Play match** and **Start fight**. Turn your phone sideways to play. The default **Touch / Keyboard** player faces a CPU. The fight opens in fullscreen when the browser allows it. Fighter damage and stocks appear at the sides of the arena.
 
 - Use the analog stick to move and aim. Flick up to jump or down to drop through a raised platform. Use **Up + B** to recover.
 - Press **A** for a light attack and **B** for a special. Superstar fighters can hold **B** for a charged special.
@@ -34,6 +44,12 @@ Pair Bluetooth controllers in Windows first, focus the game tab, then press the 
 **Cloudbreak Foundry** has fixed platforms. **Stormcoil Array** has two lifts that carry fighters standing on them. The current visible between the pylons changes direction and pushes airborne fighters within it.
 
 **GDMR** fills the screen with one platform that rocks between −30° and +30°. Using a Superstar move gives each active rival up to two arena clones.
+
+## Adventure
+
+Select **Play adventure** in the browser to start Rift Trail with one to four local players. From the roster, a controller can press Down to select Adventure and A to open its lobby. Choose fighters and head right across ledges, walls, spikes, and pits. Human players fight on the same team.
+
+Every fighter in the roster appears once as a CPU opponent. Each encounter spawns up to one opponent per human player and opens the next section once the enemies are defeated. Enemies are knocked out when they fall into a pit or reach 100% damage. Human players lose a stock when they fall and respawn at the last cleared section while they have stocks left. The final opponent appears alone at 1.5 times their normal size. Defeat the entire roster to complete the adventure.
 
 ## Controls
 

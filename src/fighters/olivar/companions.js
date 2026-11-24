@@ -1,6 +1,6 @@
 import { rules } from '../../combat/arena.js';
 import { strike } from '../../combat/hits.js';
-import { bodyCenter } from '../../combat/state.js';
+import { areRivals, bodyCenter } from '../../combat/state.js';
 import { assaultSeconds, companionCount, companionOrbit, returnSeconds } from './profile.js';
 
 export function assaultRemaining(player, match) {
@@ -8,7 +8,7 @@ export function assaultRemaining(player, match) {
 }
 
 function canTarget(owner, target) {
-  return target.slot !== owner.slot && target.stocks && !target.respawn;
+  return areRivals(owner, target) && target.stocks && !target.respawn;
 }
 
 function closestRival(owner, match) {

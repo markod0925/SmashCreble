@@ -4,16 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#101419">
-    <title>Rift Ruckus</title>
+    <title>Smash Creble</title>
     <link rel="stylesheet" href="./style.css">
     <script type="module" src="./src/main.js"></script>
   </head>
   <body>
     <div id="shell">
       <header class="site-header">
-        <button class="brand" type="button" id="home-button" aria-label="Rift Ruckus home">
+        <button class="brand" type="button" id="home-button" aria-label="Smash Creble home">
           <span class="brand-mark" aria-hidden="true"></span>
-          <span>RIFT<span class="brand-accent">RUCKUS</span></span>
+          <span>Smash <span class="brand-accent">Creble</span></span>
         </button>
         <div class="header-actions">
           <div class="controller-status" id="pad-status" aria-live="polite"><span class="status-dot"></span><span id="pad-count">0 / 4 CONTROLLERS</span></div>
@@ -30,9 +30,12 @@
           </div>
           <div class="hero-copy">
             <div class="eyebrow"><span class="slash-mark" aria-hidden="true"></span> LOCAL PLATFORM FIGHTER</div>
-            <h1 id="game-title"><span>RIFT</span><span>RUCKUS</span></h1>
+            <h1 id="game-title"><span>Smash</span> <span>Creble</span></h1>
             <p><span id="hero-lineup">Battle across floating arenas.</span><br>Send your rivals over the edge.</p>
-            <button type="button" class="primary-button" id="play-button"><span class="play-icon" aria-hidden="true"></span> Play match <kbd>Enter</kbd></button>
+            <div class="hero-actions">
+              <button type="button" class="primary-button" id="play-button"><span class="play-icon" aria-hidden="true"></span> Play match <kbd>Enter</kbd></button>
+              <button type="button" class="text-button" id="adventure-button">Play adventure</button>
+            </div>
           </div>
           <div class="hero-detail" id="hero-detail"><span id="hero-special-label">RIVET'S SPECIAL</span><strong id="hero-special">Arc Bolt</strong><p id="hero-special-description">Fires an electric bolt straight ahead.</p></div>
           <div class="hero-legend"><span class="mini-diamond" aria-hidden="true"></span> CLOUDBREAK FOUNDRY</div>
@@ -50,7 +53,7 @@
       <main id="battle" class="battle" hidden aria-label="Match arena">
         <div class="sky battle-sky" aria-hidden="true"><span class="sun"></span></div>
         <div class="battle-top">
-          <div class="round-label"><span class="mini-diamond" aria-hidden="true"></span> <span id="arena-name"></span> <small>STOCK MATCH</small></div>
+          <div class="round-label"><span class="mini-diamond" aria-hidden="true"></span> <span id="arena-name"></span> <small id="mode-label">STOCK MATCH</small></div>
           <div class="timer" id="timer" aria-label="Time remaining">3:00</div>
           <button class="text-button pause-button" id="pause-button" type="button"><span aria-hidden="true">Ⅱ</span> Pause <kbd>Esc</kbd></button>
         </div>

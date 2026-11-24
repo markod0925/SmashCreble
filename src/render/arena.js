@@ -1,4 +1,5 @@
 import { drawCharacter } from './characters.js';
+import { drawAdventureTerrain } from './adventure.js';
 import { drawGdmrPlatform, drawGdmrScenery } from './gdmr.js';
 import { TAU, zero } from './math.js';
 
@@ -125,7 +126,11 @@ const arenaViews = {
   gdmr: { drawScenery: (renderer, arena, time) => drawGdmrScenery(renderer, time), drawPlatform: drawGdmrPlatform },
 };
 
-export function drawBattleArena(renderer, arena, time) {
+export function drawBattleArena(renderer, arena, time, adventureView) {
+  if (adventureView) {
+    drawAdventureTerrain(renderer, arena, adventureView, time);
+    return;
+  }
   const view = arenaViews[arena.definition.theme] ?? arenaViews.foundry;
   view.drawScenery(renderer, arena, time);
   for (const platform of arena.platforms) view.drawPlatform(renderer, platform);

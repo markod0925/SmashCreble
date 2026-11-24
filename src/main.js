@@ -1,4 +1,5 @@
 import { audioReady, playSound, toggleSound, updateDanceMusic } from './audio.js';
+import { createAdventure } from './combat/adventure.js';
 import { rules } from './combat/arena.js';
 import { createMatch, tickMatch } from './combat/match.js';
 import { fighters } from './fighters/index.js';
@@ -22,13 +23,14 @@ try {
   graphics = new Graphics(canvas);
   portrait = createPortraits(graphics);
 } catch (error) {
-  const message = 'The 3D renderer could not start. Open Rift Ruckus in a browser with WebGL and graphics acceleration enabled.';
+  const message = 'The 3D renderer could not start. Open Smash Creble in a browser with WebGL and graphics acceleration enabled.';
   $('fatal').textContent = message;
   $('fatal').hidden = false;
   throw error;
 }
 
 let view = 'home';
+let homeAdventure = false;
 let modal = null;
 let match = null;
 let elapsed = 0;
@@ -113,10 +115,12 @@ function openControls() {
   renderControls(Boolean(touch));
 }
 
-function openLobby() {
+function openLobby(adventure = homeAdventure) {
+  lobby.adventure = homeAdventure = adventure;
   audioReady();
   playSound('select');
-  openDialog('lobby', 'LOCAL VERSUS', 'Set up the fight');
+  if (adventure) openDialog('lobby', 'RIFT TRAIL', 'Set up the adventure');
+  else openDialog('lobby', 'LOCAL VERSUS', 'Set up the fight');
   lobby.render(true);
 }
 
@@ -124,7 +128,8 @@ function startMatch() {
   if (!lobby.canBegin()) return;
   audioReady();
   closeDialog();
-  match = createMatch(lobby.lineup(), lobby.arena);
+  const lineup = lobby.lineup();
+  match = lobby.adventure ? createAdventure(lineup) : createMatch(lineup, lobby.arena);
   graphics.resetBattle();
   view = 'battle';
   $('home').hidden = true;
@@ -135,6 +140,7 @@ function startMatch() {
   syncTouchControls();
   battle.dataset.arenaTheme = match.arena.definition.theme;
   $('arena-name').textContent = match.arena.definition.name.toUpperCase();
+  $('mode-label').textContent = match.adventure ? 'ADVENTURE' : 'STOCK MATCH';
   battle.prepend(canvas);
   hud.reset(match);
   hud.update(match);
@@ -153,20 +159,21 @@ function goHome() {
   $('home').hidden = false;
   $('site-footer').hidden = false;
   $('hero-world').prepend(canvas);
-  $('play-button').focus();
+  $(homeAdventure ? 'adventure-button' : 'play-button').focus();
 }
 
 function openPause() {
   const disconnected = lobby.missingControllers().length;
-  openDialog('pause', match.arena.definition.name.toUpperCase(), disconnected ? 'Controller disconnected' : 'Match paused');
+  openDialog('pause', match.arena.definition.name.toUpperCase(), disconnected ? 'Controller disconnected' : match.adventure ? 'Adventure paused' : 'Match paused');
   renderPause(disconnected, dismissDialog, goHome);
 }
 
 function showResults() {
-  const { winner, timedOut } = match.result;
+  const { completed, winner, timedOut } = match.result;
   playSound('finish');
-  openDialog('results', timedOut ? 'TIME EXPIRED' : 'MATCH COMPLETE', winner ? `${winner.fighter.name} wins` : 'Draw');
-  renderResults(match.fighters, () => {
+  if (match.adventure) openDialog('results', 'RIFT TRAIL', completed ? 'Adventure complete' : 'Adventure ended');
+  else openDialog('results', timedOut ? 'TIME EXPIRED' : 'MATCH COMPLETE', winner ? `${winner.fighter.name} wins` : 'Draw');
+  renderResults(match, () => {
     if (lobby.canBegin()) startMatch();
     else {
       goHome();
@@ -212,6 +219,8 @@ function handleMenu(snapshot, controllersChanged) {
   if (view === 'home') {
     const nav = key.navX || panels.find((pad) => pad.navX)?.navX;
     if (nav) changeSelection(lobby.selection + nav);
+    const modeStep = key.navY || panels.find((pad) => pad.navY)?.navY;
+    if (modeStep) $(modeStep < 0 ? 'adventure-button' : 'play-button').focus();
     const joining = panels.filter((pad) => pad.startPressed || pad.acceptPressed);
     if (joining.length || key.acceptPressed) {
       for (const pad of joining) lobby.joinPad(pad);
@@ -223,7 +232,8 @@ function handleMenu(snapshot, controllersChanged) {
 }
 
 function collectControls(snapshot) {
-  for (const { slot, fighter } of match.fighters) {
+  for (const { slot, fighter, cpu } of match.fighters) {
+    if (cpu) continue;
     const seat = lobby.seats[slot];
     const state = seat?.source === 'keyboard' ? snapshot.keyboard : seat?.source === 'pad' ? lobby.padFor(seat) : null;
     if (!state) continue;
@@ -286,7 +296,10 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-$('play-button').addEventListener('click', openLobby);
+$('play-button').addEventListener('click', () => openLobby(false));
+$('adventure-button').addEventListener('click', () => openLobby(true));
+$('play-button').addEventListener('focus', () => { homeAdventure = false; });
+$('adventure-button').addEventListener('focus', () => { homeAdventure = true; });
 $('controls-button').addEventListener('click', openControls);
 $('sound-button').addEventListener('click', () => {
   $('sound-button').setAttribute('aria-pressed', String(toggleSound()));
@@ -299,7 +312,7 @@ portraitViewport.addEventListener('change', syncTouchControls);
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) matchFullscreen = false;
 });
-$('home-button').addEventListener('click', () => { if (view === 'battle') openPause(); else $('play-button').focus(); });
+$('home-button').addEventListener('click', () => { if (view === 'battle') openPause(); else $(homeAdventure ? 'adventure-button' : 'play-button').focus(); });
 handleDismiss(dismissDialog);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && view === 'battle' && !modal) openPause();

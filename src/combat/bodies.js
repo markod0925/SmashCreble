@@ -1,4 +1,4 @@
-import { leavePlatform } from './arena.js';
+import { leavePlatform, stopAtWall } from './arena.js';
 import { landOnPlatform } from './movement.js';
 import { bodyHalfWidth, bodySize } from './state.js';
 import { capturingAttack } from './status.js';
@@ -42,6 +42,7 @@ export function separateBodies(actors, match, movement) {
     const position = (left + right) * .5;
     if (position === x) continue;
     player.x = position;
+    stopAtWall(player, x, match.arena);
     leavePlatform(player);
     const landingFrom = movement?.get(player)?.landingFrom;
     if (landingFrom) landOnPlatform(player, landingFrom, match.arena);

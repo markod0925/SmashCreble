@@ -1,10 +1,12 @@
 import { vanishClone } from './clones.js';
+import { checkDamageKnockout } from './knockout.js';
+import { areRivals } from './state.js';
 import { boundTime, captureProgress, capturingAttack, freezeFighter, frozenTime, interruptAttack, isInvulnerable } from './status.js';
 import { clamp } from '../math.js';
 import { tryGulp } from '../fighters/zunchy/swallow.js';
 
 export function strike(attacker, victim, hit, match) {
-  if (attacker.slot === victim.slot || isInvulnerable(victim) || victim.dodge || victim.respawn || !victim.stocks) return false;
+  if (!areRivals(attacker, victim) || isInvulnerable(victim) || victim.dodge || victim.respawn || !victim.stocks) return false;
   if (victim.owner) {
     if (hit.shockDuration) {
       match.events.push({ type: 'shockEcho', x: victim.x, y: victim.y, depth: victim.depth, facing: victim.facing, fighter: victim.fighter });
@@ -65,5 +67,6 @@ export function strike(attacker, victim, hit, match) {
   victim.invulnerable = 0.12;
   interruptAttack(victim);
   match.events.push({ type: 'hit', x: victim.x, y: victim.y + 1, color: attacker.fighter.color, xDir: x, strength: launch });
+  checkDamageKnockout(victim, match);
   return true;
 }

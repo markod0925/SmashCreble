@@ -1,13 +1,19 @@
 import { strike } from './hits.js';
-import { bodyCenter, combatants } from './state.js';
+import { closestFloor } from './arena.js';
+import { areRivals, bodyCenter, combatants } from './state.js';
 import { clamp, direction } from '../math.js';
-import { traceDigits, tracePosition } from '../fighters/packman/path.js';
+import { traceDigits, tracePosition, traceStroke } from '../fighters/packman/path.js';
 
 export function startTrace(player, match) {
   const attack = player.attack;
   const { center, layout, cue, afterglow, colors } = attack.trace67;
   const origin = [player.x, player.y + center];
-  const tracePath = layout ? layout(origin, match.arena, attack.facing) : { digits: traceDigits };
+  let digits = traceDigits;
+  if (!layout && match.adventure) {
+    const floorY = closestFloor(player, match.arena)?.y ?? 0;
+    digits = traceDigits.map(({ points, start, end }) => traceStroke(points.map(([x, y]) => [x + player.x, y + floorY]), start, end));
+  }
+  const tracePath = layout ? layout(origin, match.arena, attack.facing) : { digits };
   attack.origin = origin;
   attack.tracePath = tracePath;
   attack.traceDirection = [attack.facing, 0];
@@ -23,7 +29,7 @@ function strikeAlongTrace(player, attack, match, [ax, ay], [bx, by]) {
   const dy = by - ay;
   const travel = dx * dx + dy * dy;
   for (const target of combatants(match)) {
-    if (target.slot === player.slot || attack.victims.has(target)) continue;
+    if (!areRivals(player, target) || attack.victims.has(target)) continue;
     const center = target.y + bodyCenter(target, match);
     const t = travel > 0 ? clamp(((target.x - ax) * dx + (center - ay) * dy) / travel, 0, 1) : 0;
     const gapX = target.x - ax - dx * t;

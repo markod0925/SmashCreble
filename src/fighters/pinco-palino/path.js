@@ -1,4 +1,5 @@
 import { clamp } from '../../math.js';
+import { closestFloor } from '../../combat/arena.js';
 import { interpolate, traceDigits, traceStroke } from '../packman/path.js';
 
 export const kickCenter = 1.19;
@@ -13,7 +14,7 @@ const timings = [[.4, 1.63], [1.87, 2.66]];
 
 export function layoutKickTrace(origin, arena, facing) {
   const [x, y] = origin;
-  const deck = arena.platforms.find(({ main }) => main);
+  const deck = arena.definition.theme === 'adventure' ? closestFloor({ x, y: y - kickCenter }, arena) : arena.platforms.find(({ main }) => main);
   const { side, top } = arena.definition.bounds;
   const floor = deck?.y ?? 0;
   const left = Math.max(-side + 1, (deck?.left ?? -side) - 1.4);

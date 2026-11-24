@@ -4,18 +4,17 @@ import { bommBurstScale } from '../fighters/bomm/profile.js';
 import { shrinkScale } from '../fighters/zunchy/profile.js';
 
 export const cloneScale = 0.5;
-export const scaleOf = (player) => player.owner ? cloneScale : 1;
+export const scaleOf = (player) => player.owner ? cloneScale : player.sizeMultiplier ?? 1;
 export const bodyScale = (player, match) => scaleOf(player) * shrinkScale(player, match);
 export const bodyCenter = (player, match) => 1.05 * bodyScale(player, match);
-export const bodySize = (player, match) => player.fighter.size * bommBurstScale(player, match) * shrinkScale(player, match);
+export const bodySize = (player, match) => player.fighter.size * (player.sizeMultiplier ?? 1) * bommBurstScale(player, match) * shrinkScale(player, match);
 export const bodyHalfWidth = (player, size) => (player.fighter.bodyHalfWidth ?? .55) * size;
 
 export function bodyContactDistance(a, b, match) {
   return bodyHalfWidth(a, bodySize(a, match)) + bodyHalfWidth(b, bodySize(b, match));
 }
 
-export function spawn(slot, initial, fighter, arena) {
-  const entry = arena.definition.spawns[slot];
+export function spawn(slot, initial, fighter, arena, entry = arena.definition.spawns[slot]) {
   const platform = arena.platforms.find(({ id }) => id === entry.platform);
   const x = platformCenter(platform) + entry.x * Math.cos(platform.angle);
   return {
@@ -40,6 +39,10 @@ export function createMatch(lineup, definition = defaultArena) {
 }
 
 export const idleInput = Object.freeze({ x: 0, y: 0 });
+
+export function areRivals(a, b) {
+  return a.slot !== b.slot && (a.team === undefined || a.team !== b.team);
+}
 
 export function combatants(match) {
   return [...match.fighters, ...match.clones];

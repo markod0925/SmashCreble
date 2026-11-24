@@ -1,37 +1,22 @@
-import { platformCenter, platformHeight } from './arena.js';
+import { closestFloor, platformCenter, platformHeight } from './arena.js';
 import { canSummonClones, canUseSuper } from './clones.js';
-import { bodyContactDistance, combatants, idleInput, scaleOf } from './state.js';
+import { areRivals, bodyContactDistance, combatants, idleInput, scaleOf } from './state.js';
 import { boundTime, dazedTime, frozenTime } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { clamp, direction } from '../math.js';
 
-function recoveryPlatform(player, arena) {
-  if (player.grounded?.main) return player.grounded;
-  let nearest;
-  let distance = Infinity;
-  for (const platform of arena.platforms) {
-    if (!platform.main) continue;
-    const gap = Math.max(0, platform.left - player.x, player.x - platform.right);
-    const candidate = Math.hypot(gap, player.y - platformHeight(platform, clamp(player.x, platform.left, platform.right)));
-    if (candidate >= distance) continue;
-    nearest = platform;
-    distance = candidate;
-  }
-  return nearest;
-}
-
 export function cpuInput(player, match, dt) {
   if (boundTime(player, match) || dazedTime(player, match) || frozenTime(player, match)) return idleInput;
   let target;
   for (const other of combatants(match)) {
-    if (other.slot === player.slot || !other.stocks || other.respawn) continue;
+    if (!areRivals(player, other) || !other.stocks || other.respawn) continue;
     if (!target || Math.abs(other.x - player.x) < Math.abs(target.x - player.x)) target = other;
   }
   player.aiDelay -= dt;
   player.aiJump -= dt;
-  const floor = recoveryPlatform(player, match.arena);
+  const floor = closestFloor(player, match.arena);
   const edgeMargin = floor ? Math.min(.6, (floor.right - floor.left) / 4) : 0;
   const floorY = floor && platformHeight(floor, clamp(player.x, floor.left, floor.right));
   const offstage = floor && (!player.grounded || player.grounded.main) &&
@@ -80,7 +65,7 @@ export function cpuInput(player, match, dt) {
     const superMove = signatureAttacks[player.fighter.moves.super];
     const superInRange = shark || vidarr || nuvol || budino || superMove.rubberDance || superMove.dazzlesRivals || superMove.wandLightning || player.fighter.cloneLight ||
       (inga && Math.hypot(dx, dy) < signatureAttacks.ingaBladeStorm.range * .83) ||
-      (summonLimit && !dragonball && Math.abs(dx) < 5.9) || (olivar && Math.hypot(dx, dy) < 5.5) || (packman && Math.abs(target.x) < 6.25) ||
+      (summonLimit && !dragonball && Math.abs(dx) < 5.9) || (olivar && Math.hypot(dx, dy) < 5.5) || (packman && Math.abs(match.adventure ? dx : target.x) < 6.25) ||
       (ciclope && Math.abs(dx) < signatureAttacks.ciclopeLaser.range * .84 && Math.abs(dy) < 1.6) ||
       (kings && Math.hypot(dx, dy) < signatureAttacks.kingsFinale.range * .86) ||
       (duelist && Math.abs(dx) < 3.65 && dy < 1.08 && dy > -2.1) ||

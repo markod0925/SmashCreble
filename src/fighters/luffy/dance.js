@@ -1,5 +1,5 @@
 import { strike } from '../../combat/hits.js';
-import { combatants } from '../../combat/state.js';
+import { areRivals, combatants } from '../../combat/state.js';
 import { freezeFighter, frozenTime, interruptAttack } from '../../combat/status.js';
 import { direction } from '../../math.js';
 import { rubberDanceBeat, rubberDanceImpact, rubberDanceSeconds } from './profile.js';
@@ -10,7 +10,7 @@ export function advanceRubberDance(owner, attack, match) {
     attack.fired = true;
     attack.untouchable = true;
     attack.danceEndsAt = match.time - rubberDanceSeconds;
-    attack.danceTargets = combatants(match).filter(target => target.slot !== owner.slot && target.stocks && !target.respawn);
+    attack.danceTargets = combatants(match).filter(target => areRivals(owner, target) && target.stocks && !target.respawn);
     for (const target of attack.danceTargets) freezeFighter(target, match, rubberDanceSeconds);
     owner.vx = 0;
     match.events.push({ type: 'special', x: owner.x, y: owner.y + 1.4, color: '#fff3e4' });

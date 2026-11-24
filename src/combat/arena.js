@@ -6,6 +6,21 @@ export const platformCenter = ({ left, right }) => (left + right) / 2;
 
 export const platformHeight = (platform, x) => platform.y + (x - platformCenter(platform)) * platform.slope;
 
+export function closestFloor({ x, y, grounded }, arena) {
+  if (grounded?.main) return grounded;
+  let nearest;
+  let distance = Infinity;
+  for (const platform of arena.platforms) {
+    if (!platform.main) continue;
+    const edge = clamp(x, platform.left, platform.right);
+    const candidate = Math.hypot(x - edge, y - platformHeight(platform, edge));
+    if (candidate >= distance) continue;
+    nearest = platform;
+    distance = candidate;
+  }
+  return nearest;
+}
+
 function platformPose(layout, arena) {
   const [dx, dy] = layout.motion?.(arena.environment, arena.elapsed) ?? [0, 0];
   const angle = layout.rotation?.(arena.elapsed) ?? 0;
@@ -27,7 +42,18 @@ export function createArena(definition) {
     savePlatformPose(platform);
     return platform;
   });
+  arena.walls = definition.platforms.filter(({ wallBase }) => wallBase !== undefined);
   return arena;
+}
+
+export function stopAtWall(player, fromX, arena) {
+  for (const { left, right, y, wallBase } of arena.walls) {
+    if (player.y < wallBase || player.y >= y) continue;
+    if (fromX < left && player.x >= left) player.x = left - .01;
+    else if (fromX > right && player.x <= right) player.x = right + .01;
+    else continue;
+    player.vx = 0;
+  }
 }
 
 export function advanceArena(arena, dt) {

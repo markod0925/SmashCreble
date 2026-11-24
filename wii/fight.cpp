@@ -71,7 +71,7 @@ struct Fight::Engine {
         if (!failed) return true;
         const char* message = JS_ToCString(context, exception);
         if (message) {
-            std::fprintf(stderr, "Rift Ruckus Wii: %s\n", message);
+            std::fprintf(stderr, "Smash Creble Wii: %s\n", message);
             JS_FreeCString(context, message);
         }
         JS_FreeValue(context, exception);

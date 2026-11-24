@@ -2,7 +2,7 @@
 cd /d "%~dp0"
 where node >nul 2>nul
 if errorlevel 1 (
-  echo Rift Ruckus needs Node.js to run its local game server.
+  echo Smash Creble needs Node.js to run its local game server.
   pause
   exit /b 1
 )

@@ -1,3 +1,5 @@
+import { areRivals } from '../../combat/state.js';
+
 export const shrinkSeconds = 5;
 
 export const fighter = {
@@ -44,5 +46,5 @@ export function shrinkTime(caster, match) {
 }
 
 export function shrinkScale(target, match) {
-  return match.fighters.some(caster => caster.slot !== target.slot && shrinkTime(caster, match) > 0) ? .5 : 1;
+  return match.fighters.some(caster => areRivals(caster, target) && shrinkTime(caster, match) > 0) ? .5 : 1;
 }

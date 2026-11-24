@@ -1,5 +1,6 @@
 import { clamp } from '../math.js';
-import { bodyCenter, combatants } from './state.js';
+import { areRivals, bodyCenter, combatants } from './state.js';
+import { checkDamageKnockout } from './knockout.js';
 
 export function isInvulnerable(player) {
   return Boolean(player.invulnerable || player.attack?.untouchable);
@@ -41,7 +42,7 @@ export function freezeFighter(player, match, duration) {
 
 export function dazeRivals(source, match, duration) {
   for (const player of combatants(match)) {
-    if (player.slot === source.slot || !player.stocks || player.respawn) continue;
+    if (!areRivals(source, player) || !player.stocks || player.respawn) continue;
     player.dazedUntil = Math.min(player.dazedUntil ?? match.time, match.time - duration);
     interruptAttack(player);
     player.guarding = false;
@@ -57,6 +58,7 @@ export function advancePoison(player, match) {
     poison.next -= 1;
   }
   if (match.time <= poison.until + 1e-9) player.poison = null;
+  checkDamageKnockout(player, match);
 }
 
 export function capturingAttack(target, match) {

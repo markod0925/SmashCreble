@@ -1,11 +1,13 @@
 import { $, node } from './dom.js';
 import { playerColors } from '../player-colors.js';
+import { defeatedEnemies, enemyColor } from '../combat/adventure.js';
 import { rules } from '../combat/arena.js';
 import { boundTime, dazedTime, frozenTime, isZombie } from '../combat/status.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { danceSeconds } from '../fighters/shark-67/profile.js';
 import { playSound } from '../audio.js';
+import { clamp } from '../math.js';
 
 export class BattleHud {
   constructor(portrait) {
@@ -15,7 +17,9 @@ export class BattleHud {
   reset(match) {
     $('hud').replaceChildren();
     $('battle-tags').replaceChildren();
-    this.players = match.fighters.map(({ slot, fighter, cpu }) => {
+    $('timer').setAttribute('aria-label', match.adventure ? 'Adventure progress' : 'Time remaining');
+    this.enemies = new Map();
+    this.players = (match.adventure?.party ?? match.fighters).map(({ slot, fighter, cpu }) => {
       const card = node('div', 'hud-card');
       card.style.setProperty('--player', playerColors[slot]);
       const amount = node('span', 'damage');
@@ -46,9 +50,13 @@ export class BattleHud {
 
   update(match) {
     const seconds = Math.ceil(match.time);
-    const timer = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    const { adventure } = match;
+    const timer = adventure ? `Defeated ${defeatedEnemies(adventure)} / ${adventure.totalEnemies}`
+      : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
     if ($('timer').textContent !== timer) $('timer').textContent = timer;
-    match.fighters.forEach((fighter, i) => {
+    const party = adventure?.party ?? match.fighters;
+    if (adventure) this.updateEnemies(adventure.enemies);
+    party.forEach((fighter, i) => {
       const { card, amount, stockLine, stocks, star, power, tag } = this.players[i];
       const damage = `${Math.floor(fighter.damage)}%`;
       if (amount.textContent !== damage) amount.textContent = damage;
@@ -86,11 +94,31 @@ export class BattleHud {
     });
   }
 
+  updateEnemies(enemies) {
+    for (const [enemy, tag] of this.enemies) {
+      if (enemy.stocks) continue;
+      tag.remove();
+      this.enemies.delete(enemy);
+    }
+    for (const enemy of enemies) {
+      if (!enemy.stocks) continue;
+      let tag = this.enemies.get(enemy);
+      if (!tag) {
+        tag = node('span', 'player-tag enemy-tag');
+        tag.style.setProperty('--player', enemyColor);
+        this.enemies.set(enemy, tag);
+        $('battle-tags').append(tag);
+      }
+      const label = `${enemy.fighter.name} · ${Math.floor(enemy.damage)}%`;
+      if (tag.textContent !== label) tag.textContent = label;
+    }
+  }
+
   updateCountdown(match) {
     const value = Math.ceil(match.countdown);
     if (value !== this.lastCountdown) {
       this.lastCountdown = value;
-      $('countdown').textContent = value || 'FIGHT!';
+      $('countdown').textContent = value || (match.adventure ? 'GO!' : 'FIGHT!');
       playSound(value ? 'countdown' : 'go');
     }
     $('countdown').hidden = !value && match.time < rules.duration - .68;
@@ -99,11 +127,15 @@ export class BattleHud {
   updateTags(match, points) {
     points.forEach((point, i) => {
       const player = match.fighters[i];
-      const tag = this.players[i].tag;
+      const tag = this.players[i]?.tag ?? this.enemies.get(player);
+      if (!tag) return;
       const [x, y] = point ?? [-1, -1];
-      tag.hidden = !player.stocks || player.respawn > 0 || x < 1 || x > 99 || y < 2 || y > 91;
-      tag.style.left = `${x}%`;
-      tag.style.top = `${y}%`;
+      const offscreenParty = Boolean(match.adventure && point && !player.cpu && (x < 2 || x > 98));
+      tag.hidden = !player.stocks || player.respawn > 0 || (!offscreenParty && (x < 1 || x > 99 || y < 2 || y > 91));
+      tag.classList.toggle('offscreen-left', offscreenParty && x < 2);
+      tag.classList.toggle('offscreen-right', offscreenParty && x > 98);
+      tag.style.left = `${offscreenParty ? clamp(x, 4, 96) : x}%`;
+      tag.style.top = `${offscreenParty ? clamp(y, 15, 82) : y}%`;
     });
   }
 }

@@ -1,4 +1,4 @@
-# Rift Ruckus for Wii
+# Smash Creble for Wii
 
 This native Homebrew Channel build runs four-fighter matches in Cloudbreak Foundry with one to four local players. The Wii release uses the Web roster, fighter models, combat rules, moves, and battle effects. The browser game remains the authoring project.
 
@@ -16,13 +16,13 @@ Run this from the project root when a Web snapshot is ready:
 node wii/release.mjs 0.1.0-wii.6
 ```
 
-The script exports the roster portraits and geometry and embeds the Web combat and battle scene modules. It builds the bundled QuickJS engine from source, compiles the native Wii application, converts the ELF to DOL, and verifies its section table and entry point. The release includes `wii/dist/<version>/apps/RiftRuckus/boot.dol`, Homebrew Channel metadata, and the QuickJS license. Pick a new version for each release. The script picks up changes to the shared modules when building a new release.
+The script exports the roster portraits and geometry and embeds the Web combat and battle scene modules. It builds the bundled QuickJS engine from source, compiles the native Wii application, converts the ELF to DOL, and verifies its section table and entry point. The release includes `wii/dist/<version>/apps/SmashCreble/boot.dol`, Homebrew Channel metadata, and the QuickJS license. Pick a new version for each release. The script picks up changes to the shared modules when building a new release.
 
 To inspect the generated data without a Wii toolchain, run `node wii/release.mjs --export-only`. Generated files go in `wii/build/generated`.
 
 ## Play on Wii
 
-Copy the release's `apps/RiftRuckus` directory into `apps` on the SD card and launch **Rift Ruckus Wii** from the Homebrew Channel.
+Copy the release's `apps/SmashCreble` directory into `apps` on the SD card and launch **Smash Creble Wii** from the Homebrew Channel.
 
 | Action | Wii Remote + Nunchuk | Wii Remote held sideways, pointing left | Classic Controller |
 | --- | --- | --- | --- |

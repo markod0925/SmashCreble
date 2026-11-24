@@ -13,6 +13,7 @@ export class Lobby {
     this.keyboardLabel = hasTouch ? 'Touch / Keyboard' : 'Keyboard';
     this.selection = 0;
     this.arenaIndex = 0;
+    this.adventure = false;
     this.snapshot = { pads: new Map(), unsupported: 0 };
     this.seats = [
       { source: 'keyboard', selection: 0, automatic: true },
@@ -37,7 +38,8 @@ export class Lobby {
   }
 
   lineup() {
-    return this.seats.flatMap((seat, slot) => seat ? [{ slot, fighter: fighters[seat.selection], cpu: seat.source === 'cpu' }] : []);
+    return this.seats.flatMap((seat, slot) => seat && (!this.adventure || seat.source !== 'cpu')
+      ? [{ slot, fighter: fighters[seat.selection], cpu: seat.source === 'cpu' }] : []);
   }
 
   get arena() {
@@ -45,6 +47,7 @@ export class Lobby {
   }
 
   chooseArena(step) {
+    if (this.adventure) return;
     this.arenaIndex = (this.arenaIndex + step + arenas.length) % arenas.length;
     this.arenaLabel.textContent = this.arena.name;
     audioReady();
@@ -110,23 +113,29 @@ export class Lobby {
   }
 
   canBegin() {
-    return this.seats.filter(Boolean).length >= 2 && this.seats.some((seat) => seat && seat.source !== 'cpu') && !this.missingControllers().length;
+    return (this.adventure || this.seats.filter(Boolean).length >= 2) &&
+      this.seats.some((seat) => seat && seat.source !== 'cpu') && !this.missingControllers().length;
   }
 
   render(focusStart = false) {
     const focusKey = document.activeElement?.dataset.focus;
     const rows = node('div', 'lobby-slots');
-    this.seats.forEach((seat, i) => rows.append(this.seatRow(seat, i)));
-    const arena = button('', () => this.chooseArena(1), 'text-button lobby-arena');
-    arena.dataset.focus = 'arena';
-    this.arenaLabel = node('strong', '', this.arena.name);
-    this.arenaLabel.setAttribute('aria-live', 'polite');
-    const arrow = node('span', '', '↻');
-    arrow.setAttribute('aria-hidden', 'true');
-    arena.append(node('span', '', 'Arena'), this.arenaLabel, arrow);
-    const note = node('p', 'dialog-note', 'Press A or Start to join. On a controller, left and right pick a fighter. Up and down change the arena. Press Start to fight.');
+    this.seats.forEach((seat, i) => rows.append(this.seatRow(this.adventure && seat?.source === 'cpu' ? null : seat, i)));
+    let arena;
+    if (!this.adventure) {
+      arena = button('', () => this.chooseArena(1), 'text-button lobby-arena');
+      arena.dataset.focus = 'arena';
+      this.arenaLabel = node('strong', '', this.arena.name);
+      this.arenaLabel.setAttribute('aria-live', 'polite');
+      const arrow = node('span', '', '↻');
+      arrow.setAttribute('aria-hidden', 'true');
+      arena.append(node('span', '', 'Arena'), this.arenaLabel, arrow);
+    }
+    const note = node('p', 'dialog-note', this.adventure
+      ? 'Press A or Start to join. Travel right and defeat the roster. Knock enemies into pits or deal 100% damage to open the way.'
+      : 'Press A or Start to join. On a controller, left and right pick a fighter. Up and down change the arena. Press Start to fight.');
     const actions = node('div', 'dialog-actions');
-    const fight = button('Start fight', this.startMatch, 'primary-button');
+    const fight = button(this.adventure ? 'Start adventure' : 'Start fight', this.startMatch, 'primary-button');
     fight.dataset.focus = 'start';
     fight.disabled = !this.canBegin();
     const addCPU = button('Add CPU', () => this.addSeat('cpu'));
@@ -135,10 +144,13 @@ export class Lobby {
     const addKey = button(`Add ${this.keyboardLabel.toLowerCase()}`, () => this.addSeat('keyboard'));
     addKey.dataset.focus = 'keyboard';
     addKey.disabled = this.seats.some((seat) => seat?.source === 'keyboard') || !this.seats.some((seat) => !seat || seat.source === 'cpu');
-    actions.append(fight, addCPU, addKey);
-    if (!this.canBegin()) note.textContent = this.missingControllers().length ? 'Reconnect or remove disconnected controllers to start.' : 'Choose at least two fighters, including a human player.';
+    actions.append(fight);
+    if (!this.adventure) actions.append(addCPU);
+    actions.append(addKey);
+    if (!this.canBegin()) note.textContent = this.missingControllers().length ? 'Reconnect or remove disconnected controllers to start.' : this.adventure
+      ? 'Choose at least one human player.' : 'Choose at least two fighters, including a human player.';
     else if (this.snapshot.unsupported) note.textContent += ' A controller without a standard browser mapping was detected.';
-    this.content.replaceChildren(rows, arena, note, actions);
+    this.content.replaceChildren(rows, ...(arena ? [arena] : []), note, actions);
     const prior = [...this.content.querySelectorAll('button')].find((el) => el.dataset.focus === focusKey && !el.disabled);
     if (prior) prior.focus();
     else if (focusStart && !fight.disabled) fight.focus();

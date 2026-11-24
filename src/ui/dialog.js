@@ -1,4 +1,5 @@
 import { $, node, button } from './dom.js';
+import { defeatedEnemies } from '../combat/adventure.js';
 
 const dialog = $('dialog');
 const content = $('dialog-content');
@@ -43,15 +44,17 @@ export function renderPause(disconnected, resumeMatch, goHome) {
   (resume.disabled ? actions.lastElementChild : resume).focus();
 }
 
-export function renderResults(fighters, restart, goHome) {
+export function renderResults(match, restart, goHome) {
+  const { adventure, fighters } = match;
+  if (adventure) content.append(node('p', 'dialog-note', `${defeatedEnemies(adventure)} of ${adventure.totalEnemies} opponents defeated.`));
   const list = node('ul', 'result-list');
-  for (const entry of [...fighters].sort((a, b) => b.stocks - a.stocks || a.damage - b.damage)) {
+  for (const entry of [...(adventure?.party ?? fighters)].sort((a, b) => b.stocks - a.stocks || a.damage - b.damage)) {
     const row = node('li');
     row.append(node('strong', '', `P${entry.slot + 1} ${entry.fighter.name}${entry.cpu ? ' · CPU' : ''}`), node('span', '', `${entry.stocks} ${entry.stocks === 1 ? 'stock' : 'stocks'} left`));
     list.append(row);
   }
   const actions = node('div', 'dialog-actions');
-  const rematch = button('Rematch', restart, 'primary-button');
+  const rematch = button(adventure ? 'Restart adventure' : 'Rematch', restart, 'primary-button');
   actions.append(rematch, button('Return to roster', goHome));
   content.append(list, actions);
   rematch.focus();

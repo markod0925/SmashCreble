@@ -91,10 +91,10 @@ async function main() {
 
   const work = await mkdtemp(join(build, 'release-'));
   const generated = join(work, 'generated');
-  const elf = join(work, 'rift-ruckus.elf');
+  const elf = join(work, 'smash-creble.elf');
   const output = join(wii, 'dist', version);
   const payload = join(work, 'package');
-  const app = join(payload, 'apps', 'RiftRuckus');
+  const app = join(payload, 'apps', 'SmashCreble');
   const dol = join(app, 'boot.dol');
   try {
     await exportWeb(generated);
@@ -114,7 +114,7 @@ async function main() {
     verifyDol(await readFile(dol));
     await writeFile(join(app, 'meta.xml'), `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
-  <name>Rift Ruckus Wii</name>
+  <name>Smash Creble Wii</name>
   <version>${version}</version>
   <short_description>Local platform fighter prototype</short_description>
   <long_description>Play four-fighter matches in Cloudbreak Foundry with up to four local players. CPU fighters fill the remaining slots.</long_description>

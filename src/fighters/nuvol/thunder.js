@@ -1,5 +1,5 @@
 import { strike } from '../../combat/hits.js';
-import { bodyCenter, combatants } from '../../combat/state.js';
+import { areRivals, bodyCenter, combatants } from '../../combat/state.js';
 import { direction } from '../../math.js';
 
 export const boltTop = 16;
@@ -8,7 +8,7 @@ export const boltBottom = -1.3;
 function thunderColumns(owner, match) {
   const columns = [];
   for (const rival of match.fighters) {
-    if (rival.slot === owner.slot || !rival.stocks || rival.respawn) continue;
+    if (!areRivals(owner, rival) || !rival.stocks || rival.respawn) continue;
     if (columns.every(x => Math.abs(x - rival.x) > 1.3)) columns.push(rival.x);
   }
   return columns.length ? columns : [owner.x + 2.25 * owner.facing];
@@ -26,7 +26,7 @@ export function advanceThunder(owner, attack, match) {
   for (const [i, x] of wave.columns.entries()) {
     match.events.push({ type: 'nuvolBolt', x, y: 0, seed: wave.index * 3 + i, color: '#b1e7ff' });
     for (const rival of targets) {
-      if (rival.slot === owner.slot || attack.victims.has(rival) || Math.abs(rival.x - x) > .97) continue;
+      if (!areRivals(owner, rival) || attack.victims.has(rival) || Math.abs(rival.x - x) > .97) continue;
       const centerY = rival.y + bodyCenter(rival, match);
       if (centerY < boltBottom || centerY > boltTop) continue;
       const hit = {

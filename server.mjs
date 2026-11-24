@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 
 const host = '127.0.0.1';
-const configuredPort = process.env.RIFT_PORT;
+const configuredPort = process.env.SMASH_CREBLE_PORT ?? process.env.RIFT_PORT;
 let port = Number(configuredPort ?? 4173);
 const root = new URL('./', import.meta.url);
 const assets = new Map([
@@ -42,12 +42,12 @@ server.on('error', (error) => {
     server.listen(port, host);
     return;
   }
-  console.error(error.code === 'EADDRINUSE' ? `Port ${port} is busy. Set RIFT_PORT to use another port.` : error.message);
+  console.error(error.code === 'EADDRINUSE' ? `Port ${port} is busy. Set SMASH_CREBLE_PORT to use another port.` : error.message);
   process.exitCode = 1;
 });
 server.once('listening', () => {
   const address = `http://${host}:${server.address().port}`;
-  console.log(`Rift Ruckus is ready at ${address}. Press Ctrl+C here to stop it.`);
+  console.log(`Smash Creble is ready at ${address}. Press Ctrl+C here to stop it.`);
   if (process.argv.includes('--open') && process.platform === 'win32') {
     const browser = spawn('explorer.exe', [address], { detached: true, stdio: 'ignore' });
     browser.on('error', () => console.log(`Open ${address} in your browser.`));
