@@ -17,7 +17,7 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; min-width: 680px; }
+body { margin: 0; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
 button:disabled { opacity: .5; cursor: default; }
@@ -164,6 +164,64 @@ dialog h2 { margin: 8px 0 15px; font: 41px/.97 var(--display); text-transform: u
 .result-list span { color: #bdcbcd; font-size: 13px; }
 .fatal { position: fixed; inset: 0; z-index: 5; display: grid; place-content: center; padding: 30px; background: #11191e; color: #ffcea4; }
 
+#shell:has(.touch-battle:not([hidden])) {
+  --touch-cell: clamp(44px, 12dvh, 56px);
+  --touch-gap: 4px;
+  position: relative;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#shell:has(.touch-battle:not([hidden])) .site-header { display: none; }
+.battle.touch-battle { min-height: 0; height: 100%; }
+.touch-battle .battle-top {
+  inset: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto max(12px, env(safe-area-inset-left));
+}
+.touch-battle .hud { top: calc(58px + env(safe-area-inset-top)); bottom: auto; }
+.touch-battle .pause-button { min-height: 44px; }
+.touch-battle .pause-button kbd { display: none; }
+.touch-controls {
+  position: absolute;
+  z-index: 4;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  left: max(8px, env(safe-area-inset-left));
+  right: max(8px, env(safe-area-inset-right));
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  pointer-events: none;
+}
+.touch-dpad, .touch-actions {
+  display: grid;
+  grid-template-columns: repeat(3, var(--touch-cell));
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  pointer-events: auto;
+}
+.touch-dpad { overflow: hidden; border-radius: 25%; }
+.touch-actions { gap: var(--touch-gap); }
+.touch-dpad span, .touch-actions button {
+  display: grid;
+  place-items: center;
+  height: var(--touch-cell);
+  border: 1px solid #8fa6a4a6;
+  background: #172534e8;
+  color: var(--ink);
+}
+.touch-dpad span { font-size: 22px; border-color: #8fa6a459; }
+.touch-dpad span:empty { background: #172534a8; }
+.touch-actions button { padding: 0; border-radius: 12px; font-size: clamp(10px, 2.9vw, 13px); font-weight: 750; }
+.touch-dpad span.held, .touch-actions button.held { background: var(--mint); color: #102823; }
+
+@media (orientation: portrait) {
+  #shell:has(.touch-battle:not([hidden])) { --touch-cell: clamp(44px, 14vw, 60px); }
+  .battle.touch-battle { height: calc(100% - 3 * var(--touch-cell) - 16px - env(safe-area-inset-bottom)); }
+  .touch-battle .hud { top: auto; bottom: 8px; }
+}
+
 @media (max-width: 1150px) {
   .roster { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
@@ -183,6 +241,34 @@ dialog h2 { margin: 8px 0 15px; font: 41px/.97 var(--display); text-transform: u
   .hero-detail p { display: none; }
   .site-header, .roster-section, .site-footer { padding-left: 24px; padding-right: 24px; }
   .fighter-card-info small { font-size: 10px; }
+}
+
+@media (max-width: 680px) {
+  .site-header { padding-inline: 12px; }
+  .header-actions { gap: 8px; }
+  .brand { gap: 6px; font-size: 19px; }
+  .brand-mark { width: 22px; height: 22px; }
+  .controller-status { display: none; }
+  .sound-button { margin-left: 0; }
+  .hero-world { left: 0; }
+  .hero-detail, .hero-legend, .section-heading > span { display: none; }
+  .roster { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .roster-section, .site-footer { padding-inline: 12px; }
+  .site-footer > span:last-child { display: none; }
+  dialog, dialog:has(.controls-table) { width: calc(100% - 24px); padding: 14px; }
+  .lobby-slot { grid-template-columns: 32px minmax(0, 1fr) 36px; }
+  .slot-source { grid-column: 2 / -1; }
+  .slot-pick { grid-column: 2; grid-template-columns: 36px 30px minmax(0, 1fr) 36px; }
+  .slot-pick img { width: 30px; }
+  .slot-pick button, .slot-remove { min-height: 36px; }
+  .battle-top { inset-inline: 12px; }
+  .round-label small, .round-label .mini-diamond { display: none; }
+  .timer { font-size: 28px; padding-inline: 10px; }
+  .hud { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+  .hud-card { max-width: none; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 0 4px; padding: 3px 4px 3px 0; }
+  .hud-face { width: 26px; height: 27px; }
+  .hud-card strong, .damage { font-size: 13px; }
+  .hud-power { padding: 2px 3px 0; font-size: 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

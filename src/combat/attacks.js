@@ -9,6 +9,7 @@ import { interruptAttack } from './status.js';
 import { advanceTrace, startTrace } from './trace.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower, powerStealTravelTime, stolenPowerTime } from '../fighters/bomm/profile.js';
+import { startAcidRain } from '../fighters/che-addominali/rain.js';
 import { advanceRubberDance } from '../fighters/luffy/dance.js';
 import { assaultRemaining, deployCompanions } from '../fighters/olivar/companions.js';
 import { advanceThunder } from '../fighters/nuvol/thunder.js';
@@ -143,6 +144,7 @@ export function advanceAttack(player, dt, match) {
     }
     if (attack.biteAt) beginCapture(player, attack, match);
     if (attack.summonsClones) summonClones(player, match, attack.summonsClones);
+    if (attack.startsAcidRain) startAcidRain(player, attack, match);
     if (attack.deploysCompanions) deployCompanions(player, match);
     if (attack.stealsPower) stealPower(player, attack, match);
     if (attack.type === 'bommBurst') player.bommBurstAt = match.time;

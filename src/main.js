@@ -10,6 +10,7 @@ import { BattleHud } from './ui/hud.js';
 import { Lobby } from './ui/lobby.js';
 import { createPortraits } from './ui/portraits.js';
 import { createRoster } from './ui/roster.js';
+import { TouchControls } from './ui/touch-controls.js';
 
 const canvas = document.createElement('canvas');
 canvas.className = 'game-canvas';
@@ -21,7 +22,7 @@ try {
   graphics = new Graphics(canvas);
   portrait = createPortraits(graphics);
 } catch (error) {
-  const message = 'The 3D renderer could not start. Open Rift Ruckus in a desktop browser with WebGL and graphics acceleration enabled.';
+  const message = 'The 3D renderer could not start. Open Rift Ruckus in a browser with WebGL and graphics acceleration enabled.';
   $('fatal').textContent = message;
   $('fatal').hidden = false;
   throw error;
@@ -34,10 +35,12 @@ let elapsed = 0;
 let controllerLabel = '';
 let accumulator = 0;
 const queued = new Map();
-const lobby = new Lobby(portrait, (index) => changeSelection(index, true), startMatch);
+const touch = navigator.maxTouchPoints > 0 || window.matchMedia('(any-pointer: coarse)').matches
+  ? new TouchControls($('touch-controls')) : null;
+const lobby = new Lobby(portrait, (index) => changeSelection(index, true), startMatch, Boolean(touch));
 const showSelection = createRoster(portrait, changeSelection);
 const hud = new BattleHud(portrait);
-const inputs = new Inputs(() => view === 'battle' && !modal);
+const inputs = new Inputs(() => view === 'battle' && !modal, touch);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function changeSelection(index, quiet = false) {
@@ -52,6 +55,7 @@ function changeSelection(index, quiet = false) {
 
 function openDialog(type, kicker, title) {
   modal = type;
+  touch?.show(false);
   updateDanceMusic(null);
   showDialog(type, kicker, title);
 }
@@ -61,6 +65,7 @@ function closeDialog() {
   hideDialog();
   queued.clear();
   accumulator = 0;
+  touch?.show(view === 'battle' && $('battle').classList.contains('touch-battle'));
 }
 
 function dismissDialog() {
@@ -71,7 +76,7 @@ function dismissDialog() {
 
 function openControls() {
   openDialog('controls', 'INPUT GUIDE', 'Controls');
-  renderControls();
+  renderControls(Boolean(touch));
 }
 
 function openLobby() {
@@ -91,6 +96,9 @@ function startMatch() {
   $('home').hidden = true;
   $('site-footer').hidden = true;
   $('battle').hidden = false;
+  const useTouch = Boolean(touch && lobby.seats.some((seat) => seat?.source === 'keyboard'));
+  $('battle').classList.toggle('touch-battle', useTouch);
+  touch?.show(useTouch);
   $('battle').dataset.arenaTheme = match.arena.definition.theme;
   $('arena-name').textContent = match.arena.definition.name.toUpperCase();
   $('battle').prepend(canvas);
@@ -105,6 +113,7 @@ function goHome() {
   match = null;
   view = 'home';
   $('battle').hidden = true;
+  touch?.show(false);
   $('home').hidden = false;
   $('site-footer').hidden = false;
   $('hero-world').prepend(canvas);

@@ -20,8 +20,9 @@ export function handleDismiss(dismiss) {
   dialog.addEventListener('cancel', (event) => { event.preventDefault(); dismiss(); });
 }
 
-export function renderControls() {
+export function renderControls(hasTouch) {
   content.append($('controls-template').content.cloneNode(true));
+  content.querySelector('.touch-guide').hidden = !hasTouch;
   const scroller = content.querySelector('.controls-scroll');
   scroller.addEventListener('keydown', (event) => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;

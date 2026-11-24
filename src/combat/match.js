@@ -8,6 +8,7 @@ import { move } from './movement.js';
 import { advanceProjectiles } from './projectiles.js';
 import { combatants, idleInput, spawn } from './state.js';
 import { advancePoison, capturingAttack } from './status.js';
+import { advanceAcidRain } from '../fighters/che-addominali/rain.js';
 import { advanceCompanions } from '../fighters/olivar/companions.js';
 import { clamp } from '../math.js';
 
@@ -44,6 +45,7 @@ export function tickMatch(match, controls, dt = rules.step) {
   }
   match.time = Math.max(0, match.time - dt);
   for (const player of match.fighters) advancePoison(player, match);
+  advanceAcidRain(match);
   if (match.dance) {
     advanceDance(match, dt);
     if (!match.dance) checkResult(match);

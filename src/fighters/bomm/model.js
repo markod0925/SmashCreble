@@ -2,6 +2,7 @@ import { multiply, one, smoothStep, TAU, transform, transformPoint, zero } from 
 import { fighterRoot } from '../../render/attack-animation.js';
 import { part } from '../../render/parts.js';
 import { drawFlyingKickTrail } from '../bid/model.js';
+import { drawBorrowedTriple } from '../che-addominali/model.js';
 import { drawClubImpact } from '../ciclope/model.js';
 import { bommBurstScale } from './profile.js';
 import { flameEffect } from '../dragon-boy/model.js';
@@ -116,6 +117,7 @@ export function draw(renderer, fighter, position, time, options) {
   if (attack.borrowed && attack.type === 'olivarBlade') drawBorrowedBlade(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'iiThrust') drawBorrowedThrust(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'maestraRuler') drawBorrowedRuler(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'absTriple') drawBorrowedTriple(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'pincoTongue') drawFlyingTongue(renderer, transformPoint(body, [0, -.19, .93]), position, attack, size);
   if (attack.borrowed && attack.type === 'dragonBallNavelLaser') {
     drawNavelBeam(renderer, transformPoint(body, [0, -.41, .84]), x, attack, size);

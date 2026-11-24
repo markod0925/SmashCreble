@@ -80,7 +80,8 @@ export function cpuInput(player, match, dt) {
       (duelist && Math.abs(dx) < 3.65 && dy < 1.08 && dy > -2.1) ||
       (dragonball && Math.abs(dx) < signatureAttacks.dragonBallBacteria.range * .83 && Math.abs(dy) < 1.65) ||
       (player.fighter.id === 'maestra' && Math.abs(dx) < signatureAttacks.maestraShove.range * .87 && Math.abs(dy) < 1.05) ||
-      (player.fighter.id === 'pinco-palino' && Math.abs(dx) < 7 && Math.abs(dy) < 4.7);
+      (player.fighter.id === 'pinco-palino' && Math.abs(dx) < 7 && Math.abs(dy) < 4.7) ||
+      (player.fighter.id === 'che-addominali' && Math.abs(dx) < signatureAttacks.absAcidRain.range && Math.abs(dy) < 3.5);
     if ((active || (superInRange && !player.attack && !player.hitstun)) && canUseSuper(player, match)) return { x, y: 0, superPressed: true };
     if (olivar && !deployed && !close && Math.abs(dx) < 5.9 && Math.abs(dy) < 2.3 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {

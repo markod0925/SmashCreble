@@ -5,11 +5,12 @@ import { playerColors } from '../player-colors.js';
 import { audioReady, playSound } from '../audio.js';
 
 export class Lobby {
-  constructor(portrait, onPrimarySelection, startMatch) {
+  constructor(portrait, onPrimarySelection, startMatch, hasTouch = false) {
     this.content = $('dialog-content');
     this.portrait = portrait;
     this.onPrimarySelection = onPrimarySelection;
     this.startMatch = startMatch;
+    this.keyboardLabel = hasTouch ? 'Touch / Keyboard' : 'Keyboard';
     this.selection = 0;
     this.arenaIndex = 0;
     this.snapshot = { pads: new Map(), unsupported: 0 };
@@ -93,7 +94,7 @@ export class Lobby {
       row.append(node('span', '', 'Open seat'), node('span', '', 'Press A or Start to join'));
       return row;
     }
-    const source = seat.source === 'cpu' ? 'CPU' : seat.source === 'keyboard' ? 'Keyboard' : this.padFor(seat) ? 'Controller' : 'Disconnected';
+    const source = seat.source === 'cpu' ? 'CPU' : seat.source === 'keyboard' ? this.keyboardLabel : this.padFor(seat) ? 'Controller' : 'Disconnected';
     const fighter = fighters[seat.selection];
     const pick = node('div', 'slot-pick');
     const prev = button('‹', () => this.chooseSeat(slot, -1), '');
@@ -131,11 +132,11 @@ export class Lobby {
     const addCPU = button('Add CPU', () => this.addSeat('cpu'));
     addCPU.dataset.focus = 'cpu';
     addCPU.disabled = !this.seats.includes(null);
-    const addKey = button('Add keyboard', () => this.addSeat('keyboard'));
+    const addKey = button(`Add ${this.keyboardLabel.toLowerCase()}`, () => this.addSeat('keyboard'));
     addKey.dataset.focus = 'keyboard';
     addKey.disabled = this.seats.some((seat) => seat?.source === 'keyboard') || !this.seats.some((seat) => !seat || seat.source === 'cpu');
     actions.append(fight, addCPU, addKey);
-    if (!this.canBegin()) note.textContent = this.missingControllers().length ? 'Reconnect or remove disconnected controllers to start.' : 'Choose at least two fighters, including a keyboard or controller player.';
+    if (!this.canBegin()) note.textContent = this.missingControllers().length ? 'Reconnect or remove disconnected controllers to start.' : 'Choose at least two fighters, including a human player.';
     else if (this.snapshot.unsupported) note.textContent += ' A controller without a standard browser mapping was detected.';
     this.content.replaceChildren(rows, arena, note, actions);
     const prior = [...this.content.querySelectorAll('button')].find((el) => el.dataset.focus === focusKey && !el.disabled);

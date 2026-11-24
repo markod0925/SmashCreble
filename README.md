@@ -1,6 +1,6 @@
 # Rift Ruckus
 
-Rift Ruckus is a local platform fighter for Windows PCs. Combat takes place on a 2D plane in low-poly 3D arenas. The game features twenty-eight fighters and synthesized sound effects.
+Rift Ruckus is a local platform fighter for desktop and mobile browsers. Combat takes place on a 2D plane in low-poly 3D arenas. The game features twenty-nine fighters and synthesized sound effects.
 
 ## Screenshots
 
@@ -14,10 +14,19 @@ Rift Ruckus is a local platform fighter for Windows PCs. Combat takes place on a
 
 See the [Wii build and play instructions](wii/README.md).
 
+## Play on a phone
+
+Open [Rift Ruckus on GitHub Pages](https://markod0925.github.io/SmashCreble/), then tap **Play match** and **Start fight**. The default **Touch / Keyboard** player faces a CPU. Use the direction pad and action buttons together in portrait or landscape.
+
+- Hold **Heavy** to charge and release it to attack.
+- Use **Up + Special** to recover or **Down + Jump** to drop through a platform.
+- Hold **Shield** and tap **Dodge** to evade.
+- Press **Light + Special** together after collecting a Superstar to use a super attack.
+
 ## Play on Windows
 
 1. Install Node.js if it is missing. Double-click `Play.cmd` to start the local server and open the game in your default browser. You can also run `npm start` or `node server.mjs` in the project directory.
-2. If the browser does not open automatically, visit `http://127.0.0.1:4173` in a desktop browser with WebGL enabled. Keep the launcher window open while you play. The game uses no external assets or packages.
+2. If the browser does not open automatically, visit the address printed in the launcher window in a browser with WebGL enabled. The server uses port `4173` by default and picks an available port if it is busy. Keep the launcher window open while you play. The game uses no external assets or packages.
 3. Pick a fighter, select **Play match**, and select **Start fight**. The default setup is a keyboard player against a CPU. In the lobby, use the **Arena** button or press Up or Down on a joined controller to change the stage.
 
 Pair Bluetooth controllers in Windows first, focus the game tab, then press the bottom face button or Start to join. Up to four controllers can play simultaneously. The first two controllers take over the default keyboard and CPU seats as they join. To play with both keyboard and controllers, use **Add keyboard** in the lobby. The game uses the browser’s [standard Gamepad mapping](https://www.w3.org/TR/gamepad/#remapping). A gamepad that the browser exposes without that mapping may need its Windows-compatible controller mode. Start begins the fight from the lobby and pauses during a match. The match pauses if a joined controller disconnects.
@@ -45,12 +54,12 @@ Each fighter starts with three stocks. Damage makes subsequent hits launch a fig
 
 Jump and double jump use Space or X. Hold Down with the jump button to drop through a raised platform.
 
-| Dragon Boy | Eid | Incantus | Beina | Gangar | Vi | Bomm | Gioppino | Huuuuu!! | 67 | Inga inga | Bid | Olivar | Packman | Ciclope | Vidarr | Funny Kings | Nuvol | ii! | DragonBall | Luffy | Maestra | Nurofen Caps | Pinco Palino | Keyboard | Controller (Xbox labels) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Claw & Kick | Kick & Punch | Belly Bump | Kick & Punch | Punch & Kick | Horn Jab | Headbutts | Punch & Kicks | Slap | Kick & Headbutt | Headbutt | Claw Swipe | Kick & Punch | Chomp | Lasso Throw | Serpent Bites | Double Slap | Rain | Punch & Kicks | Bite | Kick & Punch | Hair Pull | Vitamin C | Headbutt | J | A |
-| Flame Breath | Pulse Shot | Ear Stench | Peel Flip | Lunge Bite | Hoof Kick | Quick Bomb | Zombie Bite | Choking Puff | Briefcase Swing | Draw & Slash | Flying Kicks | Sprout Blade | Gas Cloud | Club Smash | Flying Fangs | Tomato Toss | Hail Shower | Sword Thrust | Navel Beam | Headbutt | Ruler Strike | Mini Bomb | Flying Tongue | Tap L | Tap B |
-| Spine Shot | Blink Scythe | Stagger Hex | Banana Toss | Eye Lasers | Rainbow Arc | Power Steal | Brain Toss | Bandage Bind | 67 Venom Snakes | Lance Throw | Goblin Pair | Sprout Assault | Blue Eye Lasers | Gas Cloud | Serpent Coils | Blade Fan | Deep Freeze | Twin Slash | Clone Pair | Gum-Gum Punch | Sonic Shout | Mega Bomb | Bald Flash | Hold L | Hold B |
-| Scale Burst | Robot Spin | Hypnotic Chomp | Banana Barrage | Gulp & Spit | Clone Herd | Bomm Burst | Zombie Horde | Sarcophagus | Snake Dance | Blade Storm | Goblin Horde | Laser Burst | Trace 67 | Red Eye Beam | Frost Serpents | Royal Finale | Lightning Storm | Triple Blade Dive | Bacteria Burst | Rubber Dance | Mighty Shove | Clone Squad | Flying 67 | J + L | A + B |
+| Dragon Boy | Eid | Incantus | Beina | Gangar | Vi | Bomm | Gioppino | Huuuuu!! | 67 | Inga inga | Bid | Olivar | Packman | Ciclope | Vidarr | Funny Kings | Nuvol | ii! | DragonBall | Luffy | Maestra | Nurofen Caps | Pinco Palino | Che Addominali! | Keyboard | Controller (Xbox labels) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Claw & Kick | Kick & Punch | Belly Bump | Kick & Punch | Punch & Kick | Horn Jab | Headbutts | Punch & Kicks | Slap | Kick & Headbutt | Headbutt | Claw Swipe | Kick & Punch | Chomp | Lasso Throw | Serpent Bites | Double Slap | Rain | Punch & Kicks | Bite | Kick & Punch | Hair Pull | Vitamin C | Headbutt | Jabs | J | A |
+| Flame Breath | Pulse Shot | Ear Stench | Peel Flip | Lunge Bite | Hoof Kick | Quick Bomb | Zombie Bite | Choking Puff | Briefcase Swing | Draw & Slash | Flying Kicks | Sprout Blade | Gas Cloud | Club Smash | Flying Fangs | Tomato Toss | Hail Shower | Sword Thrust | Navel Beam | Headbutt | Ruler Strike | Mini Bomb | Flying Tongue | Triple Punch | Tap L | Tap B |
+| Spine Shot | Blink Scythe | Stagger Hex | Banana Toss | Eye Lasers | Rainbow Arc | Power Steal | Brain Toss | Bandage Bind | 67 Venom Snakes | Lance Throw | Goblin Pair | Sprout Assault | Blue Eye Lasers | Gas Cloud | Serpent Coils | Blade Fan | Deep Freeze | Twin Slash | Clone Pair | Gum-Gum Punch | Sonic Shout | Mega Bomb | Bald Flash | Six-Punch Barrage | Hold L | Hold B |
+| Scale Burst | Robot Spin | Hypnotic Chomp | Banana Barrage | Gulp & Spit | Clone Herd | Bomm Burst | Zombie Horde | Sarcophagus | Snake Dance | Blade Storm | Goblin Horde | Laser Burst | Trace 67 | Red Eye Beam | Frost Serpents | Royal Finale | Lightning Storm | Triple Blade Dive | Bacteria Burst | Rubber Dance | Mighty Shove | Clone Squad | Flying 67 | Acid Rain | J + L | A + B |
 
 Touch the golden Superstar at center stage to stock one super attack. The star above the fighter and on the HUD shows when the move is ready. The Superstar returns after the move is used or its holder is knocked out. Upward recovery still uses Up + L or Up + B.
 
@@ -77,7 +86,7 @@ Touch the golden Superstar at center stage to stock one super attack. The star a
 | Olivar | Space explorer | Three small space sprouts orbit Olivar. **Sprout Blade** lines them up into a blade for two slashes. **Sprout Assault** enlarges them and sends them after the nearest opponent for five seconds, then they return and can form the blade again. **Laser Burst** fires a full circle of laser pulses. |
 | Packman | Armored chomper | **Chomp** lunges into a bite. **Gas Cloud** hits nearby rivals. **Blue Eye Lasers** fires two beams straight ahead. **Trace 67** turns Packman blue and invulnerable while he snaps his jaw and flies along two strokes to draw a glowing 67 in the center of the arena. Rivals in the path of either stroke take damage. |
 | Ciclope | One-eyed giant | **Lasso Throw** pulls the first rival it catches toward Ciclope and reels back. **Club Smash** strikes from overhead. **Gas Cloud** hits nearby rivals on either side. **Red Eye Beam** fires a single long-range laser from the red eye at the center of his face. |
-| Vidarr | Frost gorgon | **Serpent Bites** snaps at a nearby rival. **Flying Fangs** launches detached snake heads. **Serpent Coils** sends out snakes to wrap and bite a rival. **Frost Serpents** freezes every opponent in place for five seconds, then stretches Vidarr's snake hair across the arena to bite them. |
+| Vidarr | Frost gorgon | **Serpent Bites** snaps at a nearby rival. **Flying Fangs** launches detached snake heads. **Serpent Coils** sends out snakes that bite and knock back a rival. **Frost Serpents** freezes every opponent in place for five seconds, then stretches Vidarr's snake hair across the arena to bite them. |
 | Funny Kings | Two-faced royalty | **Double Slap** hits twice with the glove. **Tomato Toss** splatters a tomato on impact. **Blade Fan** fires a midrange spread of blades. **Royal Finale** launches blades and explosive hand bombs in a full circle. |
 | Nuvol | Storm cloud | Can jump three times in midair. **Rain** showers nearby rivals and reaches below Nuvol. **Hail Shower** drops chunks of hail straight down. **Deep Freeze** fires an ice projectile that immobilizes the first rival hit for five seconds. **Lightning Storm** marks columns and then strikes them in three waves. A direct hit briefly reveals a stylized skeleton. |
 | ii! | Three-sword duelist | **Punch & Kicks** chains a punch and two kicks. **Sword Thrust** lunges with one blade. **Twin Slash** draws two swords for two strikes. **Triple Blade Dive** launches ii! into the air and brings all three blades down together. |
@@ -86,6 +95,7 @@ Touch the golden Superstar at center stage to stock one super attack. The star a
 | Maestra | Sonic teacher | **Hair Pull** tugs a nearby rival toward Maestra. **Ruler Strike** swings a wooden ruler overhead. **Sonic Shout** sends visible sound waves forward that hit rivals as they reach them. **Mighty Shove** drives nearby rivals away with a strong two-handed push. |
 | Nurofen Caps | Capsule caster | **Vitamin C** shoots a tablet forward. **Mini Bomb** lobs a small bomb. **Mega Bomb** throws a bigger bomb with a wider blast. **Clone Squad** brings the group to four half-size CPU clones. They use explosive slaps and vanish on the first hit they take. |
 | Pinco Palino | Flying kicker | **Headbutt** lunges into a nearby rival. **Flying Tongue** lashes at medium range. **Bald Flash** dazzles nearby rivals and briefly blocks their attacks. **Flying 67** launches from Pinco Palino’s current position. He kicks through opponents while painting a green 67 in the air. |
+| Che Addominali! | Heavyweight boxer | **Jabs** chains two punches. **Triple Punch** strikes with three punches at once. **Six-Punch Barrage** follows up with six separate punches. **Acid Rain** showers an area for five seconds, damaging opponents who stay underneath. |
 
 ## Code layout
 

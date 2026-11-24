@@ -26,8 +26,9 @@ import * as luffy from '../fighters/luffy/model.js';
 import * as maestra from '../fighters/maestra/model.js';
 import * as nurofenCaps from '../fighters/nurofen-caps/model.js';
 import * as pincoPalino from '../fighters/pinco-palino/model.js';
+import * as cheAddominali from '../fighters/che-addominali/model.js';
 
-const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar, packman, ciclope, vidarr, 'funny-kings': funnyKings, nuvol, ii, dragonball, luffy, maestra, 'nurofen-caps': nurofenCaps, 'pinco-palino': pincoPalino };
+const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar, packman, ciclope, vidarr, 'funny-kings': funnyKings, nuvol, ii, dragonball, luffy, maestra, 'nurofen-caps': nurofenCaps, 'pinco-palino': pincoPalino, 'che-addominali': cheAddominali };
 const projectileModels = Object.assign({}, ...Object.values(models).map(({ projectiles }) => projectiles));
 
 export function drawCharacter(renderer, fighter, position, time, options = {}) {

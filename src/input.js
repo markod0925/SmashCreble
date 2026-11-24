@@ -35,10 +35,11 @@ function edges(current, previous = {}) {
 }
 
 export class Inputs {
-  constructor(isFighting) {
+  constructor(isFighting, touch = null) {
     this.keys = new Set();
     this.keyboard = {};
     this.pads = new Map();
+    this.touch = touch;
     window.addEventListener('keydown', (event) => {
       if (!captured.has(event.code) || event.altKey || event.ctrlKey || event.metaKey) return;
       const focusedButton = event.target instanceof HTMLButtonElement;
@@ -57,6 +58,7 @@ export class Inputs {
     keyboard.y = digital(has('ArrowDown', 'KeyS'), has('ArrowUp', 'KeyW'));
     const keyState = edges(keyboard, this.keyboard);
     this.keyboard = keyboard;
+    this.touch?.merge(keyState);
 
     let gamepads = [];
     try {

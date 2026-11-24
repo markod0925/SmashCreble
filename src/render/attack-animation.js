@@ -20,7 +20,7 @@ export function fighterRoot(position, size, rotation, attack) {
     ((attack.type === 'light' || attack.type === 'heavy') && attack.offset > .8);
   const falling = attack.diveSpeed || ((attack.type === 'light' || attack.type === 'heavy') && attack.offset < 0);
   const radial = !rising && !falling && (attack.summonsClones || attack.deploysCompanions || attack.freezesRivals ||
-    attack.summonsThunder || attack.startsDance || attack.rubberDance || (attack.all && !attack.travel && attack.type !== 'dash'));
+    attack.summonsThunder || attack.startsDance || attack.rubberDance || attack.startsAcidRain || (attack.all && !attack.travel && attack.type !== 'dash'));
   const beam = attack.cue === 'laser' && !attack.projectile || attack.type === 'dragonBallNavelLaser';
   let windup = 0, release = 0, rebound = 0;
   let previous = 0;

@@ -3,6 +3,7 @@ import { combatants } from '../combat/state.js';
 import { boundTime, captureProgress, capturingAttack, frozenTime, isZombie, shockedTime } from '../combat/status.js';
 import { bommBurstScale } from '../fighters/bomm/profile.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
+import { drawAcidRain } from '../fighters/che-addominali/model.js';
 import { drawBoundWrap, drawSarcophagus } from '../fighters/huuuuu/model.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { drawDanceSnake } from '../fighters/shark-67/model.js';
@@ -134,6 +135,7 @@ export class Graphics {
       }
     }
     drawProjectiles(renderer, match.projectiles, time);
+    drawAcidRain(renderer, match.acidRain, match.time);
     if (dance) {
       for (const snake of dance.snakes) drawDanceSnake(renderer, snake, dance.elapsed);
       this.drawMusic(dance);

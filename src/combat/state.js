@@ -31,7 +31,7 @@ export function createMatch(lineup, definition = defaultArena) {
   return {
     arena, time: rules.duration, countdown: 3, fighters: lineup.map(({ slot, fighter, cpu }) => ({
       slot, fighter, cpu, stocks: rules.stocks, ...spawn(slot, true, fighter, arena),
-    })), clones: [], projectiles: [], dance: null, result: null, events: [],
+    })), clones: [], projectiles: [], acidRain: [], dance: null, result: null, events: [],
     superstar: definition.superstar && lineup.some(({ fighter }) => fighter.moves)
       ? { ...definition.superstar, holder: null, cooldown: 0 } : null,
   };
