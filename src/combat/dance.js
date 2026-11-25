@@ -4,6 +4,7 @@ import { areRivals, bodyCenter, combatants } from './state.js';
 import { interruptAttack } from './status.js';
 
 export function startDance(owner, match) {
+  owner.attack = null;
   const actors = combatants(match);
   const rivals = actors.filter((actor) => areRivals(owner, actor) && actor.stocks && !actor.respawn);
   const [x, y] = briefcaseGrip(owner);

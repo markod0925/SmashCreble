@@ -1,5 +1,6 @@
 import { $, node, button } from './dom.js';
 import { defeatedEnemies } from '../combat/adventure.js';
+import { fighterIdentity } from '../fighters/mimora/mirror.js';
 
 const dialog = $('dialog');
 const content = $('dialog-content');
@@ -50,7 +51,7 @@ export function renderResults(match, restart, goHome) {
   const list = node('ul', 'result-list');
   for (const entry of [...(adventure?.party ?? fighters)].sort((a, b) => b.stocks - a.stocks || a.damage - b.damage)) {
     const row = node('li');
-    row.append(node('strong', '', `P${entry.slot + 1} ${entry.fighter.name}${entry.cpu ? ' · CPU' : ''}`), node('span', '', `${entry.stocks} ${entry.stocks === 1 ? 'stock' : 'stocks'} left`));
+    row.append(node('strong', '', `P${entry.slot + 1} ${fighterIdentity(entry).name}${entry.cpu ? ' · CPU' : ''}`), node('span', '', `${entry.stocks} ${entry.stocks === 1 ? 'stock' : 'stocks'} left`));
     list.append(row);
   }
   const actions = node('div', 'dialog-actions');

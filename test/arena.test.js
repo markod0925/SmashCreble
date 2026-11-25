@@ -12,6 +12,8 @@ import { transform, transformPoint } from '../src/render/math.js';
 
 const storm = arenas.find(({ id }) => id === 'stormcoil-array');
 const gdmr = arenas.find(({ id }) => id === 'gdmr');
+const iui = arenas.find(({ id }) => id === 'iui');
+const frittata = arenas.find(({ id }) => id === 'spiaccica-frittata');
 const lineup = [0, 1].map((slot) => ({ slot, fighter: fighters[slot] }));
 const controls = new Map();
 
@@ -194,4 +196,143 @@ test('GDMR grants two arena clones to each active rival when a Superstar move st
     assert.equal(clone.grounded, match.arena.platforms[0]);
     assert.equal(clone.y, platformHeight(clone.grounded, clone.x));
   }
+});
+
+test('IUI! warns every 15 seconds before replacing only the lower deck', () => {
+  const { arena } = createMatch(lineup, iui);
+  const [deck, ...ledges] = arena.platforms;
+  const floorHeights = arena.platforms.map(({ y }) => y);
+  const woodTops = [];
+  const renderer = {
+    object(shape, position, size) {
+      if (shape === 'box' && size[1] === .3) woodTops.push(position);
+    },
+  };
+  drawBattleArena(renderer, arena, 0);
+  const stillTops = woodTops.splice(0);
+  assert.equal(stillTops.length, 9);
+
+  advanceArena(arena, 14.99);
+  assert.equal(arena.platformWarning, 0);
+  advanceArena(arena, .26);
+  assert.ok(arena.platformWarning > 0);
+  assert.equal(arena.platforms[0], deck);
+  drawBattleArena(renderer, arena, 0);
+  const warningTops = woodTops.splice(0);
+  assert.notDeepEqual(warningTops.slice(0, 3), stillTops.slice(0, 3));
+  assert.deepEqual(warningTops.slice(3), stillTops.slice(3));
+
+  advanceArena(arena, 2.74);
+  assert.equal(arena.platforms[0], deck);
+  advanceArena(arena, .01);
+  assert.equal(arena.fallingPlatform, deck);
+  assert.equal(arena.platformWarning, 0);
+  assert.equal(arena.platforms.length, 3);
+  const [replacement] = arena.platforms;
+  assert.notEqual(replacement, deck);
+  advanceArena(arena, .5);
+  assert.ok(replacement.y > floorHeights[0] && replacement.y < replacement.previousY);
+  assert.ok(deck.falling && deck.y < deck.previousY);
+  for (const [index, ledge] of ledges.entries()) {
+    assert.equal(arena.platforms[index + 1], ledge);
+    assert.equal(ledge.y, floorHeights[index + 1]);
+  }
+  drawBattleArena(renderer, arena, 0);
+  assert.equal(woodTops.length, 12);
+  assert.deepEqual(woodTops.slice(6), stillTops.slice(3));
+
+  advanceArena(arena, 10);
+  assert.equal(arena.fallingPlatform, null);
+  assert.deepEqual(arena.platforms.map(({ y }) => y), floorHeights);
+  advanceArena(arena, 1.5);
+  assert.ok(arena.platformWarning > 0);
+  advanceArena(arena, 3);
+  assert.equal(arena.fallingPlatform, replacement);
+});
+
+test('IUI! carries idle deck riders out while raised platforms stay safe', () => {
+  const match = createMatch([...lineup, { slot: 2, fighter: fighters[2] }], iui);
+  match.countdown = 0;
+  const [jumper, idle, ledgeRider] = match.fighters;
+  const [deck, ledge] = match.arena.platforms;
+  jumper.x = 0;
+  Object.assign(ledgeRider, { x: -10, y: ledge.y, grounded: ledge });
+  advanceArena(match.arena, 18 - rules.step);
+  const jump = new Map([[jumper.slot, { x: 0, y: 0, jumpPressed: true }]]);
+  tickMatch(match, jump);
+  for (let i = 0; i < 53; i++) tickMatch(match, controls);
+  assert.equal(idle.grounded, deck);
+  assert.equal(idle.y, deck.y);
+  assert.ok(idle.y < 0);
+  assert.equal(jumper.grounded, null);
+  tickMatch(match, jump);
+  for (let i = 0; i < 125; i++) tickMatch(match, controls);
+  assert.equal(idle.stocks, rules.stocks - 1);
+  assert.equal(jumper.stocks, rules.stocks);
+  assert.equal(jumper.grounded, match.arena.platforms[0]);
+  assert.equal(ledgeRider.grounded, ledge);
+  assert.equal(ledgeRider.y, ledge.y);
+  assert.equal(ledgeRider.stocks, rules.stocks);
+});
+
+test('Spiaccica Frittata crushes low fighters every 15 seconds and keeps them on the deck', () => {
+  const seats = [0, 1, 2, 3].map((slot) => ({ slot, fighter: fighters[slot] }));
+  const match = createMatch(seats, frittata);
+  match.countdown = 0;
+  const [standing, jumping, low, below] = match.fighters;
+  const [deck] = match.arena.platforms;
+  const { damage, clearance } = frittata.deckCrush;
+  advanceArena(match.arena, 14.75);
+  tickMatch(match, new Map([[jumping.slot, { x: 0, y: 0, jumpPressed: true }]]));
+  for (let i = 0; i < 28; i++) tickMatch(match, controls);
+  assert.ok(match.arena.environment.warning > 0);
+  assert.equal(standing.damage, 0);
+  assert.ok(jumping.y > deck.y + clearance);
+
+  Object.assign(low, { grounded: null, y: deck.y + clearance / 2, vy: 0 });
+  Object.assign(below, { grounded: null, y: deck.y - 2, vy: 0 });
+  tickMatch(match, new Map([[standing.slot, { x: 0, y: 0, guard: true }]]));
+  assert.equal(match.arena.environment.fold, 1);
+  for (const rider of [standing, low]) {
+    assert.equal(rider.damage, damage);
+    assert.equal(rider.grounded, deck);
+    assert.equal(rider.y, deck.y);
+    assert.equal(rider.vx, 0);
+    assert.equal(rider.vy, 0);
+    assert.equal(rider.stocks, rules.stocks);
+  }
+  assert.equal(jumping.damage, 0);
+  assert.equal(below.damage, 0);
+  for (let i = 0; i < 24; i++) tickMatch(match, controls);
+  assert.equal(standing.damage, damage);
+
+  advanceArena(match.arena, 30 - rules.step - match.arena.elapsed);
+  tickMatch(match, controls);
+  assert.equal(standing.damage, damage * 2);
+  assert.equal(standing.grounded, deck);
+});
+
+test('Spiaccica Frittata scrolls mountains and folds one wing over the fixed deck', () => {
+  const { arena } = createMatch(lineup, frittata);
+  const [deck] = arena.platforms;
+  const angles = [];
+  const summits = [];
+  const renderer = {
+    object(shape, position, size, color, rotation) {
+      if (shape === 'horn') summits.push(position);
+      if (shape === 'box' && size[0] === deck.width) angles.push(rotation[0]);
+    },
+  };
+  drawBattleArena(renderer, arena, 0);
+  const originalSummits = summits.splice(0);
+  assert.deepEqual(angles.splice(0), [0, 0]);
+  advanceArena(arena, 15);
+  drawBattleArena(renderer, arena, 0);
+  assert.notDeepEqual(summits, originalSummits);
+  assert.deepEqual(angles.splice(0), [0, Math.PI]);
+  assert.equal(arena.platforms[0], deck);
+  assert.equal(deck.y, 0);
+  advanceArena(arena, 1);
+  drawBattleArena(renderer, arena, 0);
+  assert.deepEqual(angles, [0, 0]);
 });

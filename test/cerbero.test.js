@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { rules } from '../src/combat/arena.js';
+import { summonClones } from '../src/combat/clones.js';
 import { createMatch, tickMatch } from '../src/combat/match.js';
 import { dazedTime } from '../src/combat/status.js';
 import { sitDazeSeconds, toothCount } from '../src/fighters/cerbero/profile.js';
@@ -62,10 +63,12 @@ test('Tooth Barrage fires successive shots from all three mouths when special is
   assert.equal(rear.damage, 0);
 });
 
-test('Giant Sit dazes every active rival at impact for three seconds and leaves Cerbero free afterward', () => {
+test('Giant Sit damages every active rival once at full size, then dazes them for three seconds', () => {
   const match = prepare(-9.7, 9, 5.3);
   const [dog, rear, far, air] = match.fighters;
   Object.assign(air, { y: 9, vy: 2.4, grounded: null });
+  summonClones(far, match, 1);
+  const [clone] = match.clones;
   tick(match, 1, { superPressed: true });
   assert.equal(dog.attack, null);
   match.superstar.holder = dog;
@@ -75,11 +78,16 @@ test('Giant Sit dazes every active rival at impact for three seconds and leaves 
   const guard = new Map([[2, { x: 0, y: 0, guard: true }]]);
   const rivalControls = new Map([[2, { x: -1, y: 0, lightPressed: true }]]);
   const rivals = [rear, far, air];
-  const windup = Math.ceil(signatureAttacks.cerberoGiantSit.from / rules.step);
-  for (let i = 1; i < windup - 1; i++) tickMatch(match, guard);
+  const { growthHit, from: sitAt } = signatureAttacks.cerberoGiantSit;
+  while (dog.attack.age < growthHit.at - rules.step) tickMatch(match, guard);
+  assert.ok(rivals.every(player => player.damage === 0));
+  while (dog.attack.age < growthHit.at) tickMatch(match, guard);
+  assert.ok(rivals.every(player => player.damage === growthHit.damage));
+  assert.equal(clone.stocks, 0);
+  assert.equal(dog.damage, 0);
   assert.ok(rivals.every(player => dazedTime(player, match) === 0));
   assert.equal(far.guarding, true);
-  tickMatch(match, guard);
+  while (dog.attack.age < sitAt) tickMatch(match, guard);
   assert.ok(rivals.every(player => Math.abs(dazedTime(player, match) - sitDazeSeconds) < 1e-7));
   assert.equal(far.guarding, false);
   assert.equal(dazedTime(dog, match), 0);
@@ -87,7 +95,7 @@ test('Giant Sit dazes every active rival at impact for three seconds and leaves 
   for (let i = 1; i < Math.round(sitDazeSeconds / rules.step); i++) tickMatch(match, rivalControls);
   assert.equal(dog.attack, null);
   assert.equal(far.x, farX);
-  assert.ok(rivals.every(player => player.attack === null && player.damage === 0));
+  assert.ok(rivals.every(player => player.attack === null && player.damage === growthHit.damage));
   tickMatch(match, rivalControls);
   assert.equal(dazedTime(far, match), 0);
   assert.ok(far.attack);

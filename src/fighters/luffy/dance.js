@@ -1,6 +1,6 @@
 import { strike } from '../../combat/hits.js';
 import { areRivals, combatants } from '../../combat/state.js';
-import { freezeFighter, frozenTime, interruptAttack } from '../../combat/status.js';
+import { freezeFighter, frozenTime } from '../../combat/status.js';
 import { direction } from '../../math.js';
 import { rubberDanceBeat, rubberDanceImpact, rubberDanceSeconds } from './profile.js';
 
@@ -18,7 +18,7 @@ export function advanceRubberDance(owner, attack, match) {
 
   const remaining = match.time - attack.danceEndsAt;
   if (remaining <= 1e-9) {
-    interruptAttack(owner);
+    owner.attack = null;
     return;
   }
   const elapsed = attack.danceElapsed = Math.max(0, rubberDanceSeconds - remaining);

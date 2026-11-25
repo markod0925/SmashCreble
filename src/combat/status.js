@@ -6,6 +6,10 @@ export function isInvulnerable(player) {
   return Boolean(player.invulnerable || player.attack?.untouchable);
 }
 
+export function isSuperAttacking(player) {
+  return Boolean(player.attack && player.attack.type === player.fighter.moves?.super);
+}
+
 export function isZombie(player, match) {
   return player.zombieUntil != null && match.time - player.zombieUntil > 1e-9;
 }
@@ -22,8 +26,24 @@ export function dazedTime(player, match) {
   return statusTime(player.dazedUntil, match);
 }
 
+export function sleepTime(player, match) {
+  return statusTime(player.sleepUntil, match);
+}
+
+export function slowTime(player, match) {
+  return statusTime(player.slowUntil, match);
+}
+
+export function resizeScale(player, match) {
+  return statusTime(player.resizeUntil, match) ? player.resizeScale : 1;
+}
+
 export function shockedTime(player, match) {
   return statusTime(player.shockedUntil, match);
+}
+
+export function crushedTime(player, match) {
+  return statusTime(player.crushedUntil, match);
 }
 
 function statusTime(until, match) {
@@ -31,8 +51,8 @@ function statusTime(until, match) {
 }
 
 export function freezeFighter(player, match, duration) {
+  if (!interruptAttack(player)) return;
   player.frozenUntil = Math.min(player.frozenUntil ?? match.time, match.time - duration);
-  interruptAttack(player);
   player.guarding = false;
   player.dodge = 0;
   player.vx = 0;
@@ -43,8 +63,8 @@ export function freezeFighter(player, match, duration) {
 export function dazeRivals(source, match, duration) {
   for (const player of combatants(match)) {
     if (!areRivals(source, player) || !player.stocks || player.respawn) continue;
+    if (!interruptAttack(player)) continue;
     player.dazedUntil = Math.min(player.dazedUntil ?? match.time, match.time - duration);
-    interruptAttack(player);
     player.guarding = false;
     player.dodge = 0;
   }
@@ -62,7 +82,7 @@ export function advancePoison(player, match) {
 }
 
 export function capturingAttack(target, match) {
-  return match.fighters.find(({ attack }) => attack?.capture?.target === target)?.attack;
+  return match.fighters.find(({ attack }) => attack?.capture?.target === target || attack?.captures?.some(capture => capture.target === target))?.attack;
 }
 
 export function captureProgress(attack) {
@@ -70,15 +90,24 @@ export function captureProgress(attack) {
 }
 
 export function captureTarget(attack, target) {
-  attack.capture = { target, x: target.x, y: target.y };
+  const capture = { target, x: target.x, y: target.y };
+  if (attack.captureAll) (attack.captures ??= []).push(capture);
+  else attack.capture = capture;
   interruptAttack(target);
   target.vx = 0;
   target.vy = 0;
   target.grounded = null;
 }
 
+export function releaseCapture(attack, target) {
+  if (attack.captures) attack.captures = attack.captures.filter(capture => capture.target !== target);
+  else attack.capture = null;
+}
+
 export function interruptAttack(player) {
+  if (isSuperAttacking(player)) return false;
   player.attack = null;
   player.charge = 0;
   player.charging = false;
+  return true;
 }

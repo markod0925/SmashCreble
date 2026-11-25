@@ -33,8 +33,14 @@ import * as murenaMan from '../fighters/murena-man/model.js';
 import * as harriPotter from '../fighters/harri-potter/model.js';
 import * as cerbero from '../fighters/cerbero/model.js';
 import * as zunchy from '../fighters/zunchy/model.js';
+import * as dragaMamma from '../fighters/draga-mamma/model.js';
+import * as maradona from '../fighters/maradona/model.js';
+import * as hoHoHo from '../fighters/ho-ho-ho/model.js';
+import * as killyWilly from '../fighters/killy-willy/model.js';
+import * as mimora from '../fighters/mimora/model.js';
+import * as markok from '../fighters/markok/model.js';
 
-const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar, packman, ciclope, vidarr, 'funny-kings': funnyKings, nuvol, ii, dragonball, luffy, maestra, 'nurofen-caps': nurofenCaps, 'pinco-palino': pincoPalino, 'che-addominali': cheAddominali, budino, 'super-libro-girl': superLibroGirl, 'murena-man': murenaMan, 'harri-potter': harriPotter, cerbero, zunchy };
+const models = { rivet, bramble, vesper, kiln, 'dragon-boy': dragonBoy, eid, incantus, beina, gangar, vi, bomm, gioppino, huuuuu, 'shark-67': shark67, 'inga-inga': ingaInga, bid, olivar, packman, ciclope, vidarr, 'funny-kings': funnyKings, nuvol, ii, dragonball, luffy, maestra, 'nurofen-caps': nurofenCaps, 'pinco-palino': pincoPalino, 'che-addominali': cheAddominali, budino, 'super-libro-girl': superLibroGirl, 'murena-man': murenaMan, 'harri-potter': harriPotter, cerbero, zunchy, 'draga-mamma': dragaMamma, maradona, 'ho-ho-ho': hoHoHo, 'killy-willy': killyWilly, mimora, markok };
 const projectileModels = Object.assign({}, ...Object.values(models).map(({ projectiles }) => projectiles));
 
 export function drawCharacter(renderer, fighter, position, time, options = {}) {

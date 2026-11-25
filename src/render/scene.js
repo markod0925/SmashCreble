@@ -1,10 +1,11 @@
 import { rules } from '../combat/arena.js';
 import { encounterGate, enemyColor } from '../combat/adventure.js';
 import { bodySize, combatants } from '../combat/state.js';
-import { boundTime, captureProgress, capturingAttack, dazedTime, frozenTime, isZombie, shockedTime } from '../combat/status.js';
+import { boundTime, captureProgress, capturingAttack, crushedTime, dazedTime, frozenTime, isZombie, shockedTime, sleepTime, slowTime } from '../combat/status.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { drawAcidRain } from '../fighters/che-addominali/model.js';
 import { drawBoundWrap, drawSarcophagus } from '../fighters/huuuuu/model.js';
+import { drawCapeWrap } from '../fighters/markok/model.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { drawDanceSnake } from '../fighters/shark-67/model.js';
 import { drawIce, drawSerpentBind } from '../fighters/vidarr/model.js';
@@ -14,7 +15,7 @@ import { adventureCamera } from './adventure.js';
 import { drawBattleArena, drawHero } from './arena.js';
 import { drawCharacter, drawProjectiles, portraitCamera } from './characters.js';
 import { BattleEffects } from './effects.js';
-import { battleCamera, TAU, zero } from './math.js';
+import { battleCamera, TAU, transform, zero } from './math.js';
 import { drawShockSkeleton } from './skeleton.js';
 import { WebGLRenderer } from './webgl.js';
 
@@ -81,16 +82,20 @@ export class Graphics {
       const clone = Boolean(fighter.owner);
       const capture = capturingAttack(fighter, match);
       const progress = capture ? captureProgress(capture) : 0;
+      const capeWrapped = capture?.captureStyle === 'cape';
+      const staysVisible = capeWrapped || capture?.captureStyle === 'hug';
       if (capture?.sarcophagus) drawSarcophagus(renderer, fighter, progress);
-      if (progress >= 1) {
+      if (progress >= 1 && !staysVisible) {
         if (!clone) tagPoints.push(null);
         continue;
       }
       const pulledToMouth = capture?.type === 'gangarGulp' || capture?.gulpSpit;
-      const shrink = capture?.sarcophagus ? 0 : pulledToMouth ? progress : Math.pow(progress, 3);
+      const shrink = capture?.sarcophagus || staysVisible ? 0 : pulledToMouth ? progress : Math.pow(progress, 3);
       const standingSize = bodySize(fighter, match);
       const size = standingSize * (1 - shrink * .93);
-      if (!clone) tagPoints.push(renderer.project(fighter.x, fighter.y + 3.94 * size, .5));
+      const crushed = crushedTime(fighter, match);
+      const heightScale = crushed ? 1 - .82 * Math.min(1, crushed / (definition.deckCrush.duration * .67)) : 1;
+      if (!clone) tagPoints.push(renderer.project(fighter.x, fighter.y + 3.94 * size * heightScale, .5));
       if (!fighter.stocks || fighter.respawn > 0) continue;
       const depth = clone ? fighter.depth : pulledToMouth ? .21 + progress * .87 : .21;
       const shadowScale = (clone ? .5 : 1) * standingSize / fighter.fighter.size;
@@ -101,19 +106,20 @@ export class Graphics {
       const fuseColor = power && (match.time - power.arrivesAt > 1e-9 ? power.previousColor : power.color);
       const frozen = frozenTime(fighter, match);
       const dazed = dazedTime(fighter, match);
+      const sleeping = sleepTime(fighter, match);
+      const slowed = slowTime(fighter, match);
       const danceBeat = dance ? dance.elapsed * TAU * 2 + fighter.slot * .7 : 0;
-      const dancing = dance && !frozen && !dazed;
+      const dancing = dance && !frozen && !dazed && !sleeping;
       const sway = dancing ? Math.sin(danceBeat) : 0;
       const bounce = dancing ? Math.abs(Math.cos(danceBeat)) * .18 : 0;
-      const poseTime = frozen ? time + frozen : dancing ? danceBeat / 14 : time;
+      const poseTime = frozen || sleeping ? time + Math.max(frozen, sleeping) : dancing ? danceBeat / 14 : time;
       const shock = shockedTime(fighter, match);
-      if (shock > 0) drawShockSkeleton(renderer, model, [fighter.x, fighter.y, depth], fighter.facing, shock);
-      else drawCharacter(renderer, model, [fighter.x + sway * .15, fighter.y + bounce, depth], poseTime, {
+      const options = {
         heading: fighter.facing * (dance ? .51 : .93) + sway * .31, facing: fighter.facing,
         running: dancing ? .65 : fighter.grounded ? Math.min(1, Math.abs(fighter.vx) / 7) : 0,
         airborne: !dance && !fighter.grounded, verticalSpeed: fighter.vy, landing: fighter.landing, attack: fighter.attack, charging: fighter.charging,
         guarding: fighter.guarding, flash: fighter.invulnerable && Math.sin(time * 55) > .15,
-        wobble: frozen ? 0 : dazed ? Math.sin(time * 9) * .2 : dance ? sway * .24 : fighter.stagger ? Math.sin(time * 18) * .18 :
+        wobble: frozen ? 0 : sleeping ? -fighter.facing * .24 : dazed ? Math.sin(time * 9) * .2 : dance ? sway * .24 : fighter.stagger ? Math.sin(time * 18) * .18 :
           capture ? Math.sin(time * 12) * .14 : zombie ? Math.sin(time * 12) * .16 : 0,
         zombie,
         fuseColor,
@@ -125,7 +131,14 @@ export class Graphics {
         companionAssault: fighter.companionAssault,
         companionRemaining: assaultRemaining(fighter, match),
         hungry: shrinkTime(fighter, match) > 0,
-      });
+      };
+      const drawModel = shock > 0
+        ? () => drawShockSkeleton(renderer, model, [fighter.x, fighter.y, depth], fighter.facing, shock)
+        : () => drawCharacter(renderer, model, [fighter.x + sway * .15, fighter.y + bounce, depth], poseTime, options);
+      if (crushed) {
+        renderer.withModelTransform(transform([0, fighter.y * (1 - heightScale), 0], [1, heightScale, 1], zero), drawModel);
+      } else drawModel();
+      if (capeWrapped) drawCapeWrap(renderer, [fighter.x, fighter.y, depth], size, progress, poseTime);
       const bound = boundTime(fighter, match);
       if (bound > 0) {
         if (fighter.boundStyle === 'serpents') drawSerpentBind(renderer, [fighter.x, fighter.y, depth], size, poseTime);
@@ -139,15 +152,16 @@ export class Graphics {
             [.12, .17, .12], '#a1ed77', [0, phase * TAU, i], .76, 1 - phase);
         }
       }
-      const top = fighter.y + 3.53 * size;
+      const top = fighter.y + 3.53 * size * heightScale;
       if (star?.holder === fighter) renderer.object('star', [fighter.x, top, .5], [.52, .52, .4], '#ffdb70', [0, Math.sin(time * 3) * .45, 0], .92);
       else renderer.object('gem', [fighter.x, top, .5], clone ? [.22, .2, .18] : [.36, .33, .27], fighter.team === 'enemies' ? enemyColor : playerColors[fighter.slot], [0, time, Math.PI], .95);
-      if (dazed || fighter.stagger || capture?.type === 'incantusChomp') {
-        const count = dazed ? 3 : 2;
+      if (sleeping) drawSleep(renderer, fighter, top, size, time);
+      if (dazed || slowed || fighter.stagger || capture?.type === 'incantusChomp') {
+        const count = dazed || slowed ? 3 : 2;
         for (let i = 0; i < count; i++) {
           const angle = i * TAU / count - Math.PI / 2 + time * 7;
           renderer.object('star', [fighter.x + Math.sin(angle) * .65 * size, top - .24 * size, .54 + Math.cos(angle) * .43],
-            [.25, .25, .2], dazed ? '#ffda88' : '#deaeff', [0, angle, -angle], .94);
+            [.25, .25, .2], dazed || slowed ? '#ffda88' : '#deaeff', [0, angle, -angle], .94);
         }
       }
       if (fighter.charging) {
@@ -179,5 +193,19 @@ export class Graphics {
       renderer.object('box', [x + .09 * scale, y + .125 * scale, 1.4], [.044 * scale, .264 * scale, .063], color, zero, .92, alpha);
       renderer.object('box', [x + .153 * scale, y + .226 * scale, 1.4], [.155 * scale, .047 * scale, .062], color, [0, 0, -.27], .92, alpha);
     }
+  }
+}
+
+function drawSleep(renderer, fighter, top, size, time) {
+  for (let i = 0; i < 3; i++) {
+    const phase = (time * .85 + i / 3) % 1;
+    const scale = size * (.77 + phase * .34);
+    const x = fighter.x + fighter.facing * (.49 + phase * .65) * size;
+    const y = top + (.05 + phase * .87) * size;
+    const alpha = Math.min(1, phase * 7, (1 - phase) * 5);
+    for (const sign of [-1, 1]) {
+      renderer.object('box', [x, y + sign * .117 * scale, 1.15], [.275 * scale, .044 * scale, .052 * scale], '#b7d9ff', zero, .93, alpha);
+    }
+    renderer.object('box', [x, y, 1.15], [.32 * scale, .044 * scale, .052 * scale], '#b7d9ff', [0, 0, .84], .93, alpha);
   }
 }

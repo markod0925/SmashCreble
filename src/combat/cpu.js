@@ -1,14 +1,14 @@
 import { closestFloor, platformCenter, platformHeight } from './arena.js';
 import { canSummonClones, canUseSuper } from './clones.js';
 import { areRivals, bodyContactDistance, combatants, idleInput, scaleOf } from './state.js';
-import { boundTime, dazedTime, frozenTime } from './status.js';
+import { boundTime, dazedTime, frozenTime, resizeScale, sleepTime } from './status.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { clamp, direction } from '../math.js';
 
 export function cpuInput(player, match, dt) {
-  if (boundTime(player, match) || dazedTime(player, match) || frozenTime(player, match)) return idleInput;
+  if (boundTime(player, match) || dazedTime(player, match) || frozenTime(player, match) || sleepTime(player, match)) return idleInput;
   let target;
   for (const other of combatants(match)) {
     if (!areRivals(player, other) || !other.stocks || other.respawn) continue;
@@ -16,6 +16,13 @@ export function cpuInput(player, match, dt) {
   }
   player.aiDelay -= dt;
   player.aiJump -= dt;
+  if (match.arena.definition.deckCrush && player.grounded && match.arena.environment.untilImpact <= .22) {
+    return { x: 0, y: 0, jumpPressed: true };
+  }
+  if (player.grounded?.falling) {
+    player.aiJump = .44;
+    return { x: 0, y: 0, jumpPressed: true };
+  }
   const floor = closestFloor(player, match.arena);
   const edgeMargin = floor ? Math.min(.6, (floor.right - floor.left) / 4) : 0;
   const floorY = floor && platformHeight(floor, clamp(player.x, floor.left, floor.right));
@@ -59,8 +66,11 @@ export function cpuInput(player, match, dt) {
     const murena = player.fighter.id === 'murena-man';
     const harri = player.fighter.id === 'harri-potter';
     const cerbero = player.fighter.id === 'cerbero';
+    const draga = player.fighter.id === 'draga-mamma';
+    const maradona = player.fighter.id === 'maradona';
+    const hoHoHo = player.fighter.id === 'ho-ho-ho';
     const deployed = assaultRemaining(player, match) > 1e-9;
-    const summonLimit = signatureAttacks[player.fighter.moves.hold].summonsClones;
+    const summonLimit = signatureAttacks[player.fighter.moves.hold]?.summonsClones;
     const roomToSummon = summonLimit && canSummonClones(player, match, summonLimit);
     const superMove = signatureAttacks[player.fighter.moves.super];
     const superInRange = shark || vidarr || nuvol || budino || superMove.rubberDance || superMove.dazzlesRivals || superMove.wandLightning || player.fighter.cloneLight ||
@@ -74,6 +84,11 @@ export function cpuInput(player, match, dt) {
       (player.fighter.id === 'pinco-palino' && Math.abs(dx) < 7 && Math.abs(dy) < 4.7) ||
       (murena && Math.abs(dx) < superMove.range * .92 && dy > -2.3 && dy < 4) ||
       (superMove.shrinksRivals && Math.abs(dx) < 7.2 && Math.abs(dy) < 3.6) ||
+      ((superMove.captureAll || superMove.captureStyle === 'cape') && Math.abs(dx) < superMove.range * resizeScale(player, match) * .88 && Math.abs(dy) < superMove.vertical * .85) ||
+      superMove.mirrorsRival ||
+      (draga && Math.abs(dx) < superMove.range * resizeScale(player, match) && Math.abs(dy) < superMove.vertical) ||
+      (maradona && Math.hypot(dx, dy) < superMove.range * resizeScale(player, match) * .83) ||
+      (hoHoHo && dy > -1.1 && Math.hypot(dx, dy) < superMove.range * resizeScale(player, match) * .88) ||
       (player.fighter.id === 'che-addominali' && Math.abs(dx) < signatureAttacks.absAcidRain.range && Math.abs(dy) < 3.5);
     if ((active || (superInRange && !player.attack && !player.hitstun)) && canUseSuper(player, match)) return { x, y: 0, superPressed: true };
     if (olivar && !deployed && !close && Math.abs(dx) < 5.9 && Math.abs(dy) < 2.3 &&
@@ -96,6 +111,11 @@ export function cpuInput(player, match, dt) {
       player.aiDelay = .96;
       return { x, y: 0, specialPressed: true, special: Math.abs(dx) < signatureAttacks.murenaWhirl.range * .84 };
     }
+    if (draga && !close && Math.abs(dx) < signatureAttacks.dragaDoubleSpell.range * scaleOf(player) * resizeScale(player, match) && Math.abs(dy) < .9 &&
+        player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
+      player.aiDelay = .98;
+      return { x, y: 0, specialPressed: true, special: Math.abs(dx) > signatureAttacks.dragaSpell.range * .8 };
+    }
     if (harri && !close && Math.abs(dx) < signatureAttacks.harriBombs.range * .86 && Math.abs(dy) < 1.75 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
       const boltRange = signatureAttacks.harriBolt.range * .85;
@@ -107,7 +127,12 @@ export function cpuInput(player, match, dt) {
       player.aiDelay = 1.02;
       return { x, y: 0, specialPressed: true, special: Math.abs(dx) > signatureAttacks.cerberoSpray.range * .9 };
     }
-    const rangedCharge = ['vi', 'gioppino', 'huuuuu', 'shark-67', 'packman', 'vidarr', 'funny-kings', 'nuvol', 'luffy', 'maestra', 'nurofen-caps', 'pinco-palino', 'budino', 'super-libro-girl', 'zunchy'].includes(player.fighter.id);
+    if (hoHoHo && !close && Math.abs(dx) < signatureAttacks.hoHoHoSleighRide.range * resizeScale(player, match) && Math.abs(dy) < .9 &&
+        player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
+      player.aiDelay = .98;
+      return { x, y: 0, specialPressed: true, special: Math.abs(dx) > signatureAttacks.hoHoHoGift.range * .67 };
+    }
+    const rangedCharge = maradona || ['vi', 'gioppino', 'huuuuu', 'shark-67', 'packman', 'vidarr', 'funny-kings', 'nuvol', 'luffy', 'maestra', 'nurofen-caps', 'pinco-palino', 'budino', 'super-libro-girl', 'zunchy', 'killy-willy', 'mimora', 'markok'].includes(player.fighter.id);
     if (rangedCharge && !close && Math.abs(dx) < signatureAttacks[player.fighter.moves.hold].range * scaleOf(player) && Math.abs(dy) < 0.9 &&
         player.aiDelay <= 0 && !player.attack && !player.hitstun && !player.stagger) {
       player.aiDelay = 0.96;

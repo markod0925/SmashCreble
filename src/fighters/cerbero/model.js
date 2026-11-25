@@ -101,7 +101,7 @@ export function draw(renderer, fighter, position, time, options) {
   const spray = type === 'cerberoSpray';
   const firing = type === 'cerberoTeeth';
   const stomping = type === 'cerberoGiantSit';
-  const giant = stomping ? ease(age / .45) * ease((attack.duration - age) / .6) : 0;
+  const giant = stomping ? ease(age / attacks.cerberoGiantSit.growthHit.at) * ease((attack.duration - age) / .6) : 0;
   const sit = stomping ? giant * ease((age - .38) / (attack.from - .38)) : 0;
   const squash = stomping ? pulse((age - attack.from + .015) / .31) : 0;
   const recover = type === 'recovery' ? pulse(age / attack.duration) : 0;

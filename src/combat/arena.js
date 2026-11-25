@@ -7,7 +7,7 @@ export const platformCenter = ({ left, right }) => (left + right) / 2;
 export const platformHeight = (platform, x) => platform.y + (x - platformCenter(platform)) * platform.slope;
 
 export function closestFloor({ x, y, grounded }, arena) {
-  if (grounded?.main) return grounded;
+  if (grounded?.main && !grounded.falling) return grounded;
   let nearest;
   let distance = Infinity;
   for (const platform of arena.platforms) {
@@ -35,13 +35,17 @@ function savePlatformPose(platform) {
   Object.assign(platform, { previousLeft: left, previousRight: right, previousY: y, previousSlope: slope });
 }
 
+function createPlatform(layout, arena, height = 0) {
+  const platform = { id: layout.id, main: layout.main, ...platformPose(layout, arena) };
+  platform.y += height;
+  savePlatformPose(platform);
+  return platform;
+}
+
 export function createArena(definition) {
   const arena = { definition, elapsed: 0, environment: definition.environment?.(0) };
-  arena.platforms = definition.platforms.map((layout) => {
-    const platform = { id: layout.id, main: layout.main, ...platformPose(layout, arena) };
-    savePlatformPose(platform);
-    return platform;
-  });
+  arena.platforms = definition.platforms.map((layout) => createPlatform(layout, arena));
+  if (definition.platformCycle) arena.platformGeneration = 0;
   arena.walls = definition.platforms.filter(({ wallBase }) => wallBase !== undefined);
   return arena;
 }
@@ -56,9 +60,42 @@ export function stopAtWall(player, fromX, arena) {
   }
 }
 
+function setPlatformHeight(platform, y) {
+  savePlatformPose(platform);
+  platform.y = y;
+}
+
+function advancePlatformCycle(arena, { platformId, interval, warning, transition, enterHeight }) {
+  // Snap phase boundaries to the fixed simulation clock despite floating-point accumulation.
+  const time = arena.elapsed + 1e-9;
+  const generation = Math.max(0, Math.floor((time - warning) / interval));
+  const warningAt = (generation + 1) * interval;
+  arena.platformWarning = Math.max(0, time - warningAt);
+  if (generation === arena.platformGeneration && !arena.fallingPlatform) return;
+
+  const index = arena.definition.platforms.findIndex(({ id }) => id === platformId);
+  const layout = arena.definition.platforms[index];
+  if (generation !== arena.platformGeneration) {
+    arena.fallingPlatform = arena.platforms[index];
+    arena.fallingPlatform.falling = true;
+    arena.platforms[index] = createPlatform(layout, arena, enterHeight);
+    arena.platformGeneration = generation;
+  }
+
+  const progress = Math.min(1, (time - (generation * interval + warning)) / transition);
+  const exitDistance = layout.y - arena.definition.bounds.bottom + 1;
+  setPlatformHeight(arena.platforms[index], layout.y + enterHeight * (1 - progress) ** 2);
+  setPlatformHeight(arena.fallingPlatform, layout.y - exitDistance * progress ** 2);
+  if (progress === 1) arena.fallingPlatform = null;
+}
+
 export function advanceArena(arena, dt) {
   arena.elapsed += dt;
   arena.environment = arena.definition.environment?.(arena.elapsed);
+  if (arena.definition.platformCycle) {
+    advancePlatformCycle(arena, arena.definition.platformCycle);
+    return;
+  }
   arena.definition.platforms.forEach((layout, i) => {
     const platform = arena.platforms[i];
     if (!layout.motion && !layout.rotation) return;

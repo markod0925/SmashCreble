@@ -1,6 +1,8 @@
 import { drawCharacter } from './characters.js';
 import { drawAdventureTerrain } from './adventure.js';
 import { drawGdmrPlatform, drawGdmrScenery } from './gdmr.js';
+import { drawFrittataPlatform, drawFrittataScenery } from './frittata.js';
+import { drawIuiPlatform, drawIuiScenery } from './iui.js';
 import { TAU, zero } from './math.js';
 
 const rockColors = ['#2d4154', '#394254', '#4b4657', '#34374c', '#575066'];
@@ -124,6 +126,8 @@ const arenaViews = {
   foundry: { drawScenery: (renderer, arena, time) => drawFoundryScenery(renderer, time), drawPlatform: drawFoundryPlatform },
   storm: { drawScenery: drawStormScenery, drawPlatform: drawStormPlatform },
   gdmr: { drawScenery: (renderer, arena, time) => drawGdmrScenery(renderer, time), drawPlatform: drawGdmrPlatform },
+  iui: { drawScenery: drawIuiScenery, drawPlatform: drawIuiPlatform },
+  frittata: { drawScenery: drawFrittataScenery, drawPlatform: drawFrittataPlatform },
 };
 
 export function drawBattleArena(renderer, arena, time, adventureView) {
@@ -133,5 +137,6 @@ export function drawBattleArena(renderer, arena, time, adventureView) {
   }
   const view = arenaViews[arena.definition.theme] ?? arenaViews.foundry;
   view.drawScenery(renderer, arena, time);
-  for (const platform of arena.platforms) view.drawPlatform(renderer, platform);
+  if (arena.fallingPlatform) view.drawPlatform(renderer, arena.fallingPlatform, arena);
+  for (const platform of arena.platforms) view.drawPlatform(renderer, platform, arena);
 }

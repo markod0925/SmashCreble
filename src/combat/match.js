@@ -5,12 +5,14 @@ import { separateBodies } from './bodies.js';
 import { vanishClone } from './clones.js';
 import { cpuInput } from './cpu.js';
 import { advanceDance } from './dance.js';
+import { crushDeckRiders } from './deck-crush.js';
 import { knockOut } from './knockout.js';
 import { move } from './movement.js';
 import { advanceProjectiles } from './projectiles.js';
 import { combatants, idleInput, spawn } from './state.js';
 import { advancePoison, capturingAttack } from './status.js';
 import { advanceAcidRain } from '../fighters/che-addominali/rain.js';
+import { mirrorTime, restoreOriginalForm } from '../fighters/mimora/mirror.js';
 import { advanceCompanions } from '../fighters/olivar/companions.js';
 
 export { createMatch } from './state.js';
@@ -50,9 +52,15 @@ export function tickMatch(match, controls, dt = rules.step) {
   }
   match.time -= dt;
   if (!match.adventure) match.time = Math.max(0, match.time);
+  for (const player of match.fighters) {
+    if (!player.mirror || mirrorTime(player, match) > 0) continue;
+    restoreOriginalForm(player);
+    match.events.push({ type: 'blink', x: player.x, y: player.y + 1.1, color: player.fighter.color });
+  }
   for (const player of match.fighters) advancePoison(player, match);
   advanceAcidRain(match);
   const { arena } = match;
+  const previousCycle = arena.environment?.cycle;
   const actors = combatants(match);
   if (!match.dance || arena.definition.platforms.some(({ rotation }) => rotation)) {
     advanceArena(arena, dt);
@@ -80,6 +88,7 @@ export function tickMatch(match, controls, dt = rules.step) {
     movement.set(player, { x, landingFrom });
   }
   separateBodies(actors, match, movement);
+  if (arena.definition.deckCrush && arena.environment.cycle !== previousCycle) crushDeckRiders(match, actors);
   for (const player of movement.keys()) {
     if (match.adventure) constrainToEncounter(player, match);
     if (player.y < bottom || (!match.adventure && (Math.abs(player.x) > side || player.y > top))) {

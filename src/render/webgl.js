@@ -98,12 +98,22 @@ export class WebGLRenderer {
       gl.vertexAttribPointer(this.normal, 3, gl.FLOAT, false, 24, 12);
       this.boundShape = shape;
     }
-    gl.uniformMatrix4fv(this.uniforms.uModel, false, matrix);
+    gl.uniformMatrix4fv(this.uniforms.uModel, false, this.modelTransform ? multiply(this.modelTransform, matrix) : matrix);
     gl.uniform4f(this.uniforms.uColor, ...rgb(hex), alpha);
     gl.uniform1f(this.uniforms.uGlow, glow);
     if (alpha < 1) gl.depthMask(false);
     gl.drawArrays(gl.TRIANGLES, 0, count);
     if (alpha < 1) gl.depthMask(true);
+  }
+
+  withModelTransform(matrix, draw) {
+    const previous = this.modelTransform;
+    this.modelTransform = matrix;
+    try {
+      draw();
+    } finally {
+      this.modelTransform = previous;
+    }
   }
 
   object(shape, position, size, hex, rotation = zero, glow = 0, alpha = 1) {

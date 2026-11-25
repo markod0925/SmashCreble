@@ -88,3 +88,25 @@ test('Wand Lightning spends the Superstar and reaches each rival across the aren
   assert.ok([rear, cloneOwner, airborne].every(player => player.damage === lightning.damage));
   assert.equal(harri.damage, 0);
 });
+
+test('A light hit damages HarriPotter without interrupting Wand Lightning', () => {
+  const match = prepare(1.55);
+  const [harri, rival] = match.fighters;
+  const lightning = signatureAttacks.harriLightning;
+  const rivalLight = new Map([[rival.slot, { x: 0, y: 0, lightPressed: true }]]);
+  match.superstar.holder = harri;
+  tick(match, 1, { superPressed: true });
+  tickMatch(match, rivalLight);
+
+  const windup = Math.ceil(lightning.from / rules.step);
+  tick(match, windup - 3);
+  assert.ok(harri.damage > 0);
+  assert.equal(harri.hitstun, 0);
+  assert.equal(harri.attack?.type, 'harriLightning');
+  assert.equal(harri.attack.fired, false);
+
+  tick(match, 2);
+  assert.equal(rival.damage, lightning.damage);
+  tick(match, Math.ceil((lightning.duration - lightning.from) / rules.step));
+  assert.equal(harri.attack, null);
+});

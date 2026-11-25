@@ -1,3 +1,5 @@
+import { spiaccicaFrittata } from './spiaccica-frittata.js';
+
 const cloudbreakFoundry = {
   id: 'cloudbreak-foundry',
   name: 'Cloudbreak Foundry',
@@ -58,5 +60,22 @@ const gdmr = {
   camera: { height: 5, distance: 32, targetY: 1.4, fov: .68 },
 };
 
-export const arenas = [cloudbreakFoundry, stormcoilArray, gdmr];
+const iui = {
+  id: 'iui',
+  name: 'IUI!',
+  theme: 'iui',
+  platforms: [
+    { id: 'deck', left: -12, right: 12, y: 0, main: true },
+    { id: 'west', left: -11, right: -3.8, y: 4.3 },
+    { id: 'east', left: 2.1, right: 8.6, y: 3.55 },
+  ],
+  platformCycle: { platformId: 'deck', interval: 15, warning: 3, transition: 1.1, enterHeight: 14 },
+  bounds: { side: 19, top: 24, bottom: -11 },
+  spawns: [-6, 6, -1.8, 1.8].map((x) => ({ platform: 'deck', x })),
+  respawnHeight: 7.8,
+  superstar: { x: 0, y: 1.35 },
+  camera: { height: 8, distance: 31.5, targetY: 3, fov: .67 },
+};
+
+export const arenas = [cloudbreakFoundry, stormcoilArray, gdmr, iui, spiaccicaFrittata];
 export const defaultArena = cloudbreakFoundry;

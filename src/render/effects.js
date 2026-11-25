@@ -45,7 +45,7 @@ export class BattleEffects {
         this.effects.push({ ...event, type: 'blastFlash', lifetime: .32, age: 0 });
         this.shake = Math.max(this.shake, Math.min(.26, event.strength * .066));
       }
-      const count = { ko: 33, hit: 13, block: 8, break: 16, jump: 5, special: 15, superstar: 20, blink: 14, chomp: 17, laser: 8, cloneIn: 8, clonePop: 11, explosion: 22, zombieBite: 12, bandageBind: 10, coffinBurst: 18, poison: 9, lanceThrow: 5, swordSlash: 12, bladeVolley: 15, frost: 14, frostBite: 19, serpentBind: 10, shove: 10 }[event.type] ?? 0;
+      const count = { ko: 33, hit: 13, block: 8, break: 16, jump: 5, special: 15, superstar: 20, blink: 14, chomp: 17, laser: 8, cloneIn: 8, clonePop: 11, explosion: 22, zombieBite: 12, bandageBind: 10, coffinBurst: 18, poison: 9, lanceThrow: 5, swordSlash: 12, bladeVolley: 15, frost: 14, frostBite: 19, serpentBind: 10, shove: 10, potion: 16, fireKick: 10, hugSqueeze: 10, capeSnare: 14, giftPop: 12 }[event.type] ?? 0;
       const lifetime = event.type === 'ko' ? .75 : .35;
       const force = event.type === 'ko' ? 8 : event.type === 'hit' ? 5 : event.type === 'explosion' ? 3 + event.strength : 2.7;
       for (let i = 0; i < count; i++) {
@@ -95,7 +95,7 @@ export class BattleEffects {
       const scale = Math.max(.01, life * (effect.type === 'ko' ? .42 : .22));
       if (effect.type === 'blink') {
         renderer.object('box', [effect.x + effect.vx * effect.age * .6, effect.y + effect.vy * effect.age * 1.7, effect.z], [scale * .42, scale * 3.8, scale * .42], effect.color, zero, .95, life);
-      } else if (effect.type === 'cloneIn' || effect.type === 'clonePop') {
+      } else if (effect.type === 'cloneIn' || effect.type === 'clonePop' || effect.type === 'giftPop') {
         renderer.object('star', [effect.x + effect.vx * effect.age, effect.y + effect.vy * effect.age, effect.z], [scale * 1.5, scale * 1.5, scale], effect.color, [0, effect.angle, effect.age * 7], .94, life);
       } else renderer.object('gem', [effect.x + effect.vx * effect.age, effect.y + effect.vy * effect.age, effect.z], [scale * 1.6, scale, scale], effect.color, [0, effect.angle, effect.age * 8], .9, life);
     }

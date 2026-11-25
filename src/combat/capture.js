@@ -1,36 +1,43 @@
 import { vanishClone } from './clones.js';
 import { strike } from './hits.js';
 import { areRivals, combatants } from './state.js';
-import { captureProgress, captureTarget, capturingAttack, isInvulnerable } from './status.js';
+import { captureProgress, captureTarget, capturingAttack, isInvulnerable, isSuperAttacking, releaseCapture } from './status.js';
 import { clamp } from '../math.js';
+
+function catchRival(attack, target, match) {
+  if (target.owner) vanishClone(target, match);
+  else captureTarget(attack, target);
+}
 
 export function beginCapture(player, attack, match) {
   let target;
   let nearest = Infinity;
   for (const other of combatants(match)) {
-    if (!areRivals(player, other) || !other.stocks || other.respawn || isInvulnerable(other) || other.dodge || other.guarding || capturingAttack(other, match)) continue;
+    if (!areRivals(player, other) || !other.stocks || other.respawn || isInvulnerable(other) || isSuperAttacking(other) ||
+        other.dodge || other.guarding || capturingAttack(other, match)) continue;
     const dx = other.x - player.x;
     const dy = other.y - player.y;
     if (dx * attack.facing < -0.23 || Math.abs(dx) > attack.range || Math.abs(dy) > attack.vertical) continue;
+    if (attack.captureAll) {
+      catchRival(attack, other, match);
+      continue;
+    }
     const distance = Math.hypot(dx, dy);
     if (distance >= nearest) continue;
     target = other;
     nearest = distance;
   }
-  if (!target) return;
-  if (target.owner) {
-    vanishClone(target, match);
-    return;
-  }
-  captureTarget(attack, target);
+  if (target) catchRival(attack, target, match);
 }
 
 export function advanceCapture(player, attack, match) {
-  const { capture } = attack;
-  if (!capture) return;
-  const { target, x, y } = capture;
+  const captures = attack.captures ?? (attack.capture ? [attack.capture] : []);
+  for (const [index, capture] of captures.entries()) advanceCaughtRival(player, attack, match, capture, index);
+}
+
+function advanceCaughtRival(player, attack, match, { target, x, y }, index) {
   if (!target.stocks || target.respawn) {
-    attack.capture = null;
+    releaseCapture(attack, target);
     return;
   }
   if (!attack.sarcophagus) {
@@ -46,9 +53,14 @@ export function advanceCapture(player, attack, match) {
     }
   }
   if (attack.age < attack.biteAt) return;
-  attack.capture = null;
-  if (strike(player, target, attack, match)) {
-    const type = attack.sarcophagus ? 'coffinBurst' : 'chomp';
-    match.events.push({ type, x: target.x, y: target.y + (attack.sarcophagus ? 1.35 : 0), color: attack.sarcophagus ? '#c1f6ff' : '#ebc4ff' });
+  releaseCapture(attack, target);
+  const hit = attack.spitSpread ? { ...attack, lift: attack.lift + Math.min(index, 4) * attack.spitSpread } : attack;
+  if (strike(player, target, hit, match)) {
+    const hug = attack.captureStyle === 'hug';
+    const cape = attack.captureStyle === 'cape';
+    const type = attack.sarcophagus ? 'coffinBurst' : hug ? 'hugSqueeze' : cape ? 'capeSnare' : 'chomp';
+    const height = attack.sarcophagus ? 1.35 : hug || cape ? 1.05 : 0;
+    const color = attack.sarcophagus ? '#c1f6ff' : hug ? '#ffd27e' : cape ? '#a4ed94' : '#ebc4ff';
+    match.events.push({ type, x: target.x, y: target.y + height, color });
   }
 }

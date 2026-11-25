@@ -1,7 +1,7 @@
 import { crossedPlatform, leavePlatform, platformHeight, rules, stopAtWall } from './arena.js';
 import { handleAttackInput } from './attacks.js';
 import { bodyCenter, idleInput } from './state.js';
-import { boundTime, capturingAttack, dazedTime, frozenTime, isZombie } from './status.js';
+import { boundTime, capturingAttack, dazedTime, frozenTime, isZombie, sleepTime, slowTime } from './status.js';
 import { bommBurstAge, bommBurstRecovery } from '../fighters/bomm/profile.js';
 import { approach, clamp, direction } from '../math.js';
 
@@ -20,7 +20,7 @@ export function move(player, input, dt, match) {
   if (player.attack?.trace67 || capturingAttack(player, match)) return;
   if (player.attack?.rubberDance && player.attack.fired) input = idleInput;
   const bound = boundTime(player, match) > 0;
-  const free = !player.hitstun && !player.dodge && !bound && !dazedTime(player, match);
+  const free = !player.hitstun && !player.dodge && !bound && !dazedTime(player, match) && !sleepTime(player, match);
   const mobility = player.attack ? 0.54 : player.charging ? 0.36 : 1;
   player.guarding = Boolean(free && input.guard && player.grounded && player.shield > 0.09 && !player.attack && !player.charging);
   player.shield = clamp(player.shield + dt * (player.guarding ? -0.22 : 0.29), 0, 1);
@@ -50,7 +50,7 @@ export function move(player, input, dt, match) {
       if (player.attack?.trace67) return;
     }
     if (!player.dodge && player.attack?.type !== 'dash') {
-      const condition = player.stagger ? 0.58 : isZombie(player, match) ? 0.74 : 1;
+      const condition = player.stagger ? 0.58 : isZombie(player, match) || slowTime(player, match) ? 0.74 : 1;
       const burstAge = bommBurstAge(player, match) + 1e-9;
       const { smallAt, duration, speed: slowSpeed } = bommBurstRecovery;
       const slow = burstAge >= smallAt && burstAge < smallAt + duration;
@@ -80,12 +80,14 @@ export function move(player, input, dt, match) {
 export function landOnPlatform(player, from, arena) {
   if (player.grounded || player.drop) return;
   const surface = crossedPlatform(arena, from, player);
-  if (surface) {
-    player.landing = 0.15;
-    player.y = platformHeight(surface, player.x);
-    player.vy = 0;
-    player.grounded = surface;
-    player.jumps = player.fighter.airJumps ?? 2;
-    player.recovered = false;
-  }
+  if (surface) landOnSurface(player, surface);
+}
+
+export function landOnSurface(player, surface) {
+  player.landing = 0.15;
+  player.y = platformHeight(surface, player.x);
+  player.vy = 0;
+  player.grounded = surface;
+  player.jumps = player.fighter.airJumps ?? 2;
+  player.recovered = false;
 }

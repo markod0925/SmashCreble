@@ -108,6 +108,10 @@ h1 span:nth-child(2) { color: var(--mint); }
 .battle[data-arena-theme='gdmr'] { min-height: 0; height: 100dvh; }
 .battle[data-arena-theme='gdmr'] .battle-sky { background: radial-gradient(ellipse at 42% 40%, #f4d2a8a6, transparent 69%), linear-gradient(#434357, #a76f68 58%, #405b64); }
 .battle[data-arena-theme='gdmr'] .sun { left: 28%; top: 16%; width: min(18%, 245px); opacity: .58; }
+.battle[data-arena-theme='iui'] .battle-sky { background: radial-gradient(ellipse at 70% 43%, #e8c084aa, transparent 68%), linear-gradient(#36575f, #74918a 60%, #364d4e); }
+.battle[data-arena-theme='iui'] .sun { left: 69%; top: 16%; width: min(16%, 210px); opacity: .6; }
+.battle[data-arena-theme='frittata'] .battle-sky { background: radial-gradient(ellipse at 67% 50%, #ffd3a2cc, transparent 68%), linear-gradient(#3e5479, #8d9cb6 48%, #be8b86); }
+.battle[data-arena-theme='frittata'] .sun { left: 65%; top: 18%; width: min(15%, 205px); opacity: .76; }
 .battle[data-arena-theme='adventure'] .battle-sky { background: radial-gradient(ellipse at 78% 60%, #a6b49b88, transparent 60%), linear-gradient(#273c4d, #4c7176 57%, #3a5a64); }
 .battle[data-arena-theme='adventure'] .sun { left: 64%; top: 18%; width: min(14%, 190px); opacity: .63; }
 .battle::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(#17212c8f, transparent 19%, transparent 72%, #101924d9); z-index: 1; }

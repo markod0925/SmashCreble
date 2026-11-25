@@ -1,13 +1,14 @@
 import { defaultArena } from '../arenas/index.js';
 import { createArena, platformCenter, platformHeight, rules } from './arena.js';
+import { resizeScale } from './status.js';
 import { bommBurstScale } from '../fighters/bomm/profile.js';
 import { shrinkScale } from '../fighters/zunchy/profile.js';
 
 export const cloneScale = 0.5;
 export const scaleOf = (player) => player.owner ? cloneScale : player.sizeMultiplier ?? 1;
-export const bodyScale = (player, match) => scaleOf(player) * shrinkScale(player, match);
+export const bodyScale = (player, match) => scaleOf(player) * shrinkScale(player, match) * resizeScale(player, match);
 export const bodyCenter = (player, match) => 1.05 * bodyScale(player, match);
-export const bodySize = (player, match) => player.fighter.size * (player.sizeMultiplier ?? 1) * bommBurstScale(player, match) * shrinkScale(player, match);
+export const bodySize = (player, match) => player.fighter.size * (player.sizeMultiplier ?? 1) * bommBurstScale(player, match) * shrinkScale(player, match) * resizeScale(player, match);
 export const bodyHalfWidth = (player, size) => (player.fighter.bodyHalfWidth ?? .55) * size;
 
 export function bodyContactDistance(a, b, match) {
@@ -24,6 +25,7 @@ export function spawn(slot, initial, fighter, arena, entry = arena.definition.sp
     attack: null, shield: 1, guarding: false, dodge: 0, drop: 0, charge: 0, charging: false,
     aiDelay: 0, aiJump: 0, landing: 0, stagger: 0, zombieUntil: null, boundUntil: null, boundStyle: null,
     frozenUntil: null, dazedUntil: null, shockedUntil: null, poison: null, bommBurstAt: null, companionAssault: null, reserveAmmo: 0,
+    sleepUntil: null, slowUntil: null, resizeUntil: null, resizeScale: 1, crushedUntil: null,
   };
 }
 

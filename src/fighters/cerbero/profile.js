@@ -24,7 +24,9 @@ export const attacks = {
     duration: 1.35, from: .215, range: 8.1, projectile: 'cerberoTooth',
     volleyEvery: toothInterval, volleyUntil: .215 + (toothCount - .5) * toothInterval,
   },
-  cerberoGiantSit: { duration: 1.78, from: .62, dazzlesRivals: sitDazeSeconds, cue: 'cerberoSit' },
+  cerberoGiantSit: {
+    duration: 1.78, from: .62, growthHit: { at: .45, damage: 15 }, dazzlesRivals: sitDazeSeconds, cue: 'cerberoSit',
+  },
 };
 
 function spray(owner, { projectile: kind, facing, range, scale, victims }, match) {

@@ -3,6 +3,7 @@ import { createAdventure } from './combat/adventure.js';
 import { rules } from './combat/arena.js';
 import { createMatch, tickMatch } from './combat/match.js';
 import { fighters } from './fighters/index.js';
+import { fighterIdentity } from './fighters/mimora/mirror.js';
 import { combatEdges, fighterInput, Inputs } from './input.js';
 import { Graphics } from './render/scene.js';
 import { handleDismiss, hideDialog, navigateDialog, renderControls, renderPause, renderResults, showDialog } from './ui/dialog.js';
@@ -172,7 +173,7 @@ function showResults() {
   const { completed, winner, timedOut } = match.result;
   playSound('finish');
   if (match.adventure) openDialog('results', 'RIFT TRAIL', completed ? 'Adventure complete' : 'Adventure ended');
-  else openDialog('results', timedOut ? 'TIME EXPIRED' : 'MATCH COMPLETE', winner ? `${winner.fighter.name} wins` : 'Draw');
+  else openDialog('results', timedOut ? 'TIME EXPIRED' : 'MATCH COMPLETE', winner ? `${fighterIdentity(winner).name} wins` : 'Draw');
   renderResults(match, () => {
     if (lobby.canBegin()) startMatch();
     else {

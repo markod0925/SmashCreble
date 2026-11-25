@@ -12,7 +12,10 @@ import { biteEffect } from '../gangar/model.js';
 import { zombieSnap } from '../gioppino/model.js';
 import { drawChokingPuff } from '../huuuuu/model.js';
 import { drawBorrowedThrust } from '../ii/model.js';
+import { drawClawSwipe } from '../killy-willy/model.js';
 import { drawBorrowedRuler } from '../maestra/model.js';
+import { drawStaffArc } from '../markok/model.js';
+import { drawGuardSlash } from '../mimora/model.js';
 import { drawFlameJet } from '../murena-man/model.js';
 import { drawCapsBomb } from '../nurofen-caps/model.js';
 import { stenchEffect } from '../incantus/model.js';
@@ -125,6 +128,9 @@ export function draw(renderer, fighter, position, time, options) {
   if (attack.borrowed && attack.type === 'budinoFiveK') drawBorrowedFiveK(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'libroSword') drawBorrowedSteelSword(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'zunchyStomp') drawStompCracks(renderer, position, size, attack);
+  if (attack.borrowed && attack.type === 'killyClaws') drawClawSwipe(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'mimoraGuardSlash') drawGuardSlash(renderer, position, facing, attack, size);
+  if (attack.borrowed && attack.type === 'markokStaff') drawStaffArc(renderer, position, facing, attack, size);
   if (attack.borrowed && attack.type === 'pincoTongue') drawFlyingTongue(renderer, transformPoint(body, [0, -.19, .93]), position, attack, size);
   if (attack.borrowed && attack.type === 'dragonBallNavelLaser') {
     drawNavelBeam(renderer, transformPoint(body, [0, -.41, .84]), x, attack, size);

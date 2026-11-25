@@ -1,6 +1,8 @@
 import { clamp } from '../math.js';
+import { restoreOriginalForm } from '../fighters/mimora/mirror.js';
 
 export function knockOut(player, match) {
+  restoreOriginalForm(player);
   player.stocks -= 1;
   player.respawn = .87;
   player.attack = null;

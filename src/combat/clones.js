@@ -20,7 +20,7 @@ function livingClones(player, match, arenaClone = false) {
 }
 
 export function canUseSuper(player, match) {
-  if (match.superstar?.holder !== player) return false;
+  if (match.superstar?.holder !== player || player.mirror) return false;
   const limit = signatureAttacks[player.fighter.moves.super].summonsClones;
   return !limit || canSummonClones(player, match, limit);
 }

@@ -12,8 +12,10 @@ export function fireProjectiles(player, attack, match) {
 function projectileTouches(projectile, target, match) {
   const scale = bodyScale(target, match);
   const projectileScale = projectile.scale ?? 1;
+  const halfWidth = projectile.hitbox?.halfWidth ?? .2 * projectileScale;
+  const halfHeight = projectile.hitbox?.halfHeight ?? .3 * projectileScale;
   return areRivals(projectile.owner, target) && !projectile.victims?.has(target) &&
-    Math.abs(target.x - projectile.x) <= .2 * projectileScale + .45 * scale && Math.abs(target.y + bodyCenter(target, match) - projectile.y) <= .3 * projectileScale + .52 * scale;
+    Math.abs(target.x - projectile.x) <= halfWidth + .45 * scale && Math.abs(target.y + bodyCenter(target, match) - projectile.y) <= halfHeight + .52 * scale;
 }
 
 function detonateBomb(projectile, targets, match) {
@@ -60,7 +62,7 @@ export function advanceProjectiles(match, dt) {
       if (strike(projectile.owner, target, projectile.hit, match)) {
         projectile.victims?.add(target);
         projectile.onImpact?.(projectile, match, target);
-        if (!tethered) {
+        if (!tethered && !projectile.piercing) {
           projectile.remaining = 0;
           break;
         }

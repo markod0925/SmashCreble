@@ -2,16 +2,17 @@ import { leavePlatform } from './arena.js';
 import { advanceCapture, beginCapture } from './capture.js';
 import { canSummonClones, canUseSuper, summonClones } from './clones.js';
 import { startDance } from './dance.js';
-import { strike } from './hits.js';
+import { damageRivals, strike } from './hits.js';
 import { fireProjectiles } from './projectiles.js';
 import { areRivals, bodyCenter, bodyContactDistance, bodyScale, combatants, scaleOf } from './state.js';
-import { dazeRivals, interruptAttack } from './status.js';
+import { dazeRivals, interruptAttack, resizeScale } from './status.js';
 import { advanceTrace, startTrace } from './trace.js';
 import { signatureAttacks } from '../fighters/index.js';
 import { borrowedPower, powerStealTravelTime, stolenPowerTime } from '../fighters/bomm/profile.js';
 import { startAcidRain } from '../fighters/che-addominali/rain.js';
 import { castWandLightning } from '../fighters/harri-potter/lightning.js';
 import { advanceRubberDance } from '../fighters/luffy/dance.js';
+import { mirrorRival } from '../fighters/mimora/mirror.js';
 import { assaultRemaining, deployCompanions } from '../fighters/olivar/companions.js';
 import { advanceThunder } from '../fighters/nuvol/thunder.js';
 import { rainbowHeight } from '../fighters/vi/profile.js';
@@ -23,7 +24,7 @@ const superstarDelay = 12;
 const secondaryMove = (fighter) => fighter.moves?.tap ?? fighter.secondary;
 
 function scaleAttack(attack, scale) {
-  if (scale < 1) {
+  if (scale !== 1) {
     for (const field of ['range', 'vertical', 'offset', 'arcStart', 'lunge']) {
       if (attack[field] !== undefined) attack[field] *= scale;
     }
@@ -66,9 +67,13 @@ function startAttack(player, type, input, match, borrowed = null) {
       y: up ? 1 : down && !player.grounded ? -0.6 : 0.54, lift: up ? 5 : 3, all: up,
     };
   }
-  const scale = scaleOf(player);
-  scaleAttack(attack, scale);
-  player.attack = { ...attack, scale, facing, age: 0, victims: new Set(), fired: false, borrowed };
+  const baseScale = scaleOf(player);
+  const resize = resizeScale(player, match);
+  const scale = baseScale * resize;
+  const reachScale = Math.min(1, baseScale) * resize;
+  scaleAttack(attack, reachScale);
+  player.attack = { ...attack, scale, reachScale, facing, age: 0, victims: new Set(), fired: false, borrowed };
+  attack.onStart?.(player, player.attack);
   if (attack.trace67) startTrace(player, match);
   if (attack.volleyEvery) player.attack.nextVolley = attack.from;
   if (attack.takeoff && (player.grounded || attack.aerialTakeoff)) {
@@ -131,8 +136,12 @@ export function advanceAttack(player, dt, match) {
     advanceThunder(player, attack, match);
     return;
   }
+  if (attack.growthHit && !attack.growthHitDone && attack.age >= attack.growthHit.at) {
+    attack.growthHitDone = true;
+    damageRivals(player, attack.growthHit.damage, match);
+  }
   if (attack.followUp && attack.age >= attack.followUp.from) {
-    Object.assign(attack, scaleAttack({ followUp: null, ...attack.followUp, fired: false }, attack.scale));
+    Object.assign(attack, scaleAttack({ followUp: null, ...attack.followUp, fired: false }, attack.reachScale ?? Math.min(1, attack.scale)));
     attack.victims.clear();
     match.events.push({ type: 'swing', x: player.x, y: player.y + 1, color: player.fighter.color });
   }
@@ -150,6 +159,7 @@ export function advanceAttack(player, dt, match) {
     if (attack.dazzlesRivals) dazeRivals(player, match, attack.dazzlesRivals);
     if (attack.shrinksRivals) player.shrinkRivalsUntil = match.time - attack.shrinksRivals;
     if (attack.wandLightning) castWandLightning(player, attack, match);
+    if (attack.mirrorsRival) mirrorRival(player, match);
     if (attack.deploysCompanions) deployCompanions(player, match);
     if (attack.stealsPower) stealPower(player, attack, match);
     if (attack.type === 'bommBurst') player.bommBurstAt = match.time;
@@ -178,9 +188,11 @@ export function advanceAttack(player, dt, match) {
     fireProjectiles(player, attack, match);
     attack.nextVolley += attack.volleyEvery;
   }
-  if (attack.until === undefined || attack.age > attack.until) return;
+  if (attack.until === undefined || attack.age > attack.until || (attack.singleTarget && attack.victims.size)) return;
   const range = attack.waveSpeed ? Math.min(attack.range, (attack.age - attack.from) * attack.waveSpeed * attack.scale) : attack.range;
-  for (const target of combatants(match)) {
+  const targets = combatants(match);
+  if (attack.singleTarget) targets.sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x));
+  for (const target of targets) {
     if (!areRivals(player, target) || attack.victims.has(target)) continue;
     const dx = target.x - player.x;
     // Short strikes can still connect at body contact, including against wider fighters.
@@ -192,7 +204,10 @@ export function advanceAttack(player, dt, match) {
       if (Math.abs(height - rainbowHeight(attack, progress)) > attack.vertical + .52 * bodyScale(target, match)) continue;
     } else if (Math.abs(height - bodyCenter(player, match) - (attack.offset ?? 0)) > attack.vertical) continue;
     const x = attack.all && attack.x > 0.5 && attack.type !== 'dash' ? Math.abs(attack.x) * direction(dx, attack.facing) : attack.x;
-    if (strike(player, target, { ...attack, x }, match)) attack.victims.add(target);
+    if (strike(player, target, { ...attack, x }, match)) {
+      attack.victims.add(target);
+      if (attack.singleTarget) break;
+    }
   }
 }
 
@@ -214,7 +229,7 @@ function signatureAttack(player, input, match, dt) {
     if (player.charging) {
       if (input.special) player.charge = clamp(player.charge + dt / chargeTime, 0, 1);
       if (player.charge >= 1) {
-        const limit = signatureAttacks[moves.hold].summonsClones;
+        const limit = signatureAttacks[moves.hold]?.summonsClones;
         if (!limit || canSummonClones(player, match, limit)) startAttack(player, moves.hold, input, match);
         else interruptAttack(player);
       } else if (!input.special) startSecondary(player, input, match);
