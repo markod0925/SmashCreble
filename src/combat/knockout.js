@@ -3,7 +3,7 @@ import { restoreOriginalForm } from '../fighters/mimora/mirror.js';
 
 export function knockOut(player, match) {
   restoreOriginalForm(player);
-  player.stocks -= 1;
+  if (!(match.adventure?.campaign && player.team === 'party')) player.stocks -= 1;
   player.respawn = .87;
   player.attack = null;
   if (match.superstar?.holder === player) match.superstar.holder = null;

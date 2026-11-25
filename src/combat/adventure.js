@@ -34,10 +34,19 @@ export function hitSpikes(player, match) {
 }
 
 export function encounterGate(match) {
+  const { campaign } = match.adventure;
+  if (campaign) return campaign.opened ? undefined : campaign.objective?.gate ?? campaign.level.gate;
   return match.arena.definition.encounters[match.adventure.encounter]?.gate;
 }
 
 export function constrainToEncounter(player, match) {
+  if (match.adventure.campaign) {
+    const left = match.arena.platforms[0].left + .45;
+    if (player.x < left) {
+      player.x = left;
+      player.vx = Math.max(0, player.vx);
+    }
+  }
   const gate = encounterGate(match);
   if (gate === undefined || player.x < gate - .35) return;
   player.x = gate - .35;

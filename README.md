@@ -51,7 +51,9 @@ Pair Bluetooth controllers in Windows first, focus the game tab, then press the 
 
 ## Adventure
 
-Select **Play adventure** in the browser to start Rift Trail with one to four local players. From the roster, a controller can press Down to select Adventure and A to open its lobby. Choose fighters and head right across ledges, walls, spikes, and pits. Human players fight on the same team.
+Select **Play adventure** in the browser to open the Rift Trail campaign map for one to four local players. From the roster, a controller can press Down to select Adventure and A to open the map. The campaign starts at Cloudbreak Foundry and continues through Stormcoil Array, Glass Gardens, GDMR Bridge, and the Regulator Core. Follow the objective at the top of the screen, then cross the exit to unlock the next level. Any member of the party can advance shared objectives, and players have unlimited returns to safe ground. Completed levels and rescue rewards are saved in the browser. Use the map to replay levels and equip the wind stabilizer once found.
+
+Select **Roster trail** on the campaign map to play the original Rift Trail. Choose fighters and head right across ledges, walls, spikes, and pits. Human players fight on the same team.
 
 Every fighter in the roster appears once as a CPU opponent. Each encounter spawns up to one opponent per human player and opens the next section once the enemies are defeated. Enemies are knocked out when they fall into a pit or reach 100% damage. Human players lose a stock when they fall and respawn at the last cleared section while they have stocks left. The final opponent appears alone at 1.5 times their normal size. Defeat the entire roster to complete the adventure.
 

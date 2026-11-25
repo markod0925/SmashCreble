@@ -26,6 +26,7 @@ export function separateBodies(actors, match, movement) {
     for (let j = i + 1; j < bodies.length; j++) {
       const b = bodies[j];
       if (a.player.owner && b.player.owner) continue;
+      if (match.adventure?.campaign && a.player.team === b.player.team) continue;
       if (a.y >= b.top || b.y >= a.top) continue;
       const gap = a.halfWidth + b.halfWidth;
       contacts.push({ a, b, gap });

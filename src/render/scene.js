@@ -13,6 +13,7 @@ import { shrinkTime } from '../fighters/zunchy/profile.js';
 import { playerColors } from '../player-colors.js';
 import { adventureCamera } from './adventure.js';
 import { drawBattleArena, drawHero } from './arena.js';
+import { drawCampaign } from './campaign.js';
 import { drawCharacter, drawProjectiles, portraitCamera } from './characters.js';
 import { BattleEffects } from './effects.js';
 import { battleCamera, TAU, transform, zero } from './math.js';
@@ -64,11 +65,18 @@ export class Graphics {
       const ease = 1 - Math.exp(-8 * dt);
       camera.x += (follow.x - camera.x) * ease;
       camera.distance += (follow.distance - camera.distance) * ease;
-      course = { x: camera.x, radius: camera.distance * Math.max(.8, aspect * .42) + 12, gate: encounterGate(match) };
+      camera.height += (follow.height - camera.height) * ease;
+      camera.targetY += (follow.targetY - camera.targetY) * ease;
+      const campaign = match.adventure.campaign;
+      course = {
+        x: camera.x, radius: camera.distance * Math.max(.8, aspect * .42) + 12, gate: encounterGate(match),
+        gateY: campaign?.objective?.gateY ?? campaign?.level.gateY,
+      };
     }
     const { eye, target, fov } = battleCamera({ camera }, aspect, shakeX);
     renderer.begin(width, height, eye, target, fov);
     drawBattleArena(renderer, match.arena, time, course);
+    if (match.adventure?.campaign) drawCampaign(renderer, match, time, course);
     const star = match.superstar;
     if (star && !star.holder && !star.cooldown) {
       const y = star.y + Math.sin(time * 4) * .16;

@@ -2,6 +2,7 @@ import { advanceArena, carryRider, rules } from './arena.js';
 import { advanceAdventure, constrainToEncounter, hitSpikes } from './adventure.js';
 import { advanceAttack } from './attacks.js';
 import { separateBodies } from './bodies.js';
+import { advanceCampaign } from './campaign.js';
 import { vanishClone } from './clones.js';
 import { cpuInput } from './cpu.js';
 import { advanceDance } from './dance.js';
@@ -17,7 +18,11 @@ import { advanceCompanions } from '../fighters/olivar/companions.js';
 
 export { createMatch } from './state.js';
 
-function checkResult(match) {
+function checkResult(match, dt) {
+  if (match.adventure?.campaign) {
+    advanceCampaign(match, dt);
+    return;
+  }
   if (match.adventure) {
     advanceAdventure(match);
     return;
@@ -70,7 +75,7 @@ export function tickMatch(match, controls, dt = rules.step) {
   }
   if (match.dance) {
     advanceDance(match, dt);
-    if (match.adventure || !match.dance) checkResult(match);
+    if (match.adventure || !match.dance) checkResult(match, dt);
     return;
   }
 
@@ -120,5 +125,5 @@ export function tickMatch(match, controls, dt = rules.step) {
   for (const player of match.fighters) advanceCompanions(player, match, dt);
   advanceProjectiles(match, dt);
   match.clones = match.clones.filter(({ stocks }) => stocks > 0);
-  checkResult(match);
+  checkResult(match, dt);
 }

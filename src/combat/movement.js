@@ -69,7 +69,7 @@ export function move(player, input, dt, match) {
   stopAtWall(player, from.x, arena);
   leavePlatform(player);
   if (player.grounded) return;
-  const drift = arena.definition.airDrift?.({ x: player.x, y: player.y + bodyCenter(player, match) }, arena.environment) ?? 0;
+  const drift = arena.definition.airDrift?.({ x: player.x, y: player.y + bodyCenter(player, match), footY: player.y }, arena.environment, arena, player) ?? 0;
   player.x += drift * dt;
   player.vy = Math.max(-25, player.vy - dt * rules.gravity);
   player.y += player.vy * dt;

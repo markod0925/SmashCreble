@@ -1,12 +1,14 @@
 import { audioReady, playSound, toggleSound, updateDanceMusic } from './audio.js';
+import { campaignActs, campaignLevels } from './arenas/campaign.js';
 import { createAdventure } from './combat/adventure.js';
 import { rules } from './combat/arena.js';
+import { createCampaignMatch } from './combat/campaign.js';
 import { createMatch, tickMatch } from './combat/match.js';
 import { fighters } from './fighters/index.js';
 import { fighterIdentity } from './fighters/mimora/mirror.js';
 import { combatEdges, fighterInput, Inputs } from './input.js';
 import { Graphics } from './render/scene.js';
-import { handleDismiss, hideDialog, navigateDialog, renderControls, renderPause, renderResults, showDialog } from './ui/dialog.js';
+import { handleDismiss, hideDialog, navigateDialog, renderCampaignMap, renderCampaignResults, renderControls, renderPause, renderResults, showDialog } from './ui/dialog.js';
 import { $ } from './ui/dom.js';
 import { BattleHud } from './ui/hud.js';
 import { Lobby } from './ui/lobby.js';
@@ -38,6 +40,21 @@ let elapsed = 0;
 let controllerLabel = '';
 let accumulator = 0;
 let matchFullscreen = false;
+const campaignProgressKey = 'smash-creble-rift-trail-completed';
+const campaignRewardsKey = 'smash-creble-rift-trail-rewards';
+const campaignModuleKey = 'smash-creble-rift-trail-module';
+let completedLevels = 0;
+let campaignModule = null;
+const campaignRewards = new Set();
+try {
+  const stored = Number(localStorage.getItem(campaignProgressKey));
+  if (Number.isInteger(stored) && stored >= 0) completedLevels = Math.min(stored, campaignLevels.length);
+  const rewards = JSON.parse(localStorage.getItem(campaignRewardsKey));
+  if (Array.isArray(rewards)) for (const reward of rewards) campaignRewards.add(reward);
+  if (campaignRewards.has('wind-stabilizer') && localStorage.getItem(campaignModuleKey) !== 'off') campaignModule = 'wind-stabilizer';
+} catch {
+  // The campaign can continue in memory when storage is unavailable.
+}
 const queued = new Map();
 const battle = $('battle');
 const rotateHint = $('touch-rotate');
@@ -108,6 +125,10 @@ function closeDialog() {
 function dismissDialog() {
   if (modal === 'pause' && lobby.missingControllers().length) return;
   if (modal === 'results') return;
+  if (modal === 'lobby' && lobby.campaignLevel) {
+    openCampaignMap();
+    return;
+  }
   closeDialog();
 }
 
@@ -116,11 +137,39 @@ function openControls() {
   renderControls(Boolean(touch));
 }
 
-function openLobby(adventure = homeAdventure) {
-  lobby.adventure = homeAdventure = adventure;
+function openCampaignMap() {
+  lobby.campaignLevel = null;
+  homeAdventure = true;
   audioReady();
   playSound('select');
-  if (adventure) openDialog('lobby', 'RIFT TRAIL', 'Set up the adventure');
+  openDialog('campaign', 'RIFT TRAIL · EASY', 'Campaign map');
+  renderCampaignMap(campaignActs, completedLevels, (level) => openLobby(true, level), () => openLobby(true), {
+    rescued: campaignRewards.has('stormcoil-rescue'), unlocked: campaignRewards.has('wind-stabilizer'),
+    equipped: campaignModule === 'wind-stabilizer', toggle: toggleCampaignModule,
+  });
+}
+
+function toggleCampaignModule() {
+  campaignModule = campaignModule ? null : 'wind-stabilizer';
+  try { localStorage.setItem(campaignModuleKey, campaignModule ?? 'off'); } catch { /* Keep the current choice in memory. */ }
+  return Boolean(campaignModule);
+}
+
+function saveCampaignRewards(rewards) {
+  const gained = [...rewards].filter((reward) => !campaignRewards.has(reward));
+  if (!gained.length) return;
+  for (const reward of gained) campaignRewards.add(reward);
+  if (gained.includes('wind-stabilizer')) campaignModule = 'wind-stabilizer';
+  try { localStorage.setItem(campaignRewardsKey, JSON.stringify([...campaignRewards])); } catch { /* Keep the rewards in memory. */ }
+}
+
+function openLobby(adventure = homeAdventure, campaignLevel = null) {
+  lobby.adventure = homeAdventure = adventure;
+  lobby.campaignLevel = campaignLevel;
+  audioReady();
+  playSound('select');
+  if (campaignLevel) openDialog('lobby', 'RIFT TRAIL', campaignLevel.name);
+  else if (adventure) openDialog('lobby', 'RIFT TRAIL', 'Set up the adventure');
   else openDialog('lobby', 'LOCAL VERSUS', 'Set up the fight');
   lobby.render(true);
 }
@@ -130,7 +179,8 @@ function startMatch() {
   audioReady();
   closeDialog();
   const lineup = lobby.lineup();
-  match = lobby.adventure ? createAdventure(lineup) : createMatch(lineup, lobby.arena);
+  if (lobby.campaignLevel) match = createCampaignMatch(lineup, lobby.campaignLevel, { module: campaignModule, rewards: campaignRewards });
+  else match = lobby.adventure ? createAdventure(lineup) : createMatch(lineup, lobby.arena);
   graphics.resetBattle();
   view = 'battle';
   $('home').hidden = true;
@@ -140,8 +190,9 @@ function startMatch() {
   battle.classList.toggle('touch-battle', useTouch);
   syncTouchControls();
   battle.dataset.arenaTheme = match.arena.definition.theme;
+  battle.dataset.campaignAct = lobby.campaignLevel?.act ?? '';
   $('arena-name').textContent = match.arena.definition.name.toUpperCase();
-  $('mode-label').textContent = match.adventure ? 'ADVENTURE' : 'STOCK MATCH';
+  $('mode-label').textContent = lobby.campaignLevel ? 'CAMPAIGN · EASY' : match.adventure ? 'ADVENTURE' : 'STOCK MATCH';
   battle.prepend(canvas);
   hud.reset(match);
   hud.update(match);
@@ -166,12 +217,36 @@ function goHome() {
 function openPause() {
   const disconnected = lobby.missingControllers().length;
   openDialog('pause', match.arena.definition.name.toUpperCase(), disconnected ? 'Controller disconnected' : match.adventure ? 'Adventure paused' : 'Match paused');
-  renderPause(disconnected, dismissDialog, goHome);
+  if (match.adventure?.campaign) renderPause(disconnected, dismissDialog, goToCampaignMap, 'Campaign map');
+  else renderPause(disconnected, dismissDialog, goHome);
+}
+
+function goToCampaignMap() {
+  goHome();
+  openCampaignMap();
 }
 
 function showResults() {
   const { completed, winner, timedOut } = match.result;
   playSound('finish');
+  if (match.adventure?.campaign) {
+    const levelIndex = campaignLevels.indexOf(match.adventure.campaign.level);
+    completedLevels = Math.max(completedLevels, levelIndex + 1);
+    try {
+      const stored = Number(localStorage.getItem(campaignProgressKey));
+      if (Number.isInteger(stored)) completedLevels = Math.max(completedLevels, Math.min(stored, campaignLevels.length));
+      localStorage.setItem(campaignProgressKey, String(completedLevels));
+    } catch { /* Progress is still available in this session. */ }
+    const nextLevel = campaignLevels[levelIndex + 1];
+    const act = campaignActs.find(({ id }) => id === match.adventure.campaign.level.act);
+    const actCleared = nextLevel?.act !== act.id;
+    openDialog('results', 'RIFT TRAIL', nextLevel ? actCleared ? `Act ${act.numeral} cleared!` : 'Level cleared!' : 'Campaign complete!');
+    renderCampaignResults(nextLevel, actCleared ? act.clearMessage : null, (level) => {
+      goHome();
+      openLobby(true, level);
+    }, goToCampaignMap);
+    return;
+  }
   if (match.adventure) openDialog('results', 'RIFT TRAIL', completed ? 'Adventure complete' : 'Adventure ended');
   else openDialog('results', timedOut ? 'TIME EXPIRED' : 'MATCH COMPLETE', winner ? `${fighterIdentity(winner).name} wins` : 'Draw');
   renderResults(match, () => {
@@ -211,6 +286,7 @@ function handleMenu(snapshot, controllersChanged) {
       if (key.startPressed || connected.some((pad) => pad.startPressed)) { dismissDialog(); return; }
     }
     if (key.startPressed || key.backPressed || panels.some((pad) => pad.backPressed)) { dismissDialog(); return; }
+    if (modal === 'campaign' || modal === 'results') navigateDialog(key);
     for (const pad of panels) {
       navigateDialog(pad);
       if (!modal) break;
@@ -225,7 +301,8 @@ function handleMenu(snapshot, controllersChanged) {
     const joining = panels.filter((pad) => pad.startPressed || pad.acceptPressed);
     if (joining.length || key.acceptPressed) {
       for (const pad of joining) lobby.joinPad(pad);
-      openLobby();
+      if (homeAdventure) openCampaignMap();
+      else openLobby(false);
     }
     return;
   }
@@ -262,6 +339,7 @@ function runMatch(dt, snapshot) {
   }
   hud.update(match);
   hud.updateCountdown(match);
+  if (match.adventure?.campaign) saveCampaignRewards(match.adventure.campaign.rewards);
   if (match.result) showResults();
 }
 
@@ -298,7 +376,7 @@ function frame(now) {
 }
 
 $('play-button').addEventListener('click', () => openLobby(false));
-$('adventure-button').addEventListener('click', () => openLobby(true));
+$('adventure-button').addEventListener('click', openCampaignMap);
 $('play-button').addEventListener('focus', () => { homeAdventure = false; });
 $('adventure-button').addEventListener('focus', () => { homeAdventure = true; });
 $('controls-button').addEventListener('click', openControls);

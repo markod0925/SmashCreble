@@ -7,11 +7,11 @@ export const platformCenter = ({ left, right }) => (left + right) / 2;
 export const platformHeight = (platform, x) => platform.y + (x - platformCenter(platform)) * platform.slope;
 
 export function closestFloor({ x, y, grounded }, arena) {
-  if (grounded?.main && !grounded.falling) return grounded;
+  if (grounded?.main && !grounded.falling && !grounded.inactive) return grounded;
   let nearest;
   let distance = Infinity;
   for (const platform of arena.platforms) {
-    if (!platform.main) continue;
+    if (!platform.main || platform.inactive) continue;
     const edge = clamp(x, platform.left, platform.right);
     const candidate = Math.hypot(x - edge, y - platformHeight(platform, edge));
     if (candidate >= distance) continue;
@@ -22,8 +22,8 @@ export function closestFloor({ x, y, grounded }, arena) {
 }
 
 function platformPose(layout, arena) {
-  const [dx, dy] = layout.motion?.(arena.environment, arena.elapsed) ?? [0, 0];
-  const angle = layout.rotation?.(arena.elapsed) ?? 0;
+  const [dx, dy] = layout.motion?.(arena.environment, arena.elapsed, arena) ?? [0, 0];
+  const angle = layout.rotation?.(arena.elapsed, arena) ?? 0;
   const width = layout.right - layout.left;
   const x = platformCenter(layout) + dx;
   const halfSpan = width * Math.cos(angle) / 2;
@@ -35,15 +35,19 @@ function savePlatformPose(platform) {
   Object.assign(platform, { previousLeft: left, previousRight: right, previousY: y, previousSlope: slope });
 }
 
-function createPlatform(layout, arena, height = 0) {
-  const platform = { id: layout.id, main: layout.main, ...platformPose(layout, arena) };
+export function createPlatform(layout, arena, height = 0) {
+  const platform = {
+    id: layout.id, main: layout.main, visual: layout.visual,
+    moving: Boolean(layout.motion || layout.rotation), ...platformPose(layout, arena),
+  };
   platform.y += height;
   savePlatformPose(platform);
   return platform;
 }
 
 export function createArena(definition) {
-  const arena = { definition, elapsed: 0, environment: definition.environment?.(0) };
+  const arena = { definition, elapsed: 0 };
+  arena.environment = definition.environment?.(0, arena);
   arena.platforms = definition.platforms.map((layout) => createPlatform(layout, arena));
   if (definition.platformCycle) arena.platformGeneration = 0;
   arena.walls = definition.platforms.filter(({ wallBase }) => wallBase !== undefined);
@@ -91,14 +95,14 @@ function advancePlatformCycle(arena, { platformId, interval, warning, transition
 
 export function advanceArena(arena, dt) {
   arena.elapsed += dt;
-  arena.environment = arena.definition.environment?.(arena.elapsed);
+  arena.environment = arena.definition.environment?.(arena.elapsed, arena);
   if (arena.definition.platformCycle) {
     advancePlatformCycle(arena, arena.definition.platformCycle);
     return;
   }
   arena.definition.platforms.forEach((layout, i) => {
     const platform = arena.platforms[i];
-    if (!layout.motion && !layout.rotation) return;
+    if (platform.inactive || (!layout.motion && !layout.rotation)) return;
     savePlatformPose(platform);
     Object.assign(platform, platformPose(layout, arena));
   });
@@ -106,7 +110,7 @@ export function advanceArena(arena, dt) {
 
 export function carryRider(player) {
   const platform = player.grounded;
-  if (!platform) return;
+  if (!platform || platform.inactive) return;
   const { left, right, previousLeft, previousRight } = platform;
   const offset = (player.x - previousLeft) / (previousRight - previousLeft);
   player.x += (left - previousLeft) * (1 - offset) + (right - previousRight) * offset;
@@ -117,6 +121,7 @@ export function crossedPlatform(arena, from, to) {
   let surface = null;
   let earliest = Infinity;
   for (const platform of arena.platforms) {
+    if (platform.inactive) continue;
     const { left, right, y, slope, previousLeft, previousRight, previousY, previousSlope } = platform;
     const before = from.y - previousY - (from.x - (previousLeft + previousRight) / 2) * previousSlope;
     const after = to.y - platformHeight(platform, to.x);

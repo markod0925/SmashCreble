@@ -35,14 +35,71 @@ export function renderControls(hasTouch) {
   $('close-dialog').focus();
 }
 
-export function renderPause(disconnected, resumeMatch, goHome) {
+export function renderPause(disconnected, resumeMatch, goHome, leaveLabel = 'Return to roster') {
   const actions = node('div', 'dialog-actions');
   const resume = button('Resume', resumeMatch, 'primary-button');
   resume.disabled = Boolean(disconnected);
-  actions.append(resume, button('Return to roster', goHome));
+  actions.append(resume, button(leaveLabel, goHome));
   if (disconnected) content.append(node('p', 'dialog-note', 'Reconnect the controller and press A to reclaim its seat.'));
   content.append(actions);
   (resume.disabled ? actions.lastElementChild : resume).focus();
+}
+
+export function renderCampaignMap(acts, completed, chooseLevel, openRosterTrail, rewardOptions) {
+  const navigation = node('div', 'campaign-acts');
+  navigation.setAttribute('aria-label', 'Campaign acts');
+  const heading = node('h3', 'campaign-act-name');
+  const list = node('ol', 'campaign-levels');
+  const actButtons = acts.map((act, index) => {
+    const control = button(`Act ${act.numeral}`, () => showAct(index));
+    control.setAttribute('aria-label', `Act ${act.numeral} ${act.name}`);
+    navigation.append(control);
+    return control;
+  });
+  function showAct(active) {
+    const act = acts[active];
+    heading.textContent = act.name;
+    actButtons.forEach((control, index) => control.setAttribute('aria-pressed', String(index === active)));
+    list.replaceChildren();
+    const offset = acts.slice(0, active).reduce((sum, item) => sum + item.levels.length, 0);
+    for (const [position, level] of act.levels.entries()) {
+      const index = offset + position;
+      const row = node('li');
+      const label = `${index + 1}. ${level.name}`;
+      const levelButton = button(index === completed ? `${label} · Play` : label, () => chooseLevel(level), index === completed ? 'primary-button' : 'text-button');
+      levelButton.disabled = index > completed;
+      row.append(levelButton, node('span', '', index < completed ? 'Cleared' : index > completed ? 'Locked' : ''));
+      list.append(row);
+    }
+  }
+  const actions = node('div', 'dialog-actions');
+  if (rewardOptions?.unlocked) {
+    let equipped = rewardOptions.equipped;
+    const toggle = button('', () => { equipped = rewardOptions.toggle(); updateToggle(); });
+    function updateToggle() {
+      toggle.textContent = `Wind stabilizer ${equipped ? 'on' : 'off'}`;
+      toggle.setAttribute('aria-pressed', String(equipped));
+    }
+    updateToggle();
+    actions.append(toggle);
+  }
+  actions.append(button('Roster trail', openRosterTrail));
+  content.append(navigation, heading, list);
+  if (rewardOptions?.rescued) content.append(node('p', 'campaign-reward', 'Nuvol rescued'));
+  content.append(actions);
+  let remaining = completed;
+  const firstUncleared = acts.findIndex(({ levels }) => (remaining -= levels.length) < 0);
+  showAct(firstUncleared < 0 ? acts.length - 1 : firstUncleared);
+  (list.querySelector('.primary-button') ?? list.lastElementChild?.querySelector('button'))?.focus();
+}
+
+export function renderCampaignResults(nextLevel, clearMessage, continueCampaign, showMap) {
+  if (clearMessage) content.append(node('p', 'dialog-note', clearMessage));
+  const actions = node('div', 'dialog-actions');
+  if (nextLevel) actions.append(button('Next level', () => continueCampaign(nextLevel), 'primary-button'));
+  actions.append(button('Campaign map', showMap, nextLevel ? 'text-button' : 'primary-button'));
+  content.append(actions);
+  actions.firstElementChild.focus();
 }
 
 export function renderResults(match, restart, goHome) {
