@@ -3,6 +3,7 @@ import { playerColors } from '../player-colors.js';
 import { defeatedEnemies, enemyColor } from '../combat/adventure.js';
 import { rules } from '../combat/arena.js';
 import { campaignPrompt } from '../combat/campaign.js';
+import { isDancing } from '../combat/dance.js';
 import { boundTime, dazedTime, frozenTime, isZombie, sleepTime, slowTime } from '../combat/status.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
 import { mirrorTime } from '../fighters/mimora/mirror.js';
@@ -19,10 +20,11 @@ export class BattleHud {
   reset(match) {
     $('hud').replaceChildren();
     $('battle-tags').replaceChildren();
-    $('timer').setAttribute('aria-label', match.adventure?.campaign ? 'Current objective' : match.adventure ? 'Adventure progress' : 'Time remaining');
-    $('timer').setAttribute('aria-live', match.adventure?.campaign ? 'polite' : 'off');
+    const { adventure, mobSmash } = match;
+    $('timer').setAttribute('aria-label', adventure?.campaign ? 'Current objective' : adventure ? 'Adventure progress' : mobSmash ? 'KO progress' : 'Time remaining');
+    $('timer').setAttribute('aria-live', adventure?.campaign || mobSmash ? 'polite' : 'off');
     this.enemies = new Map();
-    this.players = (match.adventure?.party ?? match.fighters).map(({ slot, fighter, cpu }) => {
+    this.players = (adventure?.party ?? mobSmash?.party ?? match.fighters).map(({ slot, fighter, cpu }) => {
       const card = node('div', 'hud-card');
       card.style.setProperty('--player', playerColors[slot]);
       const amount = node('span', 'damage');
@@ -54,13 +56,15 @@ export class BattleHud {
 
   update(match) {
     const seconds = Math.ceil(match.time);
-    const { adventure } = match;
+    const { adventure, mobSmash } = match;
     const timer = adventure?.campaign ? campaignPrompt(adventure.campaign, match)
       : adventure ? `Defeated ${defeatedEnemies(adventure)} / ${adventure.totalEnemies}`
+      : mobSmash ? `KOs ${defeatedEnemies(mobSmash)} / ${mobSmash.totalEnemies}`
       : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
     if ($('timer').textContent !== timer) $('timer').textContent = timer;
-    const party = adventure?.party ?? match.fighters;
-    if (adventure) this.updateEnemies(adventure.enemies);
+    const challenge = adventure ?? mobSmash;
+    const party = challenge?.party ?? match.fighters;
+    if (challenge) this.updateEnemies(challenge.enemies);
     party.forEach((fighter, i) => {
       const { card, amount, stockLine, stocks, star, power, tag } = this.players[i];
       const damage = `${Math.floor(fighter.damage)}%`;
@@ -74,7 +78,7 @@ export class BattleHud {
       const dazed = Math.ceil(dazedTime(fighter, match));
       const sleeping = Math.ceil(sleepTime(fighter, match));
       const slowed = Math.ceil(slowTime(fighter, match));
-      const dancing = match.dance ? Math.ceil(danceSeconds - match.dance.elapsed - 1e-9) : 0;
+      const dancing = isDancing(fighter, match) ? Math.ceil(danceSeconds - match.dance.elapsed - 1e-9) : 0;
       const sprouts = Math.ceil(assaultRemaining(fighter, match) - 1e-9);
       const status = sleeping ? ` · ASLEEP ${sleeping}s` : dazed ? ` · DAZED ${dazed}s` : frozen ? ` · FROZEN ${frozen}s` : dancing ? ` · DANCE ${dancing}s` : bound ? ` · BOUND ${bound}s` : fighter.poison ? ' · POISONED'
         : zombie ? ' · ZOMBIE' : slowed ? ` · SLOWED ${slowed}s` : sprouts > 0 ? ` · SPROUTS ${sprouts}s` : '';

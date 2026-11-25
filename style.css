@@ -125,7 +125,7 @@ h1 span:nth-child(2) { color: var(--mint); }
 .round-label .mini-diamond { color: var(--mint); margin-right: 5px; }
 .round-label small { display: block; color: #b1bcbf; margin: 4px 0 0 15px; font-size: 9px; }
 .timer { font: 35px var(--display); font-variant-numeric: tabular-nums; letter-spacing: .07em; color: #fff4df; padding: 5px 18px; background: #161d28dd; border: 1px solid #7c757a; }
-.battle[data-arena-theme="adventure"] .timer { font: 700 clamp(10px, 2vw, 16px) var(--mono); padding: 9px 12px; text-transform: uppercase; white-space: nowrap; }
+.battle[data-arena-theme="adventure"] .timer, .mob-smash .timer { font: 700 clamp(10px, 2vw, 16px) var(--mono); padding: 9px 12px; text-transform: uppercase; white-space: nowrap; }
 .campaign-levels { display: grid; gap: 8px; list-style: none; margin: 16px 0; padding: 0; }
 .campaign-levels li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
 .campaign-levels button { width: 100%; justify-content: flex-start; text-align: left; }
@@ -180,6 +180,10 @@ dialog h2 { margin: 8px 0 15px; font: 41px/.97 var(--display); text-transform: u
 .lobby-arena { width: 100%; min-height: 43px; justify-content: flex-start; gap: 12px; margin-top: 12px; }
 .lobby-arena > span { color: var(--mint); }
 .lobby-arena > span:last-child { margin-left: auto; font-size: 18px; }
+.mob-targets { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+.mob-targets > span { margin-right: 4px; color: var(--mint); font: 700 .8rem var(--mono); }
+.mob-targets button { min-height: 43px; justify-content: center; }
+.mob-targets button[aria-pressed='true'] { border-color: var(--mint); color: var(--mint); background: #263b3d; }
 .lobby-slot { display: grid; grid-template-columns: 35px minmax(90px, .8fr) minmax(175px, 1.25fr) 27px; gap: 8px; align-items: center; padding: 7px; border: 1px solid #3d5158; background: #212e37; }
 .slot-label { font: 750 11px var(--mono); color: var(--player); text-align: center; }
 .slot-source { color: #d1dcda; font-size: 13px; white-space: nowrap; }

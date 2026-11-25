@@ -21,7 +21,8 @@ function livingClones(player, match, arenaClone = false) {
 
 export function canUseSuper(player, match) {
   if (match.superstar?.holder !== player || player.mirror) return false;
-  const limit = signatureAttacks[player.fighter.moves.super].summonsClones;
+  const { summonsClones: limit, startsDance } = signatureAttacks[player.fighter.moves.super];
+  if (startsDance && match.dance) return false;
   return !limit || canSummonClones(player, match, limit);
 }
 

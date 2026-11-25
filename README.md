@@ -57,6 +57,12 @@ Select **Roster challenge** on the main menu to play the original survival trail
 
 Every fighter in the roster appears once as a CPU opponent. Each encounter spawns up to one opponent per human player and opens the next section once the enemies are defeated. Enemies are knocked out when they fall into a pit or reach 100% damage. Human players lose a stock when they fall and respawn at the last cleared section while they have stocks left. The final opponent appears alone at 1.5 times their normal size. Defeat the entire roster to complete the adventure.
 
+## Mob Smash
+
+Select **Mob Smash** in the browser, choose an arena and a target of 10, 20, 50, or 100 KOs, and start the challenge. On a joined controller, press LB or RB to cycle through the targets.
+
+One to three local players share a team with their clones. Teammates and their clones cannot attack one another. The arena starts with one CPU opponent per player and replaces eliminated opponents until all opponents needed for the target have entered. Players keep the standard stocks, and the challenge ends when the team reaches the target or runs out of stocks. The HUD displays the shared KO count throughout the match.
+
 ## Controls
 
 | Action | Keyboard | Controller (Xbox labels) |

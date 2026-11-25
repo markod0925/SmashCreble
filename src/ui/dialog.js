@@ -102,16 +102,17 @@ export function renderCampaignResults(nextLevel, clearMessage, continueCampaign,
 }
 
 export function renderResults(match, restart, goHome) {
-  const { adventure, fighters } = match;
-  if (adventure) content.append(node('p', 'dialog-note', `${defeatedEnemies(adventure)} of ${adventure.totalEnemies} opponents defeated.`));
+  const { adventure, mobSmash, fighters } = match;
+  const challenge = adventure ?? mobSmash;
+  if (challenge) content.append(node('p', 'dialog-note', `${defeatedEnemies(challenge)} of ${challenge.totalEnemies} opponents defeated.`));
   const list = node('ul', 'result-list');
-  for (const entry of [...(adventure?.party ?? fighters)].sort((a, b) => b.stocks - a.stocks || a.damage - b.damage)) {
+  for (const entry of [...(challenge?.party ?? fighters)].sort((a, b) => b.stocks - a.stocks || a.damage - b.damage)) {
     const row = node('li');
     row.append(node('strong', '', `P${entry.slot + 1} ${fighterIdentity(entry).name}${entry.cpu ? ' · CPU' : ''}`), node('span', '', `${entry.stocks} ${entry.stocks === 1 ? 'stock' : 'stocks'} left`));
     list.append(row);
   }
   const actions = node('div', 'dialog-actions');
-  const rematch = button(adventure ? 'Restart challenge' : 'Rematch', restart, 'primary-button');
+  const rematch = button(challenge ? 'Restart challenge' : 'Rematch', restart, 'primary-button');
   actions.append(rematch, button('Return to roster', goHome));
   content.append(list, actions);
   rematch.focus();

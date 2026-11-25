@@ -222,7 +222,9 @@ function signatureAttack(player, input, match, dt) {
     const cloneLimit = match.arena.definition.rivalClonesOnSuper;
     if (cloneLimit) {
       for (const rival of match.fighters) {
-        if (rival !== player && rival.stocks && !rival.respawn) summonClones(rival, match, cloneLimit, true);
+        if (rival !== player && (!match.mobSmash || areRivals(player, rival)) && rival.stocks && !rival.respawn) {
+          summonClones(rival, match, cloneLimit, true);
+        }
       }
     }
   } else if (!player.attack) {

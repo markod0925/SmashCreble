@@ -5,9 +5,10 @@ import { separateBodies } from './bodies.js';
 import { advanceCampaign } from './campaign.js';
 import { vanishClone } from './clones.js';
 import { cpuInput } from './cpu.js';
-import { advanceDance } from './dance.js';
+import { advanceDance, isDancing } from './dance.js';
 import { crushDeckRiders } from './deck-crush.js';
 import { knockOut } from './knockout.js';
+import { advanceMobSmash } from './mob-smash.js';
 import { move } from './movement.js';
 import { advanceProjectiles } from './projectiles.js';
 import { combatants, idleInput, spawn } from './state.js';
@@ -19,6 +20,10 @@ import { advanceCompanions } from '../fighters/olivar/companions.js';
 export { createMatch } from './state.js';
 
 function checkResult(match, dt) {
+  if (match.mobSmash) {
+    advanceMobSmash(match);
+    return;
+  }
   if (match.adventure?.campaign) {
     advanceCampaign(match, dt);
     return;
@@ -56,7 +61,7 @@ export function tickMatch(match, controls, dt = rules.step) {
     return;
   }
   match.time -= dt;
-  if (!match.adventure) match.time = Math.max(0, match.time);
+  if (!match.adventure && !match.mobSmash) match.time = Math.max(0, match.time);
   for (const player of match.fighters) {
     if (!player.mirror || mirrorTime(player, match) > 0) continue;
     restoreOriginalForm(player);
@@ -67,7 +72,7 @@ export function tickMatch(match, controls, dt = rules.step) {
   const { arena } = match;
   const previousCycle = arena.environment?.cycle;
   const actors = combatants(match);
-  if (!match.dance || arena.definition.platforms.some(({ rotation }) => rotation)) {
+  if (!match.dance || match.mobSmash || arena.definition.platforms.some(({ rotation }) => rotation)) {
     advanceArena(arena, dt);
     for (const player of actors) {
       if (player.stocks && !player.respawn && player.owner?.stocks !== 0) carryRider(player);
@@ -75,8 +80,10 @@ export function tickMatch(match, controls, dt = rules.step) {
   }
   if (match.dance) {
     advanceDance(match, dt);
-    if (match.adventure || !match.dance) checkResult(match, dt);
-    return;
+    if (!match.mobSmash) {
+      if (match.adventure || !match.dance) checkResult(match, dt);
+      return;
+    }
   }
 
   const { side, top, bottom } = arena.definition.bounds;
@@ -88,6 +95,7 @@ export function tickMatch(match, controls, dt = rules.step) {
       if (player.respawn <= 0) Object.assign(player, spawn(player.slot, false, player.fighter, arena, match.adventure?.checkpoint?.[player.slot]));
       continue;
     }
+    if (isDancing(player, match)) continue;
     const x = player.x;
     const landingFrom = move(player, player.cpu ? cpuInput(player, match, dt) : controls.get(player.slot) ?? idleInput, dt, match);
     movement.set(player, { x, landingFrom });
@@ -112,8 +120,8 @@ export function tickMatch(match, controls, dt = rules.step) {
     if (clone.stocks && !clone.owner.stocks) vanishClone(clone, match);
   }
   for (const player of actors) {
-    if (player.stocks && !player.respawn) advanceAttack(player, dt, match);
-    if (match.dance) break;
+    if (player.stocks && !player.respawn && !isDancing(player, match)) advanceAttack(player, dt, match);
+    if (match.dance && !match.mobSmash) break;
   }
   separateBodies(combatants(match), match);
   if (match.adventure) {
@@ -121,8 +129,10 @@ export function tickMatch(match, controls, dt = rules.step) {
       if (player.stocks && !player.respawn) constrainToEncounter(player, match);
     }
   }
-  if (match.dance) return;
-  for (const player of match.fighters) advanceCompanions(player, match, dt);
+  if (match.dance && !match.mobSmash) return;
+  for (const player of match.fighters) {
+    if (!isDancing(player, match)) advanceCompanions(player, match, dt);
+  }
   advanceProjectiles(match, dt);
   match.clones = match.clones.filter(({ stocks }) => stocks > 0);
   checkResult(match, dt);

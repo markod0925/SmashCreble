@@ -3,6 +3,14 @@ import { strike } from './hits.js';
 import { areRivals, bodyCenter, combatants } from './state.js';
 import { interruptAttack } from './status.js';
 
+function affectedByDance(owner, actor, match) {
+  return !match.mobSmash || actor === owner || areRivals(owner, actor);
+}
+
+export function isDancing(actor, match) {
+  return Boolean(match.dance && affectedByDance(match.dance.owner, actor, match));
+}
+
 export function startDance(owner, match) {
   owner.attack = null;
   const actors = combatants(match);
@@ -14,6 +22,7 @@ export function startDance(owner, match) {
     depth: .82 + i * .18, cooldown: 0,
   }));
   for (const actor of actors) {
+    if (!affectedByDance(owner, actor, match)) continue;
     interruptAttack(actor);
     actor.vx = 0;
     actor.vy = 0;
@@ -58,6 +67,7 @@ export function advanceDance(match, dt) {
     return;
   }
   for (const actor of combatants(match)) {
+    if (!isDancing(actor, match)) continue;
     actor.invulnerable = Math.max(0, actor.invulnerable - dt);
     actor.hitstun = Math.max(0, actor.hitstun - dt);
     actor.stagger = Math.max(0, actor.stagger - dt);

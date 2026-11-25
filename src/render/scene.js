@@ -1,5 +1,6 @@
 import { rules } from '../combat/arena.js';
 import { encounterGate, enemyColor } from '../combat/adventure.js';
+import { isDancing } from '../combat/dance.js';
 import { bodySize, combatants } from '../combat/state.js';
 import { boundTime, captureProgress, capturingAttack, crushedTime, dazedTime, frozenTime, isZombie, shockedTime, sleepTime, slowTime } from '../combat/status.js';
 import { borrowedPower } from '../fighters/bomm/profile.js';
@@ -84,9 +85,9 @@ export class Graphics {
       renderer.object('gem', [star.x, y, .57], [1.72, 1.68, .5], '#ffd878', [0, time, 0], .93, .22);
     }
     const tagPoints = [];
-    const dance = match.dance;
     const caseOwners = new Set(match.projectiles.filter(({ kind }) => kind === 'tetheredBriefcase').map(({ owner }) => owner));
     for (const fighter of combatants(match)) {
+      const dance = isDancing(fighter, match) ? match.dance : null;
       const clone = Boolean(fighter.owner);
       const capture = capturingAttack(fighter, match);
       const progress = capture ? captureProgress(capture) : 0;
@@ -180,6 +181,7 @@ export class Graphics {
     }
     drawProjectiles(renderer, match.projectiles, time);
     drawAcidRain(renderer, match.acidRain, match.time);
+    const dance = match.dance;
     if (dance) {
       for (const snake of dance.snakes) drawDanceSnake(renderer, snake, dance.elapsed);
       this.drawMusic(dance);

@@ -14,5 +14,6 @@ export function knockOut(player, match) {
 }
 
 export function checkDamageKnockout(player, match) {
-  if (player.stocks && player.team === 'enemies' && player.damage >= match.adventure.damageLimit) knockOut(player, match);
+  const limit = match.adventure?.damageLimit;
+  if (limit !== undefined && player.stocks && player.team === 'enemies' && player.damage >= limit) knockOut(player, match);
 }

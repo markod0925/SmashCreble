@@ -3,6 +3,7 @@ import { arenas } from '../arenas/index.js';
 import { fighters } from '../fighters/index.js';
 import { playerColors } from '../player-colors.js';
 import { audioReady, playSound } from '../audio.js';
+import { mobPlayerLimit, mobTargets } from '../combat/mob-smash.js';
 
 export class Lobby {
   constructor(portrait, onPrimarySelection, startMatch, hasTouch = false) {
@@ -15,6 +16,8 @@ export class Lobby {
     this.arenaIndex = 0;
     this.adventure = false;
     this.campaignLevel = null;
+    this.mobSmash = false;
+    this.mobTarget = mobTargets[0];
     this.snapshot = { pads: new Map(), unsupported: 0 };
     this.seats = [
       { source: 'keyboard', selection: 0, automatic: true },
@@ -31,7 +34,10 @@ export class Lobby {
   }
 
   controllerSlot(pad) {
-    return this.seats.findIndex((seat) => seat?.source === 'pad' && seat.id === pad.id && seat.index === pad.index);
+    return this.seatSlots.find((slot) => {
+      const seat = this.seats[slot];
+      return seat?.source === 'pad' && seat.id === pad.id && seat.index === pad.index;
+    }) ?? -1;
   }
 
   updateControllers(snapshot) {
@@ -39,8 +45,30 @@ export class Lobby {
   }
 
   lineup() {
-    return this.seats.flatMap((seat, slot) => seat && (!this.adventure || seat.source !== 'cpu')
-      ? [{ slot, fighter: fighters[seat.selection], cpu: seat.source === 'cpu' }] : []);
+    return this.seatSlots.flatMap((slot) => {
+      const seat = this.seats[slot];
+      return seat && (!(this.adventure || this.mobSmash) || seat.source !== 'cpu')
+        ? [{ slot, fighter: fighters[seat.selection], cpu: seat.source === 'cpu' }] : [];
+    });
+  }
+
+  get seatSlots() {
+    const slots = this.seats.map((_, slot) => slot);
+    if (!this.mobSmash) return slots;
+    const isHuman = (slot) => this.seats[slot] && this.seats[slot].source !== 'cpu';
+    return [...slots.filter(isHuman), ...slots.filter((slot) => !isHuman(slot))]
+      .slice(0, mobPlayerLimit).sort((a, b) => a - b);
+  }
+
+  chooseMobTarget(target) {
+    this.mobTarget = target;
+    audioReady();
+    playSound('select');
+    this.render();
+  }
+
+  cycleMobTarget() {
+    this.chooseMobTarget(mobTargets[(mobTargets.indexOf(this.mobTarget) + 1) % mobTargets.length]);
   }
 
   get arena() {
@@ -61,22 +89,25 @@ export class Lobby {
   }
 
   missingControllers() {
-    return this.seats.filter((seat) => seat?.source === 'pad' && !this.padFor(seat));
+    return this.seatSlots.map((slot) => this.seats[slot]).filter((seat) => seat?.source === 'pad' && !this.padFor(seat));
   }
 
   joinPad(pad, reconnectOnly = false) {
     if (this.controllerSlot(pad) >= 0) return false;
-    const disconnected = this.seats.findIndex((seat) => seat?.source === 'pad' && !this.padFor(seat) && seat.id === pad.id);
-    if (disconnected >= 0) {
+    const slots = this.seatSlots;
+    const disconnected = slots.find((slot) => {
+      const seat = this.seats[slot];
+      return seat?.source === 'pad' && !this.padFor(seat) && seat.id === pad.id;
+    });
+    if (disconnected !== undefined) {
       this.seats[disconnected].index = pad.index;
       return true;
     }
     if (reconnectOnly) return false;
-    const replaceable = this.seats.findIndex((seat) => seat?.automatic);
-    const empty = this.seats.indexOf(null);
-    const cpu = this.seats.findIndex((seat) => seat?.source === 'cpu');
-    const slot = replaceable >= 0 ? replaceable : empty >= 0 ? empty : cpu;
-    if (slot < 0) return false;
+    const slot = slots.find((index) => this.seats[index]?.automatic)
+      ?? slots.find((index) => !this.seats[index])
+      ?? slots.find((index) => this.seats[index]?.source === 'cpu');
+    if (slot === undefined) return false;
     this.seats[slot] = { source: 'pad', id: pad.id, index: pad.index, selection: this.seats[slot]?.selection ?? (this.selection + slot) % fighters.length };
     return true;
   }
@@ -114,14 +145,19 @@ export class Lobby {
   }
 
   canBegin() {
-    return (this.adventure || this.seats.filter(Boolean).length >= 2) &&
-      this.seats.some((seat) => seat && seat.source !== 'cpu') && !this.missingControllers().length;
+    const lineup = this.lineup();
+    return (this.adventure || this.mobSmash || lineup.length >= 2) &&
+      lineup.some(({ cpu }) => !cpu) && !this.missingControllers().length;
   }
 
   render(focusStart = false) {
     const focusKey = document.activeElement?.dataset.focus;
     const rows = node('div', 'lobby-slots');
-    this.seats.forEach((seat, i) => rows.append(this.seatRow(this.adventure && seat?.source === 'cpu' ? null : seat, i)));
+    const slots = this.seatSlots;
+    for (const slot of slots) {
+      const seat = this.seats[slot];
+      rows.append(this.seatRow((this.adventure || this.mobSmash) && seat?.source === 'cpu' ? null : seat, slot));
+    }
     let arena;
     if (!this.adventure) {
       arena = button('', () => this.chooseArena(1), 'text-button lobby-arena');
@@ -132,12 +168,26 @@ export class Lobby {
       arrow.setAttribute('aria-hidden', 'true');
       arena.append(node('span', '', 'Arena'), this.arenaLabel, arrow);
     }
+    let targets;
+    if (this.mobSmash) {
+      targets = node('div', 'mob-targets');
+      targets.setAttribute('role', 'group');
+      targets.setAttribute('aria-label', 'KO target');
+      targets.append(node('span', '', 'KO target'));
+      for (const target of mobTargets) {
+        const control = button(String(target), () => this.chooseMobTarget(target));
+        control.dataset.focus = `target-${target}`;
+        control.setAttribute('aria-pressed', String(target === this.mobTarget));
+        targets.append(control);
+      }
+    }
     const note = node('p', 'dialog-note', this.campaignLevel
       ? `${this.campaignLevel.introduction} Press A or Start to join.` : this.adventure
       ? 'Press A or Start to join. Travel right and defeat the roster. Knock enemies into pits or deal 100% damage to open the way.'
+      : this.mobSmash ? 'Up to three players. Press A or Start to join. Use LB or RB to change the KO target.'
       : 'Press A or Start to join. On a controller, left and right pick a fighter. Up and down change the arena. Press Start to fight.');
     const actions = node('div', 'dialog-actions');
-    const fight = button(this.campaignLevel ? 'Start level' : this.adventure ? 'Start challenge' : 'Start fight', this.startMatch, 'primary-button');
+    const fight = button(this.campaignLevel ? 'Start level' : this.adventure || this.mobSmash ? 'Start challenge' : 'Start fight', this.startMatch, 'primary-button');
     fight.dataset.focus = 'start';
     fight.disabled = !this.canBegin();
     const addCPU = button('Add CPU', () => this.addSeat('cpu'));
@@ -145,23 +195,24 @@ export class Lobby {
     addCPU.disabled = !this.seats.includes(null);
     const addKey = button(`Add ${this.keyboardLabel.toLowerCase()}`, () => this.addSeat('keyboard'));
     addKey.dataset.focus = 'keyboard';
-    addKey.disabled = this.seats.some((seat) => seat?.source === 'keyboard') || !this.seats.some((seat) => !seat || seat.source === 'cpu');
+    addKey.disabled = this.seats.some((seat) => seat?.source === 'keyboard') ||
+      !slots.some((slot) => !this.seats[slot] || this.seats[slot].source === 'cpu');
     actions.append(fight);
-    if (!this.adventure) actions.append(addCPU);
+    if (!this.adventure && !this.mobSmash) actions.append(addCPU);
     actions.append(addKey);
-    if (!this.canBegin()) note.textContent = this.missingControllers().length ? 'Reconnect or remove disconnected controllers to start.' : this.adventure
+    if (!this.canBegin()) note.textContent = this.missingControllers().length ? 'Reconnect or remove disconnected controllers to start.' : this.adventure || this.mobSmash
       ? 'Choose at least one human player.' : 'Choose at least two fighters, including a human player.';
     else if (this.snapshot.unsupported) note.textContent += ' A controller without a standard browser mapping was detected.';
-    this.content.replaceChildren(rows, ...(arena ? [arena] : []), note, actions);
+    this.content.replaceChildren(rows, ...(arena ? [arena] : []), ...(targets ? [targets] : []), note, actions);
     const prior = [...this.content.querySelectorAll('button')].find((el) => el.dataset.focus === focusKey && !el.disabled);
     if (prior) prior.focus();
     else if (focusStart && !fight.disabled) fight.focus();
   }
 
   addSeat(source) {
-    const empty = this.seats.indexOf(null);
-    const slot = empty >= 0 ? empty : this.seats.findIndex((seat) => seat?.source === 'cpu');
-    if (slot < 0) return;
+    const slots = this.seatSlots;
+    const slot = slots.find((index) => !this.seats[index]) ?? slots.find((index) => this.seats[index]?.source === 'cpu');
+    if (slot === undefined) return;
     this.seats[slot] = { source, selection: source === 'keyboard' ? this.selection : (this.selection + slot) % fighters.length };
     this.render();
   }

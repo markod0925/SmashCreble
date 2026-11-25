@@ -4,6 +4,7 @@ import { createAdventure } from './combat/adventure.js';
 import { rules } from './combat/arena.js';
 import { createCampaignMatch } from './combat/campaign.js';
 import { createMatch, tickMatch } from './combat/match.js';
+import { createMobSmash } from './combat/mob-smash.js';
 import { fighters } from './fighters/index.js';
 import { fighterIdentity } from './fighters/mimora/mirror.js';
 import { combatEdges, fighterInput, Inputs } from './input.js';
@@ -33,7 +34,7 @@ try {
 }
 
 let view = 'home';
-const homeModes = ['play-button', 'campaign-button', 'roster-challenge-button'];
+const homeModes = ['play-button', 'campaign-button', 'roster-challenge-button', 'mob-smash-button'];
 let homeMode = homeModes[0];
 let modal = null;
 let match = null;
@@ -140,6 +141,7 @@ function openControls() {
 
 function openCampaignMap() {
   lobby.campaignLevel = null;
+  lobby.mobSmash = false;
   homeMode = 'campaign-button';
   audioReady();
   playSound('select');
@@ -164,19 +166,23 @@ function saveCampaignRewards(rewards) {
   try { localStorage.setItem(campaignRewardsKey, JSON.stringify([...campaignRewards])); } catch { /* Keep the rewards in memory. */ }
 }
 
-function openHomeMode(buttonId) {
+function openHomeMode(buttonId, joining = []) {
   homeMode = buttonId;
+  lobby.mobSmash = buttonId === 'mob-smash-button';
+  for (const pad of joining) lobby.joinPad(pad);
   if (buttonId === 'campaign-button') openCampaignMap();
-  else openLobby(buttonId === 'roster-challenge-button');
+  else openLobby(buttonId === 'roster-challenge-button', null, lobby.mobSmash);
 }
 
-function openLobby(adventure, campaignLevel = null) {
+function openLobby(adventure, campaignLevel = null, mobSmash = false) {
   lobby.adventure = adventure;
   lobby.campaignLevel = campaignLevel;
+  lobby.mobSmash = mobSmash;
   audioReady();
   playSound('select');
   if (campaignLevel) openDialog('lobby', 'RIFT TRAIL CAMPAIGN', campaignLevel.name);
   else if (adventure) openDialog('lobby', 'SURVIVAL', 'Roster challenge');
+  else if (mobSmash) openDialog('lobby', 'CO-OP SURVIVAL', 'Mob Smash');
   else openDialog('lobby', 'LOCAL VERSUS', 'Set up the fight');
   lobby.render(true);
 }
@@ -187,19 +193,21 @@ function startMatch() {
   closeDialog();
   const lineup = lobby.lineup();
   if (lobby.campaignLevel) match = createCampaignMatch(lineup, lobby.campaignLevel, { module: campaignModule, rewards: campaignRewards });
+  else if (lobby.mobSmash) match = createMobSmash(lineup, lobby.arena, lobby.mobTarget);
   else match = lobby.adventure ? createAdventure(lineup) : createMatch(lineup, lobby.arena);
   graphics.resetBattle();
   view = 'battle';
   $('home').hidden = true;
   $('site-footer').hidden = true;
   battle.hidden = false;
-  const useTouch = Boolean(touch && lobby.seats.some((seat) => seat?.source === 'keyboard'));
+  const useTouch = Boolean(touch && lineup.some(({ slot }) => lobby.seats[slot].source === 'keyboard'));
   battle.classList.toggle('touch-battle', useTouch);
   syncTouchControls();
   battle.dataset.arenaTheme = match.arena.definition.theme;
   battle.dataset.campaignAct = lobby.campaignLevel?.act ?? '';
+  battle.classList.toggle('mob-smash', Boolean(match.mobSmash));
   $('arena-name').textContent = match.arena.definition.name.toUpperCase();
-  $('mode-label').textContent = lobby.campaignLevel ? 'CAMPAIGN · EASY' : match.adventure ? 'ROSTER CHALLENGE' : 'STOCK MATCH';
+  $('mode-label').textContent = lobby.campaignLevel ? 'CAMPAIGN · EASY' : match.adventure ? 'ROSTER CHALLENGE' : match.mobSmash ? 'MOB SMASH' : 'STOCK MATCH';
   battle.prepend(canvas);
   hud.reset(match);
   hud.update(match);
@@ -223,7 +231,7 @@ function goHome() {
 
 function openPause() {
   const disconnected = lobby.missingControllers().length;
-  const title = match.adventure?.campaign ? 'Campaign paused' : match.adventure ? 'Challenge paused' : 'Match paused';
+  const title = match.adventure?.campaign ? 'Campaign paused' : match.adventure || match.mobSmash ? 'Challenge paused' : 'Match paused';
   openDialog('pause', match.arena.definition.name.toUpperCase(), disconnected ? 'Controller disconnected' : title);
   if (match.adventure?.campaign) renderPause(disconnected, dismissDialog, goToCampaignMap, 'Campaign map');
   else renderPause(disconnected, dismissDialog, goHome);
@@ -256,12 +264,13 @@ function showResults() {
     return;
   }
   if (match.adventure) openDialog('results', 'ROSTER CHALLENGE', completed ? 'Roster cleared!' : 'Challenge ended');
+  else if (match.mobSmash) openDialog('results', 'MOB SMASH', completed ? 'KO target reached!' : 'Challenge ended');
   else openDialog('results', timedOut ? 'TIME EXPIRED' : 'MATCH COMPLETE', winner ? `${fighterIdentity(winner).name} wins` : 'Draw');
   renderResults(match, () => {
     if (lobby.canBegin()) startMatch();
     else {
       goHome();
-      openLobby(lobby.adventure);
+      openLobby(lobby.adventure, null, lobby.mobSmash);
     }
   }, goHome);
 }
@@ -282,6 +291,7 @@ function handleMenu(snapshot, controllersChanged) {
     }
     const arenaStep = key.navY || connected.find((pad) => pad.navY)?.navY;
     if (arenaStep) lobby.chooseArena(arenaStep);
+    if (lobby.mobSmash && connected.some((pad) => pad.dodgePressed)) lobby.cycleMobTarget();
     if (connected.some((pad) => pad.startPressed) || key.acceptPressed) startMatch();
     return;
   }
@@ -311,8 +321,7 @@ function handleMenu(snapshot, controllersChanged) {
     }
     const joining = panels.filter((pad) => pad.startPressed || pad.acceptPressed);
     if (joining.length || key.acceptPressed) {
-      for (const pad of joining) lobby.joinPad(pad);
-      openHomeMode(homeMode);
+      openHomeMode(homeMode, joining);
     }
     return;
   }
