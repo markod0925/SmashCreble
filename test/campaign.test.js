@@ -30,27 +30,37 @@ function walkTo(match, player, x) {
   tick(match, .15);
 }
 
-test('the first level supports a grounded route and an attack from a second player', () => {
+test('partners can power the foundry and open the first exit without fighting the roster', () => {
   const level = campaignLevels[0];
   const match = start(level, [0, 2]);
   const [first, ally] = match.fighters;
-  walkTo(match, ally, level.objective.x - 2);
+  const [floorSwitch, doorSwitch] = level.steps;
+  assert.equal(campaignPrompt(match.adventure.campaign), 'Step on the yellow floor switch');
+  assert.equal(encounterGate(match), floorSwitch.gate);
+  walkTo(match, ally, floorSwitch.x);
   assert.ok(ally.grounded);
-  assert.ok(first.x > 0, 'the camera brings a faraway ally to safe ground');
+  assert.equal(match.adventure.campaign.step, 1);
   assert.equal(encounterGate(match), level.gate);
-  swing(match, ally);
+  walkTo(match, first, doorSwitch.x - 2);
+  swing(match, first);
   assert.equal(encounterGate(match), undefined);
-  walkTo(match, ally, level.exit);
+  walkTo(match, first, level.exit);
+  assert.ok(ally.x > floorSwitch.x, 'the camera brings a faraway ally to safe ground');
+  assert.deepEqual(match.adventure.enemies, []);
+  assert.ok(match.fighters.every(({ cpu, damage }) => !cpu && damage === 0));
   assert.deepEqual(match.result, { completed: true });
 });
 
 test('every fighter can activate a switch using the regular light attack', () => {
   const [level] = campaignLevels;
+  const [floorSwitch, doorSwitch] = level.steps;
   for (const fighter of fighters) {
     const match = createCampaignMatch([{ slot: 0, fighter, cpu: false }], level);
     match.countdown = 0;
     const [player] = match.fighters;
-    player.x = level.objective.x - 1;
+    player.x = floorSwitch.x;
+    tickMatch(match, new Map());
+    player.x = doorSwitch.x - 1;
     swing(match, player);
     assert.equal(encounterGate(match), undefined, fighter.name);
   }

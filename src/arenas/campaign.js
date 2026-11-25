@@ -3,14 +3,20 @@ import { stormcoilLevels } from './campaign-stormcoil.js';
 import { glassLevels } from './campaign-glass.js';
 import { gdmrLevels } from './campaign-gdmr.js';
 import { regulatorLevels } from './campaign-regulator.js';
+import { drawFoundryStartup } from '../render/campaign-cloudbreak.js';
 
 const cloudbreakLevels = [
   {
     id: 'cloudbreak-lights', name: 'The Lights of Cloudbreak',
-    introduction: 'Follow the lights. Hit the switch to open the gate.',
-    platforms: [floor('arrival', -15, 35), ledge('step', -1, 4, .9), ledge('walkway', 6, 11, 1.65)],
-    lights: [-2, 5, 12, 18], gate: 23, exit: 30,
-    objective: { type: 'switch', x: 19, y: 1.1 }, checkpoint: { platform: 'arrival', x: 16 },
+    introduction: 'Step on the floor switch to turn on the lights. Then hit the yellow switch and walk to the exit.',
+    platforms: [floor('arrival', -15, 35), ledge('step', 9, 13, .9), ledge('walkway', 13, 17, 1.65)],
+    lights: [-5, -2], gate: 23, exit: 30, exitPrompt: 'Walk through the green door!',
+    steps: [
+      { type: 'reach', x: 3, y: 0, radius: 1.55, gate: 7, marker: false, prompt: 'Step on the yellow floor switch', checkpoint: { platform: 'arrival', x: 5 } },
+      { type: 'switch', x: 19, y: 1.1, prompt: 'Hit the yellow switch!' },
+    ],
+    checkpoint: { platform: 'arrival', x: 16 },
+    draw: drawFoundryStartup,
   },
   {
     id: 'cloudbreak-gate', name: 'The Jammed Gate',

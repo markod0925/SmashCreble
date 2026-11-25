@@ -64,6 +64,7 @@ h1 span:nth-child(2) { color: var(--mint); }
 .hero-copy p { font-size: 16px; line-height: 1.5; color: #c6d0cd; margin: 23px 0 24px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .hero-actions .text-button { min-height: 47px; }
+#roster-challenge-button { border-color: transparent; color: var(--muted); }
 .primary-button { min-height: 47px; display: inline-flex; gap: 12px; align-items: center; justify-content: center; padding: 0 16px; border: 1px solid #a3f6db; background: var(--mint); color: #102823; font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: .06em; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%); }
 .primary-button:hover { background: #aef5dc; }
 .primary-button:focus-visible { outline-offset: -4px; outline-color: #194438; }

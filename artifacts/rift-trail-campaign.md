@@ -6,7 +6,7 @@ Isole alla deriva is a five-act Smash Creble campaign for ages 6–9. Each act h
 
 | Level | Goal | Local co-op |
 | --- | --- | --- |
-| 1. The Lights of Cloudbreak | Follow the lights past low platforms over a continuous floor. Hit the large switch and walk through the open gate. | Any player can open the gate. A low route stays accessible to everyone. |
+| 1. The Lights of Cloudbreak | Step on a floor switch to power the foundry, hit the yellow door switch, and walk through the green door. | Any player can activate either switch. The whole party can stay on the continuous floor. |
 | 2. The Jammed Gate | Strike a crate to slide it into a stop. A sentry leaves an opening after its charge. | One player can draw the sentry away while another moves the crate. |
 | 3. The Foundry Bridge | Reach the bridge switch while the keeper recovers from a clearly telegraphed slam. Cross the lowered bridge. | One player can engage the keeper while another takes the walkway. Clearing the level restores Cloudbreak as the campaign base. |
 

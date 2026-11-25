@@ -33,7 +33,8 @@ try {
 }
 
 let view = 'home';
-let homeAdventure = false;
+const homeModes = ['play-button', 'campaign-button', 'roster-challenge-button'];
+let homeMode = homeModes[0];
 let modal = null;
 let match = null;
 let elapsed = 0;
@@ -139,11 +140,11 @@ function openControls() {
 
 function openCampaignMap() {
   lobby.campaignLevel = null;
-  homeAdventure = true;
+  homeMode = 'campaign-button';
   audioReady();
   playSound('select');
   openDialog('campaign', 'RIFT TRAIL · EASY', 'Campaign map');
-  renderCampaignMap(campaignActs, completedLevels, (level) => openLobby(true, level), () => openLobby(true), {
+  renderCampaignMap(campaignActs, completedLevels, (level) => openLobby(true, level), {
     rescued: campaignRewards.has('stormcoil-rescue'), unlocked: campaignRewards.has('wind-stabilizer'),
     equipped: campaignModule === 'wind-stabilizer', toggle: toggleCampaignModule,
   });
@@ -163,13 +164,19 @@ function saveCampaignRewards(rewards) {
   try { localStorage.setItem(campaignRewardsKey, JSON.stringify([...campaignRewards])); } catch { /* Keep the rewards in memory. */ }
 }
 
-function openLobby(adventure = homeAdventure, campaignLevel = null) {
-  lobby.adventure = homeAdventure = adventure;
+function openHomeMode(buttonId) {
+  homeMode = buttonId;
+  if (buttonId === 'campaign-button') openCampaignMap();
+  else openLobby(buttonId === 'roster-challenge-button');
+}
+
+function openLobby(adventure, campaignLevel = null) {
+  lobby.adventure = adventure;
   lobby.campaignLevel = campaignLevel;
   audioReady();
   playSound('select');
-  if (campaignLevel) openDialog('lobby', 'RIFT TRAIL', campaignLevel.name);
-  else if (adventure) openDialog('lobby', 'RIFT TRAIL', 'Set up the adventure');
+  if (campaignLevel) openDialog('lobby', 'RIFT TRAIL CAMPAIGN', campaignLevel.name);
+  else if (adventure) openDialog('lobby', 'SURVIVAL', 'Roster challenge');
   else openDialog('lobby', 'LOCAL VERSUS', 'Set up the fight');
   lobby.render(true);
 }
@@ -192,7 +199,7 @@ function startMatch() {
   battle.dataset.arenaTheme = match.arena.definition.theme;
   battle.dataset.campaignAct = lobby.campaignLevel?.act ?? '';
   $('arena-name').textContent = match.arena.definition.name.toUpperCase();
-  $('mode-label').textContent = lobby.campaignLevel ? 'CAMPAIGN · EASY' : match.adventure ? 'ADVENTURE' : 'STOCK MATCH';
+  $('mode-label').textContent = lobby.campaignLevel ? 'CAMPAIGN · EASY' : match.adventure ? 'ROSTER CHALLENGE' : 'STOCK MATCH';
   battle.prepend(canvas);
   hud.reset(match);
   hud.update(match);
@@ -211,12 +218,13 @@ function goHome() {
   $('home').hidden = false;
   $('site-footer').hidden = false;
   $('hero-world').prepend(canvas);
-  $(homeAdventure ? 'adventure-button' : 'play-button').focus();
+  $(homeMode).focus();
 }
 
 function openPause() {
   const disconnected = lobby.missingControllers().length;
-  openDialog('pause', match.arena.definition.name.toUpperCase(), disconnected ? 'Controller disconnected' : match.adventure ? 'Adventure paused' : 'Match paused');
+  const title = match.adventure?.campaign ? 'Campaign paused' : match.adventure ? 'Challenge paused' : 'Match paused';
+  openDialog('pause', match.arena.definition.name.toUpperCase(), disconnected ? 'Controller disconnected' : title);
   if (match.adventure?.campaign) renderPause(disconnected, dismissDialog, goToCampaignMap, 'Campaign map');
   else renderPause(disconnected, dismissDialog, goHome);
 }
@@ -247,13 +255,13 @@ function showResults() {
     }, goToCampaignMap);
     return;
   }
-  if (match.adventure) openDialog('results', 'RIFT TRAIL', completed ? 'Adventure complete' : 'Adventure ended');
+  if (match.adventure) openDialog('results', 'ROSTER CHALLENGE', completed ? 'Roster cleared!' : 'Challenge ended');
   else openDialog('results', timedOut ? 'TIME EXPIRED' : 'MATCH COMPLETE', winner ? `${fighterIdentity(winner).name} wins` : 'Draw');
   renderResults(match, () => {
     if (lobby.canBegin()) startMatch();
     else {
       goHome();
-      openLobby();
+      openLobby(lobby.adventure);
     }
   }, goHome);
 }
@@ -297,12 +305,14 @@ function handleMenu(snapshot, controllersChanged) {
     const nav = key.navX || panels.find((pad) => pad.navX)?.navX;
     if (nav) changeSelection(lobby.selection + nav);
     const modeStep = key.navY || panels.find((pad) => pad.navY)?.navY;
-    if (modeStep) $(modeStep < 0 ? 'adventure-button' : 'play-button').focus();
+    if (modeStep) {
+      const index = Math.max(0, Math.min(homeModes.length - 1, homeModes.indexOf(homeMode) - modeStep));
+      $(homeModes[index]).focus();
+    }
     const joining = panels.filter((pad) => pad.startPressed || pad.acceptPressed);
     if (joining.length || key.acceptPressed) {
       for (const pad of joining) lobby.joinPad(pad);
-      if (homeAdventure) openCampaignMap();
-      else openLobby(false);
+      openHomeMode(homeMode);
     }
     return;
   }
@@ -375,10 +385,10 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-$('play-button').addEventListener('click', () => openLobby(false));
-$('adventure-button').addEventListener('click', openCampaignMap);
-$('play-button').addEventListener('focus', () => { homeAdventure = false; });
-$('adventure-button').addEventListener('focus', () => { homeAdventure = true; });
+for (const mode of homeModes) {
+  $(mode).addEventListener('click', () => openHomeMode(mode));
+  $(mode).addEventListener('focus', () => { homeMode = mode; });
+}
 $('controls-button').addEventListener('click', openControls);
 $('sound-button').addEventListener('click', () => {
   $('sound-button').setAttribute('aria-pressed', String(toggleSound()));
@@ -391,7 +401,7 @@ portraitViewport.addEventListener('change', syncTouchControls);
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) matchFullscreen = false;
 });
-$('home-button').addEventListener('click', () => { if (view === 'battle') openPause(); else $(homeAdventure ? 'adventure-button' : 'play-button').focus(); });
+$('home-button').addEventListener('click', () => { if (view === 'battle') openPause(); else $(homeMode).focus(); });
 handleDismiss(dismissDialog);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && view === 'battle' && !modal) openPause();

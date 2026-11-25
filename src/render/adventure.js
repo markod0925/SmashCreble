@@ -17,6 +17,7 @@ export function adventureCamera(match) {
 }
 
 const campaignColors = {
+  cloudbreak: ['#3a455a', '#708091', '#879aab'],
   stormcoil: ['#405272', '#839bba', '#b3c9e1'],
   glass: ['#325e57', '#6ea693', '#b5e1c9'],
   gdmr: ['#625052', '#aa887e', '#dfb296'],

@@ -45,7 +45,7 @@ export function renderPause(disconnected, resumeMatch, goHome, leaveLabel = 'Ret
   (resume.disabled ? actions.lastElementChild : resume).focus();
 }
 
-export function renderCampaignMap(acts, completed, chooseLevel, openRosterTrail, rewardOptions) {
+export function renderCampaignMap(acts, completed, chooseLevel, rewardOptions) {
   const navigation = node('div', 'campaign-acts');
   navigation.setAttribute('aria-label', 'Campaign acts');
   const heading = node('h3', 'campaign-act-name');
@@ -72,7 +72,8 @@ export function renderCampaignMap(acts, completed, chooseLevel, openRosterTrail,
       list.append(row);
     }
   }
-  const actions = node('div', 'dialog-actions');
+  content.append(navigation, heading, list);
+  if (rewardOptions?.rescued) content.append(node('p', 'campaign-reward', 'Nuvol rescued'));
   if (rewardOptions?.unlocked) {
     let equipped = rewardOptions.equipped;
     const toggle = button('', () => { equipped = rewardOptions.toggle(); updateToggle(); });
@@ -81,12 +82,10 @@ export function renderCampaignMap(acts, completed, chooseLevel, openRosterTrail,
       toggle.setAttribute('aria-pressed', String(equipped));
     }
     updateToggle();
+    const actions = node('div', 'dialog-actions');
     actions.append(toggle);
+    content.append(actions);
   }
-  actions.append(button('Roster trail', openRosterTrail));
-  content.append(navigation, heading, list);
-  if (rewardOptions?.rescued) content.append(node('p', 'campaign-reward', 'Nuvol rescued'));
-  content.append(actions);
   let remaining = completed;
   const firstUncleared = acts.findIndex(({ levels }) => (remaining -= levels.length) < 0);
   showAct(firstUncleared < 0 ? acts.length - 1 : firstUncleared);
@@ -112,7 +111,7 @@ export function renderResults(match, restart, goHome) {
     list.append(row);
   }
   const actions = node('div', 'dialog-actions');
-  const rematch = button(adventure ? 'Restart adventure' : 'Rematch', restart, 'primary-button');
+  const rematch = button(adventure ? 'Restart challenge' : 'Rematch', restart, 'primary-button');
   actions.append(rematch, button('Return to roster', goHome));
   content.append(list, actions);
   rematch.focus();

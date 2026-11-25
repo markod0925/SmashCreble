@@ -137,7 +137,7 @@ export class Lobby {
       ? 'Press A or Start to join. Travel right and defeat the roster. Knock enemies into pits or deal 100% damage to open the way.'
       : 'Press A or Start to join. On a controller, left and right pick a fighter. Up and down change the arena. Press Start to fight.');
     const actions = node('div', 'dialog-actions');
-    const fight = button(this.campaignLevel ? 'Start level' : this.adventure ? 'Start adventure' : 'Start fight', this.startMatch, 'primary-button');
+    const fight = button(this.campaignLevel ? 'Start level' : this.adventure ? 'Start challenge' : 'Start fight', this.startMatch, 'primary-button');
     fight.dataset.focus = 'start';
     fight.disabled = !this.canBegin();
     const addCPU = button('Add CPU', () => this.addSeat('cpu'));
