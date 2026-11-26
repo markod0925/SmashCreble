@@ -1,16 +1,18 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, posix } from 'node:path';
-import { defaultArena } from '../src/arenas/index.js';
+import { arenas } from '../src/arenas/index.js';
 import { createArena, rules } from '../src/combat/arena.js';
+import { mobPlayerLimit, mobTargets } from '../src/combat/mob-smash.js';
 import { cloneScale } from '../src/combat/state.js';
 import { fighters } from '../src/fighters/index.js';
 import { playerColors } from '../src/player-colors.js';
-import { drawBattleArena } from '../src/render/arena.js';
+import { drawArenaScenery, drawBattleArena } from '../src/render/arena.js';
 import { drawCharacter } from '../src/render/characters.js';
 import { shapes } from '../src/render/geometry.js';
-import { multiply, transform } from '../src/render/math.js';
+import { battleCamera, multiply, transform } from '../src/render/math.js';
+import { arenaDisplayLists } from './arena-assets.mjs';
 import { clonePoses, cloneRoster } from './clone-poses.mjs';
-import { modelDetail, modelShape, standardCamera, widescreenCamera } from './model-detail.mjs';
+import { modelDetail, modelShape } from './model-detail.mjs';
 
 function number(value) {
   if (!Number.isFinite(value)) throw new Error(`Invalid Wii export number: ${value}`);
@@ -18,6 +20,8 @@ function number(value) {
 }
 
 const values = (items) => items.map(number).join(', ');
+const label = (name) => JSON.stringify(name.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  .toUpperCase().replace(/[^A-Z0-9 .!&'-]/g, ' '));
 const color = (hex) => {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) throw new Error(`Invalid Wii export color: ${hex}`);
   return `0x${hex.slice(1)}ffu`;
@@ -102,6 +106,10 @@ function fitPortrait(vertices, centerX, centerY, rowHeight) {
 async function collectModules(name, modules = new Map()) {
   if (modules.has(name)) return modules;
   const replacements = {
+    'src/combat/adventure.js': 'wii/unsupported-adventure.mjs',
+    'src/combat/campaign.js': 'wii/unsupported-adventure.mjs',
+    'src/render/adventure.js': 'wii/unsupported-adventure.mjs',
+    'src/render/campaign.js': 'wii/unsupported-adventure.mjs',
     'src/render/arena.js': 'wii/render-arena.mjs',
     'src/render/arena.browser.js': 'src/render/arena.js',
     'src/render/characters.js': 'wii/render-characters.mjs',
@@ -157,7 +165,7 @@ function indexGeometry() {
   return { data, geometry };
 }
 
-async function writeAssets(output, meshes, visuals, clonePoses) {
+async function writeAssets(output, meshes, visuals, arenaMeshes, clonePoses) {
   const modules = [...await collectModules('wii/runtime.mjs')];
   const { data, geometry } = indexGeometry();
   const assets = [...meshes, ...data, ...modules.map(([, bytes], index) => [`module${index}`, bytes])];
@@ -172,6 +180,9 @@ async function writeAssets(output, meshes, visuals, clonePoses) {
   const largest = Math.max(...meshes.filter(([name]) => name.endsWith('_portrait')).map(([, bytes]) => bytes.length));
   declarations.push(`constexpr size_t playerListSize = ${largest};`, 'constexpr FighterVisual fighterVisuals[] = {',
     ...visuals.map(({ name, position }) => `  {${name}, ${values(position)}},`), '};',
+    'constexpr ArenaVisual arenaVisuals[] = {',
+    ...arenaMeshes.map((passes) =>
+      `  {${passes.map((name) => name ? `{${name}, sizeof(${name})}` : '{}').join(', ')}},`), '};',
     'constexpr Geometry geometry[] = {',
     ...geometry.map(({ name, positions, normals, triangles }) =>
       `  {positions_${name}, normals_${name}, triangles_${name}, ${positions.length / 3}, ${normals.length / 3}, ${triangles.length / 4}},`), '};',
@@ -187,33 +198,44 @@ async function writeAssets(output, meshes, visuals, clonePoses) {
 }
 
 export async function exportWeb(output) {
-  if (defaultArena.id !== 'cloudbreak-foundry' || defaultArena.platforms.some(({ motion }) => motion) ||
-      defaultArena.environment || defaultArena.spawns.length !== playerColors.length || playerColors.length !== 4) {
-    throw new Error('The Wii build needs the static Cloudbreak Foundry layout and four player spawns.');
+  if (playerColors.length !== 4 || arenas.some(({ spawns }) => spawns.length !== playerColors.length)) {
+    throw new Error('Wii arenas need four player spawns.');
   }
   const tables = `// Generated from the Web game. Do not edit.
 namespace web {
 constexpr float step = ${number(rules.step)};
-constexpr float cameraEyeStandard[] = {${values(standardCamera.eye)}};
-constexpr float cameraEyeWidescreen[] = {${values(widescreenCamera.eye)}};
-constexpr float cameraTarget[] = {${values(widescreenCamera.target)}};
-constexpr float cameraFovDegrees = ${number(widescreenCamera.fov * 180 / Math.PI)};
 constexpr size_t shapeCount = ${Object.keys(shapes).length};
-constexpr FighterSpec roster[] = {
-${fighters.map((entry) => {
-    const name = entry.name.normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase().replace(/[^A-Z0-9 .!&'-]/g, ' ');
-    return `  {${JSON.stringify(name)}, ${color(entry.color)}},`;
+constexpr unsigned mobPlayerLimit = ${mobPlayerLimit};
+constexpr int mobTargets[] = {${mobTargets.join(', ')}};
+constexpr ArenaSpec arenas[] = {
+${arenas.map((arena) => {
+    const standard = battleCamera(arena, 4 / 3);
+    const wide = battleCamera(arena, 16 / 9);
+    return `  {${label(arena.name)}, {${values(standard.eye)}}, {${values(wide.eye)}}, {${values(wide.target)}}, ${number(wide.fov * 180 / Math.PI)}},`;
   }).join('\n')}
+};
+constexpr FighterSpec roster[] = {
+${fighters.map((entry) => `  {${label(entry.name)}, ${color(entry.color)}},`).join('\n')}
 };
 constexpr uint32_t playerColors[] = {${playerColors.map(color).join(', ')}};
 }
 `;
-  const arena = createArena(defaultArena);
-  const drawArena = (renderer) => drawBattleArena(renderer, arena, 0);
-  const meshes = [
-    ['arenaOpaque', capture(drawArena, null, (alpha) => alpha === 1)],
-    ['arenaTranslucent', capture(drawArena, null, (alpha) => alpha < 1)],
-  ];
+  const meshes = [];
+  const arenaMeshes = arenas.map((definition, index) => {
+    const prebuilt = arenaDisplayLists.get(definition.id);
+    if (!prebuilt) return [null, null];
+    if (prebuilt.platforms && (definition.platforms.some(({ motion, rotation }) => motion || rotation) ||
+      definition.environment || definition.platformCycle)) throw new Error(`Wii arena moves: ${definition.id}`);
+    const arena = createArena(definition);
+    const draw = prebuilt.platforms ? drawBattleArena : drawArenaScenery;
+    const opaque = `arena${index}_opaque`;
+    const translucent = prebuilt.translucent ? `arena${index}_translucent` : null;
+    meshes.push([opaque, capture((renderer) => draw(renderer, arena, 0), null, (alpha) => alpha === 1)]);
+    if (translucent) {
+      meshes.push([translucent, capture((renderer) => draw(renderer, arena, 0), null, (alpha) => alpha < 1)]);
+    }
+    return [opaque, translucent];
+  });
   const visuals = fighters.map((entry, index) => {
     const position = cardPosition(index);
     const name = `fighter${index}_portrait`;
@@ -236,5 +258,7 @@ constexpr uint32_t playerColors[] = {${playerColors.map(color).join(', ')}};
     }
   }
   await mkdir(output, { recursive: true });
-  await Promise.all([writeFile(join(output, 'web_rules.inc'), tables), writeAssets(output, meshes, visuals, poseAssets)]);
+  await Promise.all([
+    writeFile(join(output, 'web_rules.inc'), tables), writeAssets(output, meshes, visuals, arenaMeshes, poseAssets),
+  ]);
 }

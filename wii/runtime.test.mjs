@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { rules } from '../src/combat/arena.js';
+import { arenas } from '../src/arenas/index.js';
+import { advanceArena, rules } from '../src/combat/arena.js';
+import { mobTargets } from '../src/combat/mob-smash.js';
 import { fighters, signatureAttacks } from '../src/fighters/index.js';
 import { Graphics } from '../src/render/scene.js';
 import { drawCharacter } from '../src/render/characters.js';
@@ -45,12 +47,12 @@ test('Wii fills vacant slots with CPU fighters that can win a match', () => {
     match = current;
     return current.fighters.map(({ x, y }) => [x, y, .5]);
   };
-  const frame = new Float32Array(32);
+  const frame = new Float32Array(34);
   globalThis.wiiInit(new Float32Array(16).buffer, frame.buffer, new Float32Array(16).buffer);
   const tick = () => globalThis.wiiAdvance(1, rules.step);
   try {
     for (const choices of [[-1, -1, 2, -1], [0, -1, 2, -1], [0, 1, 2, -1], [0, 1, 2, 3]]) {
-      globalThis.wiiStart(...choices);
+      globalThis.wiiStart(0, 0, ...choices);
       globalThis.wiiAdvance(0, 0);
       assert.deepEqual(match.fighters.map(({ slot }) => slot), [0, 1, 2, 3]);
       assert.deepEqual(match.fighters.map(({ cpu }) => cpu), choices.map((index) => index < 0));
@@ -61,7 +63,7 @@ test('Wii fills vacant slots with CPU fighters that can win a match', () => {
       });
     }
 
-    globalThis.wiiStart(-1, -1, 2, -1);
+    globalThis.wiiStart(0, 0, -1, -1, 2, -1);
     globalThis.wiiAdvance(0, 0);
     match.countdown = 0;
     const cpu = match.fighters[0];
@@ -74,6 +76,54 @@ test('Wii fills vacant slots with CPU fighters that can win a match', () => {
     tick();
     assert.equal(frame[2], 1);
     assert.equal(frame[3], cpu.slot);
+  } finally {
+    Graphics.prototype.battle = draw;
+  }
+});
+
+test('Wii Mob Smash starts on every arena and reports shared progress without writing enemy slots', () => {
+  const draw = Graphics.prototype.battle;
+  let match;
+  Graphics.prototype.battle = (current) => {
+    match = current;
+    return current.fighters.map(({ x, y }) => [x, y, .5]);
+  };
+  const frame = new Float32Array(34);
+  globalThis.wiiInit(new Float32Array(16).buffer, frame.buffer, new Float32Array(16).buffer);
+  const tick = () => globalThis.wiiAdvance(1, rules.step);
+  try {
+    for (const [index, arena] of arenas.entries()) {
+      globalThis.wiiStart(index, 0, 0, 1, 2, 3);
+      globalThis.wiiAdvance(0, 0);
+      assert.equal(match.arena.definition, arena);
+      assert.equal(frame[33], 0);
+
+      for (const target of mobTargets) {
+        globalThis.wiiStart(index, target, 0, -1, 2, 3);
+        globalThis.wiiAdvance(0, 0);
+        assert.equal(match.arena.definition, arena);
+        assert.deepEqual(match.mobSmash.party.map(({ slot }) => slot), [0, 2, 3]);
+        assert.equal(match.mobSmash.enemies.length, 3);
+        assert.equal(frame[5 + 7], 0);
+        assert.deepEqual([...frame.slice(32)], [0, target]);
+        match.countdown = 0;
+        for (let kos = 1; kos <= target; kos++) {
+          const enemy = match.mobSmash.enemies[0];
+          Object.assign(enemy, { grounded: null, y: arena.bounds.bottom - 1 });
+          tick();
+          assert.deepEqual([...frame.slice(32)], [kos, target]);
+          assert.equal(frame[2], Number(kos === target));
+        }
+      }
+    }
+    globalThis.wiiStart(0, mobTargets[0], -1, -1, -1, 1);
+    globalThis.wiiAdvance(0, 0);
+    match.countdown = 0;
+    Object.assign(match.mobSmash.party[0], { stocks: 1, grounded: null, y: match.arena.definition.bounds.bottom - 1 });
+    tick();
+    assert.equal(frame[2], 1);
+    assert.equal(frame[32], 0);
+    assert.deepEqual(match.result, { completed: false });
   } finally {
     Graphics.prototype.battle = draw;
   }
@@ -96,13 +146,13 @@ test('Wii controls activate and render the Web roster moves', () => {
     meshes++;
   };
   const inputs = new Float32Array(16);
-  globalThis.wiiInit(inputs.buffer, new Float32Array(32).buffer, matrix.buffer);
+  globalThis.wiiInit(inputs.buffer, new Float32Array(34).buffer, matrix.buffer);
   const tick = (held = 0, pressed = 0, steps = 1) => {
     inputs.set([0, 0, held, pressed]);
     globalThis.wiiAdvance(steps, steps * rules.step);
   };
   const start = (index) => {
-    globalThis.wiiStart(index, (index + 1) % fighters.length, (index + 2) % fighters.length, (index + 3) % fighters.length);
+    globalThis.wiiStart(0, 0, index, (index + 1) % fighters.length, (index + 2) % fighters.length, (index + 3) % fighters.length);
     const before = meshes;
     tick();
     assert.ok(meshes > before);
@@ -136,6 +186,43 @@ test('Wii controls activate and render the Web roster moves', () => {
       assert.equal(player.attack?.type, fighter.moves.super, fighter.name);
       assert.equal(match.superstar.holder, null);
       tick(0, 0, Math.ceil((player.attack.from ?? 0) / rules.step));
+    }
+  } finally {
+    Graphics.prototype.battle = draw;
+    delete globalThis.wiiMesh;
+  }
+});
+
+test('Wii renders every dynamic arena, including fighters caught in the folding deck', () => {
+  const draw = Graphics.prototype.battle;
+  let match;
+  Graphics.prototype.battle = function (current, ...args) {
+    match = current;
+    return draw.call(this, current, ...args);
+  };
+  const matrix = new Float32Array(16);
+  globalThis.wiiInit(new Float32Array(16).buffer, new Float32Array(34).buffer, matrix.buffer);
+  let rendered;
+  globalThis.wiiMesh = (index, ...style) => {
+    assert.ok(Object.keys(shapes)[index]);
+    assert.ok(matrix.every(Number.isFinite));
+    assert.ok(style.every(Number.isFinite));
+    rendered.push([...matrix, ...style]);
+  };
+  try {
+    for (const [index, { id }] of arenas.entries()) {
+      if (index === 0) continue;
+      globalThis.wiiStart(index, 0, 0, 1, 2, 3);
+      rendered = [];
+      globalThis.wiiAdvance(0, 0);
+      const before = rendered;
+      advanceArena(match.arena, id === 'iui' ? match.arena.definition.platformCycle.interval + rules.step : 1);
+      if (id === 'spiaccica-frittata') {
+        match.fighters[0].crushedUntil = match.time - match.arena.definition.deckCrush.duration;
+      }
+      rendered = [];
+      globalThis.wiiAdvance(0, 0);
+      assert.notDeepEqual(rendered, before, id);
     }
   } finally {
     Graphics.prototype.battle = draw;

@@ -1,5 +1,5 @@
 import { rules } from '../combat/arena.js';
-import { encounterGate, enemyColor } from '../combat/adventure.js';
+import { encounterGate } from '../combat/adventure.js';
 import { isDancing } from '../combat/dance.js';
 import { bodySize, combatants } from '../combat/state.js';
 import { boundTime, captureProgress, capturingAttack, crushedTime, dazedTime, frozenTime, isZombie, shockedTime, sleepTime, slowTime } from '../combat/status.js';
@@ -11,7 +11,7 @@ import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { drawDanceSnake } from '../fighters/shark-67/model.js';
 import { drawIce, drawSerpentBind } from '../fighters/vidarr/model.js';
 import { shrinkTime } from '../fighters/zunchy/profile.js';
-import { playerColors } from '../player-colors.js';
+import { enemyColor, playerColors } from '../player-colors.js';
 import { adventureCamera } from './adventure.js';
 import { drawBattleArena, drawHero } from './arena.js';
 import { drawCampaign } from './campaign.js';

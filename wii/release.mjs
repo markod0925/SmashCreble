@@ -116,8 +116,8 @@ async function main() {
 <app version="1">
   <name>Smash Creble Wii</name>
   <version>${version}</version>
-  <short_description>Local platform fighter prototype</short_description>
-  <long_description>Play four-fighter matches in Cloudbreak Foundry with up to four local players. CPU fighters fill the remaining slots.</long_description>
+  <short_description>Local platform fighter</short_description>
+  <long_description>Choose from five arenas for four-fighter Versus matches or team up with up to three local players in Mob Smash.</long_description>
 </app>
 `);
     await cp(join(wii, 'README.md'), join(payload, 'README.md'));

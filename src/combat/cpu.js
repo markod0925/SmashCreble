@@ -7,7 +7,7 @@ import { borrowedPower } from '../fighters/bomm/profile.js';
 import { assaultRemaining } from '../fighters/olivar/companions.js';
 import { clamp, direction } from '../math.js';
 
-export function cpuInput(player, match, dt) {
+export function cpuInput(player, match, dt, chooseAttack) {
   if (boundTime(player, match) || dazedTime(player, match) || frozenTime(player, match) || sleepTime(player, match)) return idleInput;
   let target;
   for (const other of combatants(match)) {
@@ -52,6 +52,10 @@ export function cpuInput(player, match, dt) {
       return { x: direction(star.x - player.x), y: 0 };
     }
     if (player.charging) return { x, y: 0, special: true };
+    if (chooseAttack && (active || player.aiDelay <= 0) && !player.attack && !player.hitstun && !player.stagger && !player.dodge) {
+      const input = chooseAttack(player, target, match, { floor, dx, dy, x, jumpPressed });
+      if (input) return input;
+    }
     const shark = player.fighter.id === 'shark-67';
     const inga = player.fighter.id === 'inga-inga';
     const olivar = player.fighter.id === 'olivar';

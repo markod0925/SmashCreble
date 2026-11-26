@@ -130,13 +130,21 @@ const arenaViews = {
   frittata: { drawScenery: drawFrittataScenery, drawPlatform: drawFrittataPlatform },
 };
 
+export function drawArenaScenery(renderer, arena, time) {
+  (arenaViews[arena.definition.theme] ?? arenaViews.foundry).drawScenery(renderer, arena, time);
+}
+
+export function drawArenaPlatforms(renderer, arena) {
+  const { drawPlatform } = arenaViews[arena.definition.theme] ?? arenaViews.foundry;
+  if (arena.fallingPlatform) drawPlatform(renderer, arena.fallingPlatform, arena);
+  for (const platform of arena.platforms) drawPlatform(renderer, platform, arena);
+}
+
 export function drawBattleArena(renderer, arena, time, adventureView) {
   if (adventureView) {
     drawAdventureTerrain(renderer, arena, adventureView, time);
     return;
   }
-  const view = arenaViews[arena.definition.theme] ?? arenaViews.foundry;
-  view.drawScenery(renderer, arena, time);
-  if (arena.fallingPlatform) view.drawPlatform(renderer, arena.fallingPlatform, arena);
-  for (const platform of arena.platforms) view.drawPlatform(renderer, platform, arena);
+  drawArenaScenery(renderer, arena, time);
+  drawArenaPlatforms(renderer, arena);
 }

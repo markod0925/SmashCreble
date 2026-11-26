@@ -3,10 +3,12 @@ import { test } from 'node:test';
 import { arenas } from '../src/arenas/index.js';
 import { rules } from '../src/combat/arena.js';
 import { summonClones } from '../src/combat/clones.js';
+import { cpuInput } from '../src/combat/cpu.js';
 import { createMatch, tickMatch } from '../src/combat/match.js';
 import { bodyCenter, bodySize } from '../src/combat/state.js';
 import { captureProgress, capturingAttack } from '../src/combat/status.js';
 import { fighters, signatureAttacks } from '../src/fighters/index.js';
+import { actions, featureNames, zunchyAttackPolicy } from '../src/fighters/zunchy/cpu-policy.js';
 import { shrinkSeconds, shrinkTime } from '../src/fighters/zunchy/profile.js';
 
 function prepare(facing = 1, arena = arenas[0]) {
@@ -114,6 +116,8 @@ test('A forward spit at the ledge can send a rival over it and leave them a chan
 test('A bomb hit can trigger the gulp while the shrinking spell is active', () => {
   const match = prepare();
   const [caster, target] = match.fighters;
+  const hits = [];
+  match.onBlastHit = (projectile, victim) => hits.push({ projectile, victim });
   target.x = 6.3;
   activate(match);
   tick(match, 70);
@@ -125,4 +129,41 @@ test('A bomb hit can trigger the gulp while the shrinking spell is active', () =
   for (let i = 0; i < 126 && !capturingAttack(target, match); i++) tick(match, 1);
   assert.equal(caster.attack?.type, 'zunchyGulp');
   assert.equal(capturingAttack(target, match), caster.attack);
+  assert.ok(hits.some(({ projectile, victim }) => projectile.kind === 'zunchyBomb' && projectile.owner === caster && victim === target));
+});
+
+test('A CPU attack model can choose the Superstar only when it is held', () => {
+  const model = {
+    hidden: [],
+    output: actions.map(action => [
+      ...new Array(featureNames.length).fill(0), action === 'super' ? 2 : Number(action === 'hold'),
+    ]),
+  };
+  const choose = zunchyAttackPolicy(model);
+  const readCpu = (player, match, dt) => cpuInput(player, match, dt, choose);
+
+  const withoutStar = prepare();
+  const [charger] = withoutStar.fighters;
+  charger.cpu = true;
+  tickMatch(withoutStar, new Map(), rules.step, readCpu);
+  assert.equal(charger.charging, true);
+
+  const withStar = prepare();
+  const [holder] = withStar.fighters;
+  holder.cpu = true;
+  withStar.superstar.holder = holder;
+  tickMatch(withStar, new Map(), rules.step, readCpu);
+  assert.equal(holder.attack?.type, 'zunchyShrink');
+  assert.equal(withStar.superstar.holder, null);
+});
+
+test('The CPU recovers offstage before consulting an attack model', () => {
+  const match = prepare();
+  const [caster, rival] = match.fighters;
+  const deck = caster.grounded;
+  Object.assign(caster, { cpu: true, x: deck.right + .1, y: deck.y - 2, grounded: null, jumps: 0, vy: -3 });
+  rival.x = deck.right - .2;
+  const choose = () => assert.fail('Recovery should take priority over attack selection');
+  tickMatch(match, new Map(), rules.step, (player, current, dt) => cpuInput(player, current, dt, choose));
+  assert.equal(caster.attack?.type, 'recovery');
 });

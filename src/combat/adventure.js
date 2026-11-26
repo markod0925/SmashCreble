@@ -1,11 +1,10 @@
 import { createAdventureTrail } from '../arenas/adventure.js';
 import { fighters } from '../fighters/index.js';
 import { direction } from '../math.js';
+import { enemyColor } from '../player-colors.js';
 import { platformCenter } from './arena.js';
 import { strike } from './hits.js';
 import { bodyHalfWidth, bodySize, createMatch, spawn } from './state.js';
-
-export const enemyColor = '#ff896f';
 
 const spikeSource = { fighter: { power: 1, color: enemyColor } };
 

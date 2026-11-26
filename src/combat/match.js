@@ -54,7 +54,7 @@ function advanceSuperstar(match, dt) {
   match.events.push({ type: 'superstar', x: star.x, y: star.y, color: '#ffde78' });
 }
 
-export function tickMatch(match, controls, dt = rules.step) {
+export function tickMatch(match, controls, dt = rules.step, readCpu = cpuInput) {
   if (match.result) return;
   if (match.countdown > 0) {
     match.countdown = Math.max(0, match.countdown - dt);
@@ -97,7 +97,7 @@ export function tickMatch(match, controls, dt = rules.step) {
     }
     if (isDancing(player, match)) continue;
     const x = player.x;
-    const landingFrom = move(player, player.cpu ? cpuInput(player, match, dt) : controls.get(player.slot) ?? idleInput, dt, match);
+    const landingFrom = move(player, player.cpu ? readCpu(player, match, dt) : controls.get(player.slot) ?? idleInput, dt, match);
     movement.set(player, { x, landingFrom });
   }
   separateBodies(actors, match, movement);

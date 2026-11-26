@@ -25,7 +25,10 @@ function detonateBomb(projectile, targets, match) {
     const dx = target.x - x;
     const dy = target.y + bodyCenter(target, match) - y;
     if (Math.hypot(dx, dy * .78) > blast) continue;
-    if (strike(owner, target, { ...hit, x: direction(dx, direction(vx)) }, match)) victims.add(target);
+    if (strike(owner, target, { ...hit, x: direction(dx, direction(vx)) }, match)) {
+      victims.add(target);
+      match.onBlastHit?.(projectile, target);
+    }
   }
   projectile.remaining = 0;
   match.events.push({ type: 'explosion', x, y, color: projectile.blastColor ?? '#ffad69', strength: blast });

@@ -1,6 +1,6 @@
-import { defaultArena } from '../src/arenas/index.js';
+import { arenas } from '../src/arenas/index.js';
 import { createMatch, tickMatch } from '../src/combat/match.js';
-import { rules } from '../src/combat/arena.js';
+import { createMobSmash } from '../src/combat/mob-smash.js';
 import { fighters } from '../src/fighters/index.js';
 import { Graphics } from '../src/render/scene.js';
 import { shapes } from '../src/render/geometry.js';
@@ -18,8 +18,17 @@ const renderer = {
   begin() {},
   project: (x, y, z) => [x, y, z],
   setZombie(amount) { this.zombie = amount; },
+  withModelTransform(matrix, draw) {
+    const previous = this.modelTransform;
+    this.modelTransform = matrix;
+    try {
+      draw();
+    } finally {
+      this.modelTransform = previous;
+    }
+  },
   drawClone(fighter, position, time, options) {
-    if (!this.clones.has(fighter) || options.attack || options.flash || options.wobble ||
+    if (this.modelTransform || !this.clones.has(fighter) || options.attack || options.flash || options.wobble ||
         options.danceTime != null || options.zombie || options.guarding || options.charging) return false;
     const pose = clonePoseIndex(fighter.id, options.facing, options.airborne, options.running, time);
     if (pose < 0) return false;
@@ -27,7 +36,7 @@ const renderer = {
     return true;
   },
   mesh(shape, matrix, color, glow = 0, alpha = 1, lowDetail = this.lowDetail) {
-    modelMatrix.set(matrix);
+    modelMatrix.set(this.modelTransform ? multiply(this.modelTransform, matrix) : matrix);
     globalThis.wiiMesh(shapeIndices.get(shape) ?? -1, parseInt(color.slice(1), 16), glow, alpha, this.zombie, Number(lowDetail));
   },
   object(shape, position, scale, color, angles = [0, 0, 0], glow = 0, alpha = 1) {
@@ -45,14 +54,19 @@ globalThis.wiiInit = (controlsBuffer, frameBuffer, matrixBuffer) => {
   modelMatrix = new Float32Array(matrixBuffer);
 };
 
-globalThis.wiiStart = (...choices) => {
-  const available = fighters.filter((_, index) => !choices.includes(index));
-  const lineup = choices.map((index, slot) => {
-    if (index >= 0) return { slot, fighter: fighters[index], cpu: false };
-    const [fighter] = available.splice(Math.floor(Math.random() * available.length), 1);
-    return { slot, fighter, cpu: true };
-  });
-  match = createMatch(lineup, defaultArena);
+globalThis.wiiStart = (arenaIndex, koTarget, ...choices) => {
+  const arena = arenas[arenaIndex];
+  if (!arena) throw new RangeError('Unknown Wii arena.');
+  const lineup = choices.map((index, slot) => ({ slot, fighter: fighters[index], cpu: index < 0 }));
+  if (koTarget) {
+    match = createMobSmash(lineup, arena, koTarget);
+  } else {
+    const available = fighters.filter((_, index) => !choices.includes(index));
+    for (const player of lineup) {
+      if (player.cpu) [player.fighter] = available.splice(Math.floor(Math.random() * available.length), 1);
+    }
+    match = createMatch(lineup, arena);
+  }
   controls.clear();
   elapsed = 0;
   graphics.resetBattle();
@@ -91,9 +105,11 @@ globalThis.wiiAdvance = (steps, dt) => {
   frame.fill(0);
   frame.set([match.time, match.countdown, Number(Boolean(match.result)), match.result?.winner?.slot ?? -1]);
   match.fighters.forEach((player, index) => {
+    if (match.mobSmash && player.cpu) return;
     const tag = tags[index];
     const i = 4 + player.slot * 7;
     frame.set([player.damage, player.stocks, player.shield, tag && player.stocks && player.respawn <= 0 ? 1 : 0,
       tag?.[0] ?? 0, tag?.[1] ?? 0, player.guarding ? 1 : 0], i);
   });
+  if (match.mobSmash) frame.set([match.mobSmash.defeated, match.mobSmash.totalEnemies], 32);
 };

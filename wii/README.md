@@ -1,10 +1,10 @@
 # Smash Creble for Wii
 
-This native Homebrew Channel build runs four-fighter matches in Cloudbreak Foundry with one to four local players. The Wii release uses the Web roster, fighter models, combat rules, moves, and battle effects. The browser game remains the authoring project.
+This native Homebrew Channel build features all 41 fighters from the Web roster. Play Versus with one to four local players or Mob Smash with one to three. Both modes support Cloudbreak Foundry, Stormcoil Array, GDMR, IUI!, and Spiaccica Frittata.
 
-The Wii renderer draws Cloudbreak Foundry from prebuilt display lists and keeps its background clouds still. Clones use prebuilt idle, running, and airborne poses during ordinary movement. Their attacks and status effects use the shared battle renderer. The Wii build uses the Web combat rules and clone behavior.
+The Wii renderer uses prebuilt display lists for Cloudbreak Foundry and the distant trees in IUI!. Cloudbreak Foundry's background clouds are still. The shared battle renderer draws moving platforms and hazards using the current simulation state. Clones with prebuilt idle, running, and airborne poses use those poses during ordinary movement.
 
-During a match the Wii renderer uses low-polygon surfaces derived from the Web fighter meshes. The exporter creates six views of each primitive. The renderer selects a view for each animated part using the fixed arena camera. Roster portraits, the arena, and effects drawn outside fighter models use the original geometry.
+During a match the Wii renderer uses low-polygon surfaces derived from the Web fighter meshes. The exporter creates six views of each primitive. The renderer selects a view for each animated part using the arena camera. Roster portraits, arenas, and effects drawn outside fighter models use the original geometry.
 
 ## Build a release
 
@@ -29,6 +29,9 @@ Copy the release's `apps/SmashCreble` directory into `apps` on the SD card and l
 | Browse the roster | Nunchuk stick | D-pad in the sideways orientation | D-pad |
 | Confirm fighter | A (Wii Remote) | 2 | A |
 | Cancel fighter confirmation | B (Wii Remote) | 1 | B |
+| Switch between Versus and Mob Smash | - | - | - |
+| Change arena after confirming | Stick left or right | D-pad left or right | D-pad left or right |
+| Change Mob Smash KO target after confirming | Stick up or down | D-pad up or down | D-pad up or down |
 | Jump in a match | C (Nunchuk) | 2 | A |
 | Move or aim | Nunchuk stick | D-pad in the sideways orientation | D-pad |
 | Light attack | A (Wii Remote) | 1 | B |
@@ -41,4 +44,8 @@ Copy the release's `apps/SmashCreble` directory into `apps` on the SD card and l
 | Start or return to character select after the match | + | + | + |
 | Exit | HOME | HOME | HOME |
 
-Each connected controller gets a numbered preview and a cursor. Press + once anyone has confirmed a fighter. Other connected controllers enter with the fighter under their cursor. At the start of each match, the game fills the remaining slots with randomly chosen CPU fighters. A disconnected human participant pauses an active match until that controller channel is available again.
+Each connected controller gets a numbered preview and a cursor. Press **+** once at least one player has confirmed a fighter. In Versus, every connected controller joins with the fighter under its cursor. Randomly chosen CPU fighters fill the remaining slots.
+
+In Mob Smash, each player confirms a fighter to join. Set a shared target of 10, 20, 50, or 100 KOs before starting. One CPU opponent enters for each player, with replacements arriving as opponents are knocked out. Teammates and their clones cannot hit each other. The challenge ends when the team reaches its KO target or loses its last stock. The HUD shows the shared KO count.
+
+A disconnected human participant pauses an active match until that controller channel is available again.

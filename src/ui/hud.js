@@ -1,6 +1,6 @@
 import { $, node } from './dom.js';
-import { playerColors } from '../player-colors.js';
-import { defeatedEnemies, enemyColor } from '../combat/adventure.js';
+import { enemyColor, playerColors } from '../player-colors.js';
+import { defeatedEnemies } from '../combat/adventure.js';
 import { rules } from '../combat/arena.js';
 import { campaignPrompt } from '../combat/campaign.js';
 import { isDancing } from '../combat/dance.js';

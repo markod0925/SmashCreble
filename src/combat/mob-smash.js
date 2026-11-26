@@ -1,5 +1,5 @@
 import { fighters } from '../fighters/index.js';
-import { enemyColor } from './adventure.js';
+import { enemyColor } from '../player-colors.js';
 import { createMatch, spawn } from './state.js';
 
 export const mobTargets = [10, 20, 50, 100];

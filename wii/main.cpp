@@ -26,8 +26,11 @@ struct FighterVisual {
     float x, y, rowHeight;
 };
 
+struct ArenaVisual { Pose opaque, translucent; };
+
 #include "web_meshes.inc"
 static_assert(std::size(fighterVisuals) == std::size(web::roster));
+static_assert(std::size(arenaVisuals) == std::size(web::arenas));
 
 struct alignas(32) PlayerList {
     unsigned char commands[playerListSize];
@@ -44,7 +47,7 @@ Mtx camera;
 Mtx44 perspective;
 Mtx44 overlay;
 
-// Keep all world-space display lists on one fixed matrix and reserve a second one for the HUD.
+// Keep one camera matrix per match and reserve a second matrix for the HUD.
 constexpr unsigned arenaMatrix = GX_PNMTX0;
 constexpr unsigned hudMatrix = GX_PNMTX1;
 
@@ -80,23 +83,18 @@ void initVideo() {
     GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
     GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
 
-    DCFlushRange(const_cast<unsigned char*>(arenaOpaque), sizeof(arenaOpaque));
-    DCFlushRange(const_cast<unsigned char*>(arenaTranslucent), sizeof(arenaTranslucent));
+    for (const auto& arena : arenaVisuals) {
+        for (const auto& pass : {arena.opaque, arena.translucent}) {
+            if (pass.bytes) DCFlushRange(const_cast<unsigned char*>(pass.commands), pass.bytes);
+        }
+    }
     for (const auto& visual : fighterVisuals) {
         DCFlushRange(const_cast<unsigned char*>(visual.portrait.commands), visual.portrait.bytes);
     }
 
-    const bool widescreen = CONF_GetAspectRatio() == CONF_ASPECT_16_9;
-    const auto& position = widescreen ? web::cameraEyeWidescreen : web::cameraEyeStandard;
-    const float aspect = widescreen ? 16.0f / 9 : 4.0f / 3;
-    guVector eye{position[0], position[1], position[2]}, up{0, 1, 0};
-    guVector target{web::cameraTarget[0], web::cameraTarget[1], web::cameraTarget[2]};
-    guLookAt(camera, &eye, &up, &target);
-    guPerspective(perspective, web::cameraFovDegrees, aspect, 1, 100);
     guOrtho(overlay, 0, 480, 0, 640, 0, 1);
     Mtx identity;
     guMtxIdentity(identity);
-    GX_LoadPosMtxImm(camera, arenaMatrix);
     GX_LoadPosMtxImm(identity, hudMatrix);
     GX_CopyDisp(framebuffers[bufferIndex], GX_TRUE);
     GX_DrawDone();
@@ -105,6 +103,17 @@ void initVideo() {
     VIDEO_Flush();
     VIDEO_WaitVSync();
     if (mode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
+}
+
+void loadArenaCamera(const ArenaSpec& arena) {
+    const bool widescreen = CONF_GetAspectRatio() == CONF_ASPECT_16_9;
+    const auto& position = widescreen ? arena.eyeWidescreen : arena.eyeStandard;
+    const float aspect = widescreen ? 16.0f / 9 : 4.0f / 3;
+    guVector eye{position[0], position[1], position[2]}, up{0, 1, 0};
+    guVector target{arena.target[0], arena.target[1], arena.target[2]};
+    guLookAt(camera, &eye, &up, &target);
+    guPerspective(perspective, arena.fov, aspect, 1, 100);
+    GX_LoadPosMtxImm(camera, arenaMatrix);
 }
 
 void drawWorld(Mesh mesh, unsigned char* commands, float x, float y, float facing) {
@@ -203,7 +212,8 @@ void renderSelection(const Selection& selection, bool error) {
         rect(x - 39, y - 41, 78, 108, 0x1a2434ffu);
         char title[] = {'P', char('1' + slot), 0};
         centerLabel(x, y - 34, title, 2.3f, color);
-        centerLabel(x, y + 50, !selection.connected[slot] ? "CPU" : selection.ready[slot] ? "READY" : "PICK", 2.0f, color);
+        centerLabel(x, y + 50, !selection.connected[slot] ? (selection.mobSmash ? "OPEN" : "CPU") :
+            selection.ready[slot] ? "READY" : "PICK", 2.0f, color);
     }
 
     GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
@@ -236,30 +246,54 @@ void renderSelection(const Selection& selection, bool error) {
         centerLabel(sideX[slot], sideY[slot] + 33, name,
             std::min(1.6f, 74.0f / (4 * std::strlen(name))));
     }
-    centerLabel(320, 405, "MOVE TO PICK     A / 2 CONFIRM     B / 1 BACK", 1.65f, muted);
-    centerLabel(320, 429, error ? "FIGHT COULD NOT START" : selection.canStart() ? "+ START" : "CONFIRM A FIGHTER",
+    char options[80];
+    if (selection.mobSmash) {
+        std::snprintf(options, sizeof(options), "MOB SMASH  /  %s  /  %d KOS",
+            web::arenas[selection.arena].name, selection.koTarget());
+    } else {
+        std::snprintf(options, sizeof(options), "VERSUS  /  %s", web::arenas[selection.arena].name);
+    }
+    centerLabel(320, 385, options, 2.0f);
+    centerLabel(320, 404, "A / 2 CONFIRM    B / 1 BACK    - CHANGE MODE", 1.65f, muted);
+    centerLabel(320, 419, selection.mobSmash ? "WHEN READY  LEFT / RIGHT ARENA    UP / DOWN KOS" :
+        "WHEN READY  LEFT / RIGHT ARENA", 1.65f, muted);
+    centerLabel(320, 439, error ? "FIGHT COULD NOT START" : selection.tooManyPlayers() ? "MOB SMASH  MAX 3 PLAYERS" :
+        selection.canStart() ? "+ START" : "CONFIRM A FIGHTER",
         2.3f, error ? 0xffad6cffu : selection.canStart() ? 0x76f3d3ffu : muted);
     present();
 }
 
-void renderMatch(const Fight& fight, const std::array<bool, 4>& humans, bool paused) {
+void renderMatch(const Fight& fight, size_t arena, const std::array<bool, 4>& humans, bool paused) {
     GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
     GX_LoadProjectionMtx(perspective, GX_PERSPECTIVE);
     GX_SetCurrentMtx(arenaMatrix);
-    GX_CallDispList(const_cast<unsigned char*>(arenaOpaque), sizeof(arenaOpaque));
-    GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_FALSE);
-    GX_CallDispList(const_cast<unsigned char*>(arenaTranslucent), sizeof(arenaTranslucent));
+    const auto& visual = arenaVisuals[arena];
+    if (visual.opaque.bytes) {
+        GX_CallDispList(const_cast<unsigned char*>(visual.opaque.commands), visual.opaque.bytes);
+    }
+    if (visual.translucent.bytes) {
+        GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_FALSE);
+        GX_CallDispList(const_cast<unsigned char*>(visual.translucent.commands), visual.translucent.bytes);
+    }
     fight.draw();
 
     beginOverlay();
     char text[32];
     const auto& frame = fight.frame;
-    const int seconds = int(std::ceil(frame.time));
-    std::snprintf(text, sizeof(text), "%d:%02d", seconds / 60, seconds % 60);
-    label(290, 37, text, 4);
+    const bool mobSmash = frame.mobTarget > 0;
+    if (mobSmash) {
+        std::snprintf(text, sizeof(text), "KOS %d / %d", int(frame.mobDefeated), int(frame.mobTarget));
+    } else {
+        const int seconds = int(std::ceil(frame.time));
+        std::snprintf(text, sizeof(text), "%d:%02d", seconds / 60, seconds % 60);
+    }
+    centerLabel(320, 37, text, 4);
     if (paused) label(270, 120, "PAUSED", 4);
     else if (frame.finished) {
-        if (frame.winner >= 0) {
+        if (mobSmash) {
+            std::snprintf(text, sizeof(text), "%s",
+                frame.mobDefeated == frame.mobTarget ? "KO TARGET REACHED!" : "OUT OF STOCKS");
+        } else if (frame.winner >= 0) {
             const int winner = int(frame.winner);
             std::snprintf(text, sizeof(text), humans[winner] ? "P%d WINS" : "CPU %d WINS", winner + 1);
         } else std::snprintf(text, sizeof(text), "DRAW");
@@ -270,6 +304,7 @@ void renderMatch(const Fight& fight, const std::array<bool, 4>& humans, bool pau
         centerLabel(320, 120, text, 6);
     }
     for (int slot = 0; slot < 4; ++slot) {
+        if (mobSmash && !humans[slot]) continue;
         const float x = 49.0f + slot * 141.0f;
         const auto& player = frame.fighters[slot];
         const uint32_t color = web::playerColors[slot];
@@ -299,7 +334,7 @@ void renderMatch(const Fight& fight, const std::array<bool, 4>& humans, bool pau
 struct Remote {
     bool connected = false, start = false, exit = false;
     Input input;
-    bool confirm = false, cancel = false;
+    bool confirm = false, cancel = false, changeMode = false;
 };
 
 unsigned combatButtons(uint32_t buttons, uint32_t jumpMask, uint32_t lightMask, uint32_t specialMask,
@@ -337,7 +372,8 @@ Remote readRemote(int slot) {
                 WPAD_NUNCHUK_BUTTON_Z, WPAD_BUTTON_MINUS);
         };
         return {true, bool(pressed & WPAD_BUTTON_PLUS), bool(pressed & WPAD_BUTTON_HOME),
-            {x, y, map(held), map(pressed)}, bool(pressed & WPAD_BUTTON_A), bool(pressed & WPAD_BUTTON_B)};
+            {x, y, map(held), map(pressed)}, bool(pressed & WPAD_BUTTON_A), bool(pressed & WPAD_BUTTON_B),
+            bool(pressed & WPAD_BUTTON_MINUS)};
     }
     if (extension == WPAD_EXP_CLASSIC) {
         const auto map = [](uint32_t buttons) {
@@ -348,7 +384,8 @@ Remote readRemote(int slot) {
             bool(pressed & (WPAD_CLASSIC_BUTTON_HOME | WPAD_BUTTON_HOME)),
             {float(bool(held & WPAD_CLASSIC_BUTTON_RIGHT)) - float(bool(held & WPAD_CLASSIC_BUTTON_LEFT)),
              float(bool(held & WPAD_CLASSIC_BUTTON_UP)) - float(bool(held & WPAD_CLASSIC_BUTTON_DOWN)), map(held), map(pressed)},
-             bool(pressed & WPAD_CLASSIC_BUTTON_A), bool(pressed & WPAD_CLASSIC_BUTTON_B)};
+             bool(pressed & WPAD_CLASSIC_BUTTON_A), bool(pressed & WPAD_CLASSIC_BUTTON_B),
+             bool(pressed & WPAD_CLASSIC_BUTTON_MINUS)};
     }
     const auto map = [](uint32_t buttons) {
         return combatButtons(buttons, WPAD_BUTTON_2, WPAD_BUTTON_1, WPAD_BUTTON_B, WPAD_BUTTON_A, WPAD_BUTTON_MINUS);
@@ -356,15 +393,14 @@ Remote readRemote(int slot) {
     return {true, bool(pressed & WPAD_BUTTON_PLUS), bool(pressed & WPAD_BUTTON_HOME),
         {float(bool(held & WPAD_BUTTON_DOWN)) - float(bool(held & WPAD_BUTTON_UP)),
          float(bool(held & WPAD_BUTTON_RIGHT)) - float(bool(held & WPAD_BUTTON_LEFT)), map(held), map(pressed)},
-         bool(pressed & WPAD_BUTTON_2), bool(pressed & WPAD_BUTTON_1)};
+         bool(pressed & WPAD_BUTTON_2), bool(pressed & WPAD_BUTTON_1), bool(pressed & WPAD_BUTTON_MINUS)};
 }
 }
 
 int main() {
     initVideo();
     WPAD_Init();
-    Fight fight(modules, std::size(modules), geometry, std::size(geometry), clonePoses, std::size(clonePoses),
-        {camera[2][0], camera[2][1], camera[2][2]});
+    Fight fight(modules, std::size(modules), geometry, std::size(geometry), clonePoses, std::size(clonePoses));
     Selection selection;
     std::array<bool, 4> humans{};
     std::array<Input, 4> inputs{};
@@ -376,7 +412,7 @@ int main() {
         const auto now = gettime();
         const float delta = std::min(.05f, float(ticks_to_microsecs(now - previous)) / 1000000);
         previous = now;
-        bool start = false, paused = false;
+        bool start = false, paused = false, changeMode = false;
         WPAD_ScanPads();
         for (int slot = 0; slot < 4; ++slot) {
             const auto remote = readRemote(slot);
@@ -386,6 +422,7 @@ int main() {
             }
             start |= remote.start;
             if (!inMatch) {
+                changeMode |= remote.changeMode;
                 selection.update(slot, remote.connected, remote.input.x, remote.input.y,
                     remote.confirm, remote.cancel, delta);
                 continue;
@@ -397,11 +434,17 @@ int main() {
             inputs[slot].held = remote.input.held;
             inputs[slot].pressed |= remote.input.pressed;
         }
+        if (changeMode) {
+            selection.mobSmash = !selection.mobSmash;
+            error = false;
+        }
         if (!inMatch && start && selection.canStart()) {
-            humans = selection.connected;
+            humans = selection.mobSmash ? selection.ready : selection.connected;
             inputs = {};
             accumulator = 0;
-            inMatch = fight.start(humans, selection.choices) && fight.advance(0, 0, inputs);
+            loadArenaCamera(web::arenas[selection.arena]);
+            inMatch = fight.start(selection.arena, selection.koTarget(), humans, selection.choices,
+                {camera[2][0], camera[2][1], camera[2][2]}) && fight.advance(0, 0, inputs);
             error = !inMatch;
         } else if (inMatch && fight.frame.finished && start) {
             selection.ready.fill(false);
@@ -419,7 +462,7 @@ int main() {
             inputs = {};
             accumulator = 0;
         }
-        if (inMatch) renderMatch(fight, humans, paused && !fight.frame.finished);
+        if (inMatch) renderMatch(fight, selection.arena, humans, paused && !fight.frame.finished);
         else renderSelection(selection, error);
     }
     WPAD_Shutdown();

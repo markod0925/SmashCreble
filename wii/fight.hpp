@@ -8,6 +8,10 @@
 #include <iterator>
 
 struct FighterSpec { const char* name; uint32_t color; };
+struct ArenaSpec {
+    const char* name;
+    float eyeStandard[3], eyeWidescreen[3], target[3], fov;
+};
 #include "web_rules.inc"
 
 enum Button : unsigned { jump = 1, light = 2, special = 4, guard = 8, heavy = 16, dodge = 32 };
@@ -24,6 +28,7 @@ struct FighterFrame {
 struct MatchFrame {
     float time, countdown, finished, winner;
     std::array<FighterFrame, 4> fighters;
+    float mobDefeated, mobTarget;
 };
 
 struct Geometry {
@@ -38,12 +43,13 @@ struct ModuleSource { const char* name; const unsigned char* bytes; size_t lengt
 class Fight {
 public:
     Fight(const ModuleSource* modules, size_t moduleCount, const Geometry* geometry, size_t geometryCount,
-        const Pose* clonePoses, size_t clonePoseCount, const std::array<float, 3>& cameraDirection);
+        const Pose* clonePoses, size_t clonePoseCount);
     ~Fight();
     Fight(const Fight&) = delete;
     Fight& operator=(const Fight&) = delete;
 
-    bool start(const std::array<bool, 4>& humans, const std::array<size_t, 4>& choices);
+    bool start(size_t arena, int koTarget, const std::array<bool, 4>& humans,
+        const std::array<size_t, 4>& choices, const std::array<float, 3>& cameraDirection);
     bool advance(int steps, float dt, const std::array<Input, 4>& input);
     void draw() const;
 
